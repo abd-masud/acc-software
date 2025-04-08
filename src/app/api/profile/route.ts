@@ -46,8 +46,8 @@ export async function PUT(request: NextRequest) {
         db = await connectionToDatabase();
 
         // Build the query dynamically
-        let setParts = [];
-        let params = [];
+        const setParts = [];
+        const params = [];
 
         setParts.push('name = ?');
         params.push(name);

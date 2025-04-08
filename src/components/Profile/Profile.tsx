@@ -146,7 +146,7 @@ export const ProfileCompound = () => {
         const errorData = await response.json();
         setError(errorData.message || "Failed to update profile");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);

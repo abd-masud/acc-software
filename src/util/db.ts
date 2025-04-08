@@ -27,7 +27,7 @@ export async function connectionToDatabase(): Promise<mysql.Pool> {
             await testConn.ping();
             testConn.release();
             return pool;
-        } catch (error) {
+        } catch {
             pool = null; // Discard broken pool
         }
     }
@@ -43,7 +43,7 @@ export async function connectionToDatabase(): Promise<mysql.Pool> {
     try {
         pool = await createNewPool();
         return pool;
-    } catch (error) {
+    } catch {
         throw new Error('Database connection failed');
     }
 }
