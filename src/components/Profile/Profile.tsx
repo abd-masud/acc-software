@@ -4,7 +4,6 @@ import React, { useState, useRef, ChangeEvent, useEffect } from "react";
 import Image from "next/image";
 import dummy from "../../../public/images/dummy.jpg";
 import { useAuth } from "@/contexts/AuthContext";
-import { Header } from "../Header/Header";
 import { FaXmark } from "react-icons/fa6";
 
 export const ProfileCompound = () => {
@@ -183,7 +182,7 @@ export const ProfileCompound = () => {
   };
 
   return (
-    <main className="bg-auth_bg bg-cover bg-center bg-fixed min-h-screen">
+    <main className="bg-auth_bg bg-cover bg-center bg-fixed h-[calc(100vh-70px)]">
       {error && (
         <div className="flex items-center px-4 py-2 mb-4 rounded-lg bg-gray-800 text-red-400 border-2 border-red-400 absolute top-5 right-5">
           <div className="text-sm font-medium">{error}</div>
@@ -192,9 +191,6 @@ export const ProfileCompound = () => {
           </button>
         </div>
       )}
-      <div className="sticky top-0 z-50">
-        <Header />
-      </div>
       <div className="max-w-screen-lg mx-auto px-4 py-8">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
           <div className="flex justify-between items-center bg-gradient-to-r from-[#131226] to-[#2a2a4a] text-white p-6 sm:p-8">

@@ -3,7 +3,6 @@
 import { Popover } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import logo from "../../../public/images/logo.png";
 import Image from "next/image";
 import dummy from "../../../public/images/dummy.jpg";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,10 +10,28 @@ import { FaUser } from "react-icons/fa";
 import { FaKey } from "react-icons/fa6";
 import { FaRightFromBracket } from "react-icons/fa6";
 import { signOut } from "next-auth/react";
+import { VscThreeBars } from "react-icons/vsc";
+import { useState } from "react";
+import { MdFullscreen, MdOutlineFullscreenExit } from "react-icons/md";
 
-export const Header = () => {
+interface HeaderProps {
+  toggleSidebar: () => void;
+}
+
+export const Header = ({ toggleSidebar }: HeaderProps) => {
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullScreen(true);
+    } else if (document.exitFullscreen) {
+      document.exitFullscreen();
+      setIsFullScreen(false);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -64,30 +81,38 @@ export const Header = () => {
 
   return (
     <main className="flex justify-between items-center h-[70px] p-5 shadow-md w-full bg-white border-b border-[#dddddd]">
-      <Link href={"/"}>
-        <div className="flex items-center justify-center">
-          <Image
-            className="mr-1"
-            priority
-            src={logo}
-            height={30}
-            width={30}
-            alt={"Logo"}
-          />
-          <p className="text-black font-[700]">Copa Accounting</p>
-        </div>
-      </Link>
-      <Popover content={popoverContent} trigger="click" placement="bottomRight">
-        <button className="flex items-center border-2 border-[#307DF1] rounded-full overflow-hidden">
-          <Image
-            className="h-[42px] w-[42px]"
-            src={user?.image || dummy}
-            height={225}
-            width={225}
-            alt={"User"}
-          />
+      <div className="flex items-center">
+        <button
+          className="text-[#6E6F78] px-3 py-1 border rounded-md"
+          onClick={toggleSidebar}
+        >
+          <VscThreeBars className="fill-black" />
         </button>
-      </Popover>
+      </div>
+      <div className="flex items-center gap-3">
+        <button onClick={toggleFullScreen}>
+          {isFullScreen ? (
+            <MdOutlineFullscreenExit className="h-8 w-8 fill-black" />
+          ) : (
+            <MdFullscreen className="h-8 w-8 fill-black" />
+          )}
+        </button>
+        <Popover
+          content={popoverContent}
+          trigger="click"
+          placement="bottomRight"
+        >
+          <button className="flex items-center border-2 border-[#307DF1] rounded-full overflow-hidden">
+            <Image
+              className="h-[42px] w-[42px]"
+              src={user?.image || dummy}
+              height={225}
+              width={225}
+              alt={"User"}
+            />
+          </button>
+        </Popover>
+      </div>
     </main>
   );
 };
