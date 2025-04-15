@@ -1,14 +1,14 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { CustomersReportButtonProps } from "@/types/customers";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import logo from "../../../../public/images/logo.png";
+import logo from "../../../public/images/logo.png";
 import { useEffect, useState } from "react";
+import { InvoicesReportButtonProps } from "@/types/invoices";
 
-export const CustomersReportButton: React.FC<CustomersReportButtonProps> = ({
-  customers,
+export const InvoicesReportButton: React.FC<InvoicesReportButtonProps> = ({
+  invoices,
 }) => {
   const { user } = useAuth();
   const [logoUrl, setLogoUrl] = useState<string>("");
@@ -94,7 +94,7 @@ export const CustomersReportButton: React.FC<CustomersReportButtonProps> = ({
     // Report title (centered)
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("CUSTOMER REPORT", centerStartX, 50, { align: "center" });
+    doc.text("INVOICE REPORT", centerStartX, 50, { align: "center" });
 
     // Date and time (right-aligned)
     doc.setFontSize(8);
@@ -117,19 +117,44 @@ export const CustomersReportButton: React.FC<CustomersReportButtonProps> = ({
     doc.line(margin, 60, pageWidth - margin, 60);
 
     // Prepare data for the table
-    const tableData = customers.map((customer, index) => [
+    const tableData = invoices.map((invoice, index) => [
       index + 1,
-      customer.name,
-      customer.delivery,
-      customer.email,
-      customer.contact,
-      customer.remarks || "N/A",
+      invoice.invoice_id,
+      `${invoice.customer?.name || ""}\n${invoice.customer?.email || ""}\n${
+        invoice.customer?.contact || ""
+      }\n${invoice.customer?.remarks || ""}`,
+      invoice.items
+        ?.map((item) => `• ${item.product} (${item.quantity} ${item.unit})`)
+        .join("\n") || "N/A",
+      `Date: ${new Date(invoice.date).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })}\nDue: ${new Date(invoice.due_date).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })}`,
+      `Subtotal: ${invoice.subtotal.toFixed(
+        2
+      )} Tk\nTax: ${invoice.total_tax.toFixed(
+        2
+      )} Tk\nDiscount: ${invoice.discount.toFixed(
+        2
+      )} Tk\nTotal: ${invoice.total.toFixed(
+        2
+      )} Tk\nPaid: ${invoice.paid_amount.toFixed(
+        2
+      )} Tk\nDue: ${invoice.due_amount.toFixed(2)} Tk`,
     ]);
 
     // Generate table
     autoTable(doc, {
       startY: 65,
-      head: [["#", "Name", "Delivery Address", "Email", "Contact", "Remarks"]],
+      head: [
+        ["#", "Invoice ID", "Customer Info", "Items", "Dates", "Financials"],
+      ],
+
       body: tableData,
       margin: { horizontal: margin },
       styles: {
@@ -147,13 +172,14 @@ export const CustomersReportButton: React.FC<CustomersReportButtonProps> = ({
         fillColor: [248, 248, 248],
       },
       columnStyles: {
-        0: { cellWidth: 10 },
-        1: { cellWidth: 30 },
-        2: { cellWidth: 40 },
+        0: { cellWidth: 7 },
+        1: { cellWidth: 20 },
+        2: { cellWidth: 50 },
         3: { cellWidth: 40 },
         4: { cellWidth: 30 },
-        5: { cellWidth: "auto" },
+        5: { cellWidth: 35 },
       },
+
       theme: "grid",
     });
 

@@ -88,7 +88,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
       <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4">
         <div className="mb-4">
           <label className="text-[14px]" htmlFor="price">
-            Price
+            Price (BDT)
           </label>
           <input
             id="price"

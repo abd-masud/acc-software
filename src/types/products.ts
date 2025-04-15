@@ -2,12 +2,12 @@ export type Products = {
     key: string;
     id: number;
     name: string;
-    description?: string;
+    description: string;
     price: number;
-    tax_rate?: number;
-    category?: string;
-    stock?: number;
-    unit?: string;
+    tax_rate: number;
+    category: string;
+    stock: number;
+    unit: string;
 };
 
 export interface ProductApiResponse {

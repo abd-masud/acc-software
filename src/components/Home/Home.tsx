@@ -1,21 +1,18 @@
-import Image from "next/image";
-import logo from "../../../public/images/logo.png";
+import { HomeHeader } from "./Header";
+import { MetricsCards } from "./MetricsCards";
+import { QuickActions } from "./QuickActions";
+import { RecentTransactions } from "./RecentTransactions";
+import { FinancialOverview } from "./FinancialOverview";
 
 export const HomeComponent = () => {
   return (
-    <main className="bg-auth_bg bg-cover bg-center bg-fixed h-[calc(100vh-70px)]">
-      <div className="flex items-center justify-center pt-10">
-        <Image
-          className="mr-3"
-          priority
-          src={logo}
-          height={40}
-          width={40}
-          alt={"Logo"}
-        />
-        <p className="text-black font-[700] sm:text-[26px] text-[20px]">
-          Copa Accounting 1.0
-        </p>
+    <main className="bg-gray-50 min-h-[calc(100vh-70px)] p-6">
+      <HomeHeader />
+      <MetricsCards />
+      <QuickActions />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RecentTransactions />
+        <FinancialOverview />
       </div>
     </main>
   );

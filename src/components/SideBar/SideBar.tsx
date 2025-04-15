@@ -6,14 +6,8 @@ import logo from "../../../public/images/logo.png";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { AiFillDashboard, AiFillProduct } from "react-icons/ai";
-import {
-  FaBookBookmark,
-  FaGear,
-  FaMoneyBillTrendUp,
-  FaUsers,
-} from "react-icons/fa6";
+import { FaGear, FaMoneyBillTrendUp, FaUsers } from "react-icons/fa6";
 import { FaChevronDown } from "react-icons/fa";
-import { BsCalendar2DateFill } from "react-icons/bs";
 import { GiNotebook } from "react-icons/gi";
 
 export const SideBar = () => {
@@ -110,44 +104,44 @@ export const SideBar = () => {
       </div>
 
       <button
-        onClick={() => toggleSection("invoice")}
+        onClick={() => toggleSection("invoices")}
         className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
-          pathname.includes("/invoice") ? "text-white bg-[#1E2639]" : ""
+          pathname.includes("/invoices") ? "text-white bg-[#1E2639]" : ""
         }`}
       >
         <div className="flex items-center">
           <div
             className={`h-[23px] w-[3px] group-hover:bg-[#307DF1] transition duration-300 ${
-              pathname.includes("/invoice") ? "bg-[#307DF1]" : "bg-transparent"
+              pathname.includes("/invoices") ? "bg-[#307DF1]" : "bg-transparent"
             }`}
           ></div>
           <FaMoneyBillTrendUp className="ml-[21px] text-[16px] mr-3 w-5" />
-          Invoice
+          Invoices
         </div>
         <FaChevronDown />
       </button>
       <div
         className={`overflow-hidden transition-all duration-500 transform ${
-          openSection == "invoice"
+          openSection == "invoices"
             ? "max-h-[90px] opacity-100"
             : "max-h-0 opacity-0"
         }`}
       >
         <div className="pl-[56px] bg-[#1D1B31] text-[13px]">
           <Link
-            className={subLinkClass("/invoice/create-invoice")}
-            href="/invoice/create-invoice"
+            className={subLinkClass("/invoices/create-invoices")}
+            href="/invoices/create-invoices"
             onClick={handleSubMenuClick}
           >
-            Create Invoice
+            Create Invoices
           </Link>
 
           <Link
-            className={subLinkClass("/invoice/invoice-list")}
-            href="/invoice/invoice-list"
+            className={subLinkClass("/invoices/invoices-list")}
+            href="/invoices/invoices-list"
             onClick={handleSubMenuClick}
           >
-            Invoice List
+            Invoices List
           </Link>
         </div>
       </div>
@@ -196,33 +190,13 @@ export const SideBar = () => {
       </div>
 
       <Link
-        href={"/date-to-date-sales"}
-        className={linkClass("/date-to-date-sales")}
+        href={"/sales-report"}
+        className={linkClass("/sales-report")}
         onClick={closeSubmenu}
       >
-        <div className={linkBar("/date-to-date-sales")}></div>
-        <BsCalendar2DateFill className="ml-[21px] text-[16px] mr-3 w-5" />
-        Date to Date Sales
-      </Link>
-
-      <Link
-        href={"/party-ledger"}
-        className={linkClass("/party-ledger")}
-        onClick={closeSubmenu}
-      >
-        <div className={linkBar("/party-ledger")}></div>
-        <FaBookBookmark className="ml-[21px] text-[16px] mr-3 w-5" />
-        Party Ledger
-      </Link>
-
-      <Link
-        href={"/all-sales-report"}
-        className={linkClass("/all-sales-report")}
-        onClick={closeSubmenu}
-      >
-        <div className={linkBar("/all-sales-report")}></div>
+        <div className={linkBar("/sales-report")}></div>
         <GiNotebook className="ml-[21px] text-[16px] mr-3 w-5" />
-        All Sales Report
+        Sales Report
       </Link>
 
       <button
@@ -251,27 +225,27 @@ export const SideBar = () => {
       >
         <div className="pl-[56px] bg-[#1D1B31] text-[13px]">
           <Link
-            className={subLinkClass("/terms-conditions")}
-            href="/terms-conditions"
+            className={subLinkClass("/settings/policy-settings")}
+            href="/settings/policy-settings"
             onClick={handleSubMenuClick}
           >
-            Terms & Conditions
+            Policy Settings
           </Link>
 
           <Link
-            className={subLinkClass("/privacy-policy")}
-            href="/privacy-policy"
+            className={subLinkClass("/settings/smtp-settings")}
+            href="/settings/smtp-settings"
             onClick={handleSubMenuClick}
           >
-            Privacy Policy
+            SMTP Settings
           </Link>
 
           <Link
-            className={subLinkClass("/refund-policy")}
-            href="/refund-policy"
+            className={subLinkClass("/settings/roles-and-permissions")}
+            href="/settings/roles-and-permissions"
             onClick={handleSubMenuClick}
           >
-            Refund Policy
+            Roles & Permissions
           </Link>
         </div>
       </div>

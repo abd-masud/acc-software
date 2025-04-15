@@ -91,8 +91,7 @@ export const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
             type="email"
             id="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+            readOnly
           />
         </div>
         <div className="mb-4">

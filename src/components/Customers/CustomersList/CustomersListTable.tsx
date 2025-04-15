@@ -8,8 +8,9 @@ import {
   MenuProps,
   Popconfirm,
   message,
+  Input,
 } from "antd";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { MdDelete, MdEdit } from "react-icons/md";
 import { Customers, CustomersTableProps } from "@/types/customers";
 import { EditCustomerModal } from "./EditCustomerModal";
@@ -24,10 +25,23 @@ export const CustomersListTable: React.FC<CustomersTableProps> = ({
   const [currentCustomer, setCurrentCustomer] = useState<Customers | null>(
     null
   );
+  const [searchText, setSearchText] = useState("");
   const showEditModal = (customer: Customers) => {
     setCurrentCustomer(customer);
     setIsEditModalOpen(true);
   };
+
+  const filteredCustomers = useMemo(() => {
+    if (!searchText) return customers;
+
+    return customers.filter((customer) =>
+      Object.values(customer).some(
+        (value) =>
+          value &&
+          value.toString().toLowerCase().includes(searchText.toLowerCase())
+      )
+    );
+  }, [customers, searchText]);
 
   const handleEditSubmit = async (updatedCustomer: Customers) => {
     try {
@@ -141,17 +155,26 @@ export const CustomersListTable: React.FC<CustomersTableProps> = ({
 
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
-      <div className="flex justify-between items-center mb-5">
-        <div className="flex items-center">
+      <div className="flex sm:justify-between justify-end items-center mb-5">
+        <div className="sm:flex items-center hidden">
           <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
           <h2 className="text-[13px] font-[500]">Customers Info</h2>
         </div>
-        <CustomersReportButton customers={customers} />
+        <div className="flex items-center justify-end gap-2">
+          <Input
+            type="text"
+            placeholder="Search..."
+            className="border text-[14px] w-32 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+          <CustomersReportButton customers={filteredCustomers} />
+        </div>
       </div>
       <Table
         scroll={{ x: "max-content" }}
         columns={columns}
-        dataSource={customers}
+        dataSource={filteredCustomers}
         loading={loading}
         bordered
         rowKey="id"

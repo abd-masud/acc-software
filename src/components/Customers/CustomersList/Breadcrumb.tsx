@@ -10,7 +10,7 @@ export const Breadcrumb = () => {
       <main className="pb-4 border-b flex justify-between items-center">
         <div>
           <p className="text-[16px] font-[600]">Customers List</p>
-          <div className="md:block hidden">
+          <div className="sm:block hidden">
             <div className="flex items-center">
               <Link className="text-[12px] text-[#797c8b]" href="/">
                 Dashboard

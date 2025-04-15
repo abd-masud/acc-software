@@ -1,14 +1,14 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { CustomersReportButtonProps } from "@/types/customers";
+import { ProductsReportButtonProps } from "@/types/products";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import logo from "../../../../public/images/logo.png";
 import { useEffect, useState } from "react";
 
-export const CustomersReportButton: React.FC<CustomersReportButtonProps> = ({
-  customers,
+export const ProductsReportButton: React.FC<ProductsReportButtonProps> = ({
+  products,
 }) => {
   const { user } = useAuth();
   const [logoUrl, setLogoUrl] = useState<string>("");
@@ -68,33 +68,28 @@ export const CustomersReportButton: React.FC<CustomersReportButtonProps> = ({
     // Center-aligned company information (all caps)
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text(user?.company?.toUpperCase() || "COMPANY NAME", centerStartX, 20, {
+    doc.text(user?.company?.toUpperCase() || "-", centerStartX, 20, {
       align: "center",
     });
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(user?.address || "123 Business Street, City", centerStartX, 27, {
+    doc.text(user?.address || "-", centerStartX, 27, {
       align: "center",
     });
 
-    doc.text(`Email: ${user?.email || "info@company.com"}`, centerStartX, 32, {
+    doc.text(`Email: ${user?.email || "-"}`, centerStartX, 32, {
       align: "center",
     });
 
-    doc.text(
-      `Contact: ${user?.contact || "+1 (123) 456-7890"}`,
-      centerStartX,
-      37,
-      {
-        align: "center",
-      }
-    );
+    doc.text(`Contact: ${user?.contact || "-"}`, centerStartX, 37, {
+      align: "center",
+    });
 
     // Report title (centered)
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("CUSTOMER REPORT", centerStartX, 50, { align: "center" });
+    doc.text("PRODUCT REPORT", centerStartX, 50, { align: "center" });
 
     // Date and time (right-aligned)
     doc.setFontSize(8);
@@ -117,19 +112,32 @@ export const CustomersReportButton: React.FC<CustomersReportButtonProps> = ({
     doc.line(margin, 60, pageWidth - margin, 60);
 
     // Prepare data for the table
-    const tableData = customers.map((customer, index) => [
+    const tableData = products.map((product, index) => [
       index + 1,
-      customer.name,
-      customer.delivery,
-      customer.email,
-      customer.contact,
-      customer.remarks || "N/A",
+      product.name,
+      product.description,
+      `${product.price} BDT`,
+      `${product.tax_rate}%`,
+      product.category,
+      product.stock,
+      product.unit,
     ]);
 
     // Generate table
     autoTable(doc, {
       startY: 65,
-      head: [["#", "Name", "Delivery Address", "Email", "Contact", "Remarks"]],
+      head: [
+        [
+          "#",
+          "Product",
+          "Description",
+          "Price",
+          "Tax Rate",
+          "Category",
+          "Stock",
+          "Unit",
+        ],
+      ],
       body: tableData,
       margin: { horizontal: margin },
       styles: {
@@ -147,12 +155,14 @@ export const CustomersReportButton: React.FC<CustomersReportButtonProps> = ({
         fillColor: [248, 248, 248],
       },
       columnStyles: {
-        0: { cellWidth: 10 },
-        1: { cellWidth: 30 },
-        2: { cellWidth: 40 },
-        3: { cellWidth: 40 },
-        4: { cellWidth: 30 },
-        5: { cellWidth: "auto" },
+        0: { cellWidth: 8 },
+        1: { cellWidth: 29 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 20 },
+        4: { cellWidth: 20 },
+        5: { cellWidth: 30 },
+        6: { cellWidth: 20 },
+        7: { cellWidth: 20 },
       },
       theme: "grid",
     });

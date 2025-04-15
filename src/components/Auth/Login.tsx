@@ -44,7 +44,7 @@ export const LoginComponent = () => {
   useEffect(() => {
     if (status == "authenticated" && session?.user?.accessToken) {
       localStorage.setItem("acc_user", session.user.accessToken);
-      router.push("/");
+      window.location.href = "/";
     }
   }, [session, status, router]);
 

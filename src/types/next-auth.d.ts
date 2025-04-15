@@ -5,7 +5,7 @@ declare module "next-auth" {
     // Augment the Session object with custom user fields
     interface Session {
         user: {
-            id?: string | null;
+            id?: string;
             name?: string | null;
             last_name?: string | null;
             email?: string | null;
@@ -21,7 +21,7 @@ declare module "next-auth" {
 
     // Extend the User type used in NextAuth callbacks
     interface User {
-        id?: string | null;
+        id?: string;
         name?: string | null;
         last_name?: string | null;
         email?: string | null;

@@ -8,11 +8,13 @@ import {
   MenuProps,
   Popconfirm,
   message,
+  Input,
 } from "antd";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { MdDelete, MdEdit } from "react-icons/md";
 import { Products, ProductsTableProps } from "@/types/products";
 import { EditProductModal } from "./EditProductModal";
+import { ProductsReportButton } from "./ProductsReport";
 
 export const ProductsListTable: React.FC<ProductsTableProps> = ({
   products,
@@ -21,10 +23,23 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
 }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Products | null>(null);
+  const [searchText, setSearchText] = useState("");
   const showEditModal = (product: Products) => {
     setCurrentProduct(product);
     setIsEditModalOpen(true);
   };
+
+  const filteredProducts = useMemo(() => {
+    if (!searchText) return products;
+
+    return products.filter((product) =>
+      Object.values(product).some(
+        (value) =>
+          value &&
+          value.toString().toLowerCase().includes(searchText.toLowerCase())
+      )
+    );
+  }, [products, searchText]);
 
   const handleEditSubmit = async (updatedProduct: Products) => {
     try {
@@ -117,11 +132,12 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
     {
       title: "Price",
       dataIndex: "price",
-      render: (price) => `${price.toFixed(2)} BDT`,
+      render: (price) => `${price} BDT`,
     },
     {
       title: "Tax Rate",
       dataIndex: "tax_rate",
+      render: (tax_rate) => `${tax_rate}%`,
     },
     {
       title: "Category",
@@ -147,16 +163,26 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
 
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
-      <div className="flex justify-between items-center mb-5">
-        <div className="flex items-center">
+      <div className="flex sm:justify-between justify-end items-center mb-5">
+        <div className="sm:flex items-center hidden">
           <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
           <h2 className="text-[13px] font-[500]">Products Info</h2>
+        </div>
+        <div className="flex items-center justify-end gap-2">
+          <Input
+            type="text"
+            placeholder="Search..."
+            className="border text-[14px] w-32 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+          <ProductsReportButton products={filteredProducts} />
         </div>
       </div>
       <Table
         scroll={{ x: "max-content" }}
         columns={columns}
-        dataSource={products}
+        dataSource={filteredProducts}
         loading={loading}
         bordered
         rowKey="id"

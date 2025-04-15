@@ -1,5 +1,84 @@
+"use client";
+
+import { useAuth } from "@/contexts/AuthContext";
+import { Breadcrumb } from "./Breadcrumb";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { SalesReportTable } from "./SalesReportTable";
+import { InvoiceApiResponse, InvoiceData } from "@/types/invoices";
+import { CustomerApiResponse, Customers } from "@/types/customers";
+
 export const SalesReportComponent = () => {
+  const { user } = useAuth();
+  const [invoicesData, setInvoicesData] = useState<InvoiceData[]>([]);
+  const [customersData, setCustomersData] = useState<Customers[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (user?.id) {
+        headers["user_id"] = user.id.toString();
+      }
+
+      const invoicesResponse = await fetch("/api/invoices", {
+        method: "GET",
+        headers,
+      });
+
+      const invoicesJson: InvoiceApiResponse = await invoicesResponse.json();
+
+      if (!invoicesResponse.ok || !invoicesJson.success) {
+        throw new Error(invoicesJson.message || "Failed to fetch invoices");
+      }
+
+      const customersResponse = await fetch("/api/customers", {
+        method: "GET",
+        headers,
+      });
+
+      const customersJson: CustomerApiResponse = await customersResponse.json();
+
+      if (!customersResponse.ok || !customersJson.success) {
+        throw new Error(customersJson.message || "Failed to fetch customers");
+      }
+
+      setInvoicesData(invoicesJson.data);
+      setCustomersData(customersJson.data);
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const Invoices = useMemo(() => {
+    return invoicesData
+      .map((invoice) => {
+        const customer = customersData.find(
+          (c) => c.id === invoice.customer.id
+        );
+        return customer ? { ...invoice, customer } : null;
+      })
+      .filter((invoice): invoice is InvoiceData => invoice !== null);
+  }, [invoicesData, customersData]);
+
   return (
-    <main className="bg-auth_bg bg-cover bg-center bg-fixed h-[calc(100vh-70px)]"></main>
+    <main className="bg-[#F2F4F7] min-h-[calc(100vh-70px)] p-5">
+      <Breadcrumb />
+      <SalesReportTable
+        invoices={Invoices}
+        fetchInvoices={fetchData}
+        loading={loading}
+      />
+    </main>
   );
 };
