@@ -113,7 +113,7 @@ export const MetricsCards = () => {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
         {[...Array(4)].map((_, index) => (
           <div key={index} className="bg-white p-6 rounded-xl shadow-sm">
             <div className="animate-pulse">
@@ -128,7 +128,7 @@ export const MetricsCards = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
       {metrics.map((metric, index) => (
         <div
           key={index}

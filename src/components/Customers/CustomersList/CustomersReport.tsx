@@ -119,6 +119,7 @@ export const CustomersReportButton: React.FC<CustomersReportButtonProps> = ({
     // Prepare data for the table
     const tableData = customers.map((customer, index) => [
       index + 1,
+      customer.customer_id,
       customer.name,
       customer.delivery,
       customer.email,
@@ -129,7 +130,17 @@ export const CustomersReportButton: React.FC<CustomersReportButtonProps> = ({
     // Generate table
     autoTable(doc, {
       startY: 65,
-      head: [["#", "Name", "Delivery Address", "Email", "Contact", "Remarks"]],
+      head: [
+        [
+          "#",
+          "Customer ID",
+          "Customer Name",
+          "Delivery Address",
+          "Email Address",
+          "Contact Number",
+          "Remarks",
+        ],
+      ],
       body: tableData,
       margin: { horizontal: margin },
       styles: {
@@ -147,12 +158,13 @@ export const CustomersReportButton: React.FC<CustomersReportButtonProps> = ({
         fillColor: [248, 248, 248],
       },
       columnStyles: {
-        0: { cellWidth: 10 },
-        1: { cellWidth: 30 },
-        2: { cellWidth: 40 },
-        3: { cellWidth: 40 },
-        4: { cellWidth: 30 },
+        0: { cellWidth: "auto" },
+        1: { cellWidth: "auto" },
+        2: { cellWidth: "auto" },
+        3: { cellWidth: "auto" },
+        4: { cellWidth: "auto" },
         5: { cellWidth: "auto" },
+        6: { cellWidth: "auto" },
       },
       theme: "grid",
     });

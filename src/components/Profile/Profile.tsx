@@ -4,6 +4,7 @@ import React, { useState, useRef, ChangeEvent, useEffect } from "react";
 import Image from "next/image";
 import dummy from "../../../public/images/dummy.jpg";
 import { useAuth } from "@/contexts/AuthContext";
+import { FaEdit, FaSave, FaTimes, FaUpload } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
 
 export const ProfileCompound = () => {
@@ -26,7 +27,6 @@ export const ProfileCompound = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize form data when user data is available
   useEffect(() => {
     if (user) {
       setFormData({
@@ -138,6 +138,7 @@ export const ProfileCompound = () => {
         if (result.success) {
           localStorage.setItem("acc_user", result.token);
           setIsEditMode(false);
+          window.location.href = "/profile";
         } else {
           setError(result.message || "Failed to update profile");
         }
@@ -182,64 +183,75 @@ export const ProfileCompound = () => {
   };
 
   return (
-    <main className="bg-auth_bg bg-cover bg-center bg-fixed h-[calc(100vh-70px)]">
+    <main className="min-h-[calc(100vh-70px)] bg-gradient-to-br from-gray-50 to-gray-100">
       {error && (
-        <div className="flex items-center px-4 py-2 mb-4 rounded-lg bg-gray-800 text-red-400 border-2 border-red-400 absolute top-5 right-5">
+        <div className="flex items-center px-4 py-3 mb-4 rounded-lg bg-red-50 text-red-600 border border-red-200 absolute top-5 right-5 shadow-md animate-fade-in">
           <div className="text-sm font-medium">{error}</div>
-          <button onClick={handleCloseError}>
-            <FaXmark className="ml-3 text-[14px]" />
+          <button
+            onClick={handleCloseError}
+            className="ml-3 text-red-600 hover:text-red-800"
+          >
+            <FaXmark />
           </button>
         </div>
       )}
-      <div className="max-w-screen-lg mx-auto px-4 py-8">
+
+      <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-          <div className="flex justify-between items-center bg-gradient-to-r from-[#131226] to-[#2a2a4a] text-white p-6 sm:p-8">
-            <h1 className="text-xl sm:text-2xl font-bold">
-              Profile Information
-            </h1>
+          {/* Header Section */}
+          <div className="flex justify-between items-center bg-gradient-to-r from-[#307DF1] to-[#307DF1]/90 text-white p-6">
+            <h1 className="text-2xl font-bold">Profile Information</h1>
             {!isEditMode ? (
               <button
                 onClick={() => setIsEditMode(true)}
-                className="bg-[#00A3FF] hover:bg-[#00aeff] text-[#131226] px-4 py-2 rounded-lg font-medium transition-colors"
+                className="flex items-center gap-2 bg-white hover:bg-gray-100 text-[#307DF1] px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
               >
+                <FaEdit className="text-sm" />
                 Edit Profile
               </button>
             ) : (
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <button
                   onClick={handleCancel}
                   disabled={isLoading}
-                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 shadow-sm"
                 >
+                  <FaTimes className="text-sm" />
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={isLoading}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 bg-[#307DF1] hover:bg-[#2a6fd8] text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 shadow-sm"
                 >
+                  <FaSave className="text-sm" />
                   {isLoading ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             )}
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-6 p-6 sm:p-8 bg-gradient-to-r from-[#131226]/90 to-[#2a2a4a]/90 text-white">
-            <div className="w-32 h-32 rounded-full border-4 border-[#00A3FF] overflow-hidden relative shrink-0">
-              <Image
-                src={previewImage || user?.image || dummy}
-                alt="Profile"
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 100vw, 33vw"
-              />
+          {/* Profile Section */}
+          <div className="flex flex-col sm:flex-row items-center gap-6 p-6 sm:p-8 bg-[#307DF1]/10">
+            {/* Profile Image */}
+            <div className="relative group">
+              <div className="w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden relative">
+                <Image
+                  src={previewImage || user?.image || dummy}
+                  alt="Profile"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                />
+              </div>
               {isEditMode && (
                 <>
                   <button
                     onClick={triggerFileInput}
-                    className="absolute bottom-0 left-0 right-0 bg-black/70 text-white py-2 text-sm font-medium hover:bg-black/80 transition-colors"
+                    className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-2 bg-[#307DF1] text-white py-2 text-sm font-medium hover:bg-[#2a6fd8] transition-colors"
                   >
-                    {previewImage ? "Change Image" : "Upload Image"}
+                    <FaUpload className="text-xs" />
+                    {previewImage ? "Change" : "Upload"}
                   </button>
                   <input
                     type="file"
@@ -253,11 +265,12 @@ export const ProfileCompound = () => {
               )}
             </div>
 
-            <div className="text-center sm:text-left space-y-2 w-full">
+            {/* Profile Info */}
+            <div className="text-center sm:text-left space-y-3 w-full">
               {isEditMode ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-[#00A3FF] mb-1">
+                  <div className="space-y-2">
+                    <label className="block text-sm text-[#307DF1] font-medium">
                       First Name
                     </label>
                     <input
@@ -268,11 +281,11 @@ export const ProfileCompound = () => {
                       onChange={handleInputChange}
                       placeholder="Enter first name"
                       required
-                      className="border text-[14px] py-3 px-[10px] w-full bg-white/10 hover:border-[#B9C1CC] focus:outline-none focus:right-0 focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#307DF1] focus:border-[#307DF1] transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm text-[#00A3FF] mb-1">
+                  <div className="space-y-2">
+                    <label className="block text-sm text-[#307DF1] font-medium">
                       Last Name
                     </label>
                     <input
@@ -283,11 +296,11 @@ export const ProfileCompound = () => {
                       onChange={handleInputChange}
                       placeholder="Enter last name"
                       required
-                      className="border text-[14px] py-3 px-[10px] w-full bg-white/10 hover:border-[#B9C1CC] focus:outline-none focus:right-0 focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#307DF1] focus:border-[#307DF1] transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm text-[#00A3FF] mb-1">
+                  <div className="space-y-2">
+                    <label className="block text-sm text-[#307DF1] font-medium">
                       Company
                     </label>
                     <input
@@ -297,28 +310,29 @@ export const ProfileCompound = () => {
                       value={formData.company}
                       onChange={handleInputChange}
                       placeholder="Enter company name"
-                      className="border text-[14px] py-3 px-[10px] w-full bg-white/10 hover:border-[#B9C1CC] focus:outline-none focus:right-0 focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#307DF1] focus:border-[#307DF1] transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm text-[#00A3FF] mb-1">
+                  <div className="space-y-2">
+                    <label className="block text-sm text-[#307DF1] font-medium">
                       Company Logo
                     </label>
-                    <div className="flex items-center gap-4 mt-2">
+                    <div className="flex items-center gap-3">
                       {previewLogo && (
-                        <div className="w-12 h-12 relative">
+                        <div className="w-10 h-10 relative rounded-md overflow-hidden border border-gray-200">
                           <Image
                             src={previewLogo}
                             alt="Company Logo"
                             fill
-                            className="object-contain"
+                            className="object-contain bg-white"
                           />
                         </div>
                       )}
                       <button
                         onClick={triggerLogoInput}
-                        className="bg-[#00A3FF] hover:bg-[#00aeff] text-white px-3 py-1 rounded text-sm"
+                        className="flex items-center gap-2 bg-[#307DF1] hover:bg-[#2a6fd8] text-white px-3 py-[10px] rounded-lg text-sm shadow-sm"
                       >
+                        <FaUpload className="text-xs" />
                         {previewLogo ? "Change Logo" : "Upload Logo"}
                       </button>
                       <input
@@ -334,19 +348,21 @@ export const ProfileCompound = () => {
                 </div>
               ) : (
                 <>
-                  <h1 className="text-2xl sm:text-3xl font-bold">
+                  <h1 className="text-3xl font-bold text-gray-800">
                     {user?.name} {user?.last_name}
                   </h1>
                   {user?.company && (
                     <div className="flex items-center gap-4">
-                      <p className="text-[#00A3FF] text-lg">{user?.company}</p>
+                      <p className="text-[#307DF1] font-medium">
+                        {user?.company}
+                      </p>
                       {user?.logo && (
-                        <div className="w-12 h-12 relative">
+                        <div className="w-10 h-10 relative rounded-md overflow-hidden border border-gray-200">
                           <Image
                             src={user.logo}
                             alt="Company Logo"
                             fill
-                            className="object-contain"
+                            className="object-contain bg-white"
                           />
                         </div>
                       )}
@@ -357,14 +373,15 @@ export const ProfileCompound = () => {
             </div>
           </div>
 
-          <div className="p-5">
-            <div className="bg-gray-50 p-5 rounded-lg">
-              <h2 className="text-lg font-semibold text-[#131226] mb-4 border-b pb-2">
+          {/* Contact Information Section */}
+          <div className="p-6">
+            <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">
                 Contact Information
               </h2>
-              <div className="grid md:grid-cols-2 grid-cols-1 gap-5">
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">
+              <div className="grid md:grid-cols-2 grid-cols-1 gap-6">
+                <div className="space-y-2">
+                  <label className="block text-sm text-gray-600 font-medium">
                     Email
                   </label>
                   {isEditMode ? (
@@ -374,7 +391,7 @@ export const ProfileCompound = () => {
                       id="email"
                       value={formData.email}
                       disabled
-                      className="border text-[14px] py-3 px-[10px] w-full bg-[#EAF2FE] hover:border-[#B9C1CC] focus:outline-none focus:right-0 focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700"
                     />
                   ) : (
                     <p className="text-gray-900 font-medium">
@@ -382,8 +399,8 @@ export const ProfileCompound = () => {
                     </p>
                   )}
                 </div>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm text-gray-600 font-medium">
                     Contact Number
                   </label>
                   {isEditMode ? (
@@ -394,7 +411,7 @@ export const ProfileCompound = () => {
                       value={formData.contact}
                       onChange={handleInputChange}
                       placeholder="Enter contact number"
-                      className="border text-[14px] py-3 px-[10px] w-full bg-[#EAF2FE] hover:border-[#B9C1CC] focus:outline-none focus:right-0 focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#307DF1] focus:border-[#307DF1] transition-all"
                     />
                   ) : (
                     <p className="text-gray-900 font-medium">
@@ -404,8 +421,8 @@ export const ProfileCompound = () => {
                 </div>
               </div>
 
-              <div className="mt-5">
-                <label className="block text-sm text-gray-600 mb-1">
+              <div className="mt-6 space-y-2">
+                <label className="block text-sm text-gray-600 font-medium">
                   Address
                 </label>
                 {isEditMode ? (
@@ -416,7 +433,7 @@ export const ProfileCompound = () => {
                     value={formData.address}
                     onChange={handleInputChange}
                     placeholder="Enter your address"
-                    className="border text-[14px] py-3 px-[10px] w-full bg-[#EAF2FE] hover:border-[#B9C1CC] focus:outline-none focus:right-0 focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#307DF1] focus:border-[#307DF1] transition-all"
                   />
                 ) : (
                   <p className="text-gray-900 font-medium">

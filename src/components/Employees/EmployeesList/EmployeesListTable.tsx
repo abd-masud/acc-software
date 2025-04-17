@@ -10,65 +10,66 @@ import {
   message,
   Input,
 } from "antd";
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { MdDelete, MdEdit } from "react-icons/md";
-import { Customers, CustomersTableProps } from "@/types/customers";
-import { EditCustomerModal } from "./EditCustomerModal";
-import { CustomersReportButton } from "./CustomersReport";
+import { Employees, EmployeesTableProps } from "@/types/employees";
+import { EmployeesReportButton } from "./EmployeesReport";
+import { EditEmployeesModal } from "./EditEmployeesModal";
 
-export const CustomersListTable: React.FC<CustomersTableProps> = ({
-  customers,
-  fetchCustomers,
+export const EmployeesListTable: React.FC<EmployeesTableProps> = ({
+  employees,
+  fetchEmployees,
   loading,
 }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [currentCustomer, setCurrentCustomer] = useState<Customers | null>(
+  const [currentEmployee, setCurrentEmployee] = useState<Employees | null>(
     null
   );
   const [searchText, setSearchText] = useState("");
-  const showEditModal = (customer: Customers) => {
-    setCurrentCustomer(customer);
+
+  const showEditModal = (employee: Employees) => {
+    setCurrentEmployee(employee);
     setIsEditModalOpen(true);
   };
 
-  const filteredCustomers = useMemo(() => {
-    if (!searchText) return customers;
+  const filteredEmployees = useMemo(() => {
+    if (!searchText) return employees;
 
-    return customers.filter((customer) =>
-      Object.values(customer).some(
+    return employees.filter((employee) =>
+      Object.values(employee).some(
         (value) =>
           value &&
           value.toString().toLowerCase().includes(searchText.toLowerCase())
       )
     );
-  }, [customers, searchText]);
+  }, [employees, searchText]);
 
-  const handleEditSubmit = async (updatedCustomer: Customers) => {
+  const handleEditSubmit = async (updatedEmployee: Employees) => {
     try {
-      const response = await fetch("/api/customers", {
+      const response = await fetch("/api/employees", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(updatedCustomer),
+        body: JSON.stringify(updatedEmployee),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update customer");
+        throw new Error("Failed to update employee");
       }
 
-      message.success("Customer updated successfully");
+      message.success("Employee updated successfully");
       setIsEditModalOpen(false);
-      fetchCustomers();
+      fetchEmployees();
     } catch (err) {
       console.error(err);
-      throw err;
+      message.error("Update failed");
     }
   };
 
   const handleDelete = async (id: number) => {
     try {
-      const response = await fetch("/api/customers", {
+      const response = await fetch("/api/employees", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -77,16 +78,16 @@ export const CustomersListTable: React.FC<CustomersTableProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete customer");
+        throw new Error("Failed to delete employee");
       }
 
-      fetchCustomers();
+      fetchEmployees();
     } catch {
       message.error("Delete failed");
     }
   };
 
-  const getMenuItems = (record: Customers): MenuProps["items"] => [
+  const getMenuItems = (record: Employees): MenuProps["items"] => [
     {
       key: "edit",
       label: (
@@ -117,26 +118,18 @@ export const CustomersListTable: React.FC<CustomersTableProps> = ({
     },
   ];
 
-  const columns: TableColumnsType<Customers> = [
+  const columns: TableColumnsType<Employees> = [
     {
       title: "#",
       width: "40px",
       render: (_, __, index) => index + 1,
     },
     {
-      title: "Customer ID",
-      dataIndex: "customer_id",
-    },
-    {
-      title: "Customer Name",
+      title: "Name",
       dataIndex: "name",
     },
     {
-      title: "Delivery Address",
-      dataIndex: "delivery",
-    },
-    {
-      title: "Email Address",
+      title: "Email",
       dataIndex: "email",
     },
     {
@@ -144,8 +137,16 @@ export const CustomersListTable: React.FC<CustomersTableProps> = ({
       dataIndex: "contact",
     },
     {
-      title: "Remarks",
-      dataIndex: "remarks",
+      title: "Department",
+      dataIndex: "department",
+    },
+    {
+      title: "Role",
+      dataIndex: "role",
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
     },
     {
       title: "Action",
@@ -162,7 +163,7 @@ export const CustomersListTable: React.FC<CustomersTableProps> = ({
       <div className="flex sm:justify-between justify-end items-center mb-5">
         <div className="sm:flex items-center hidden">
           <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
-          <h2 className="text-[13px] font-[500]">Customers Info</h2>
+          <h2 className="text-[13px] font-[500]">Employees Info</h2>
         </div>
         <div className="flex items-center justify-end gap-2">
           <Input
@@ -172,22 +173,22 @@ export const CustomersListTable: React.FC<CustomersTableProps> = ({
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-          <CustomersReportButton customers={filteredCustomers} />
+          <EmployeesReportButton employees={filteredEmployees} />
         </div>
       </div>
       <Table
         scroll={{ x: "max-content" }}
         columns={columns}
-        dataSource={filteredCustomers}
+        dataSource={filteredEmployees}
         loading={loading}
         bordered
         rowKey="id"
       />
 
-      <EditCustomerModal
+      <EditEmployeesModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        currentCustomer={currentCustomer}
+        currentEmployee={currentEmployee}
         onSave={handleEditSubmit}
       />
     </main>

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   FiDollarSign,
-  FiFileText,
   FiPieChart,
   FiUsers,
   FiPlus,
@@ -85,7 +84,9 @@ export const QuickActions = () => {
     <section className="mb-10">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-gray-800">Quick Actions</h2>
-        <p className="text-sm text-gray-500">Shortcuts to key functions</p>
+        <p className="text-sm text-gray-500 md:block hidden">
+          Shortcuts to key functions
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

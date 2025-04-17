@@ -7,7 +7,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { AiFillDashboard, AiFillProduct } from "react-icons/ai";
 import { FaGear, FaMoneyBillTrendUp, FaUsers } from "react-icons/fa6";
-import { FaChevronDown } from "react-icons/fa";
+import { FaChevronDown, FaUserTie } from "react-icons/fa";
 import { GiNotebook } from "react-icons/gi";
 
 export const SideBar = () => {
@@ -189,6 +189,51 @@ export const SideBar = () => {
         </div>
       </div>
 
+      <button
+        onClick={() => toggleSection("employees")}
+        className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+          pathname.includes("/employees") ? "text-white bg-[#1E2639]" : ""
+        }`}
+      >
+        <div className="flex items-center">
+          <div
+            className={`h-[23px] w-[3px] group-hover:bg-[#307DF1] transition duration-300 ${
+              pathname.includes("/employees")
+                ? "bg-[#307DF1]"
+                : "bg-transparent"
+            }`}
+          ></div>
+          <FaUserTie className="ml-[21px] text-[16px] mr-3 w-5" />
+          Employees
+        </div>
+        <FaChevronDown />
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-500 transform ${
+          openSection == "employees"
+            ? "max-h-[90px] opacity-100"
+            : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="pl-[56px] bg-[#1D1B31] text-[13px]">
+          <Link
+            className={subLinkClass("/employees/add-employees")}
+            href="/employees/add-employees"
+            onClick={handleSubMenuClick}
+          >
+            Add Employees
+          </Link>
+
+          <Link
+            className={subLinkClass("/employees/employees-list")}
+            href="/employees/employees-list"
+            onClick={handleSubMenuClick}
+          >
+            Employees List
+          </Link>
+        </div>
+      </div>
+
       <Link
         href={"/sales-report"}
         className={linkClass("/sales-report")}
@@ -219,11 +264,19 @@ export const SideBar = () => {
       <div
         className={`overflow-hidden transition-all duration-500 transform ${
           openSection == "settings"
-            ? "max-h-[135px] opacity-100"
+            ? "max-h-[190px] opacity-100"
             : "max-h-0 opacity-0"
         }`}
       >
         <div className="pl-[56px] bg-[#1D1B31] text-[13px]">
+          <Link
+            className={subLinkClass("/settings/general-settings")}
+            href="/settings/general-settings"
+            onClick={handleSubMenuClick}
+          >
+            General Settings
+          </Link>
+
           <Link
             className={subLinkClass("/settings/policy-settings")}
             href="/settings/policy-settings"

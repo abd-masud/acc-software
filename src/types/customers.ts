@@ -1,6 +1,7 @@
 export interface Customers {
     key: string;
     id: number;
+    customer_id: string;
     name: string;
     delivery: string;
     email: string;

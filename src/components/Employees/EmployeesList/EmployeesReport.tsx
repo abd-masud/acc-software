@@ -1,14 +1,14 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { ProductsReportButtonProps } from "@/types/products";
+import { EmployeesReportButtonProps } from "@/types/employees";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import logo from "../../../../public/images/logo.png";
 import { useEffect, useState } from "react";
 
-export const ProductsReportButton: React.FC<ProductsReportButtonProps> = ({
-  products,
+export const EmployeesReportButton: React.FC<EmployeesReportButtonProps> = ({
+  employees,
 }) => {
   const { user } = useAuth();
   const [logoUrl, setLogoUrl] = useState<string>("");
@@ -89,7 +89,7 @@ export const ProductsReportButton: React.FC<ProductsReportButtonProps> = ({
     // Report title (centered)
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("PRODUCT REPORT", centerStartX, 50, { align: "center" });
+    doc.text("EMPLOYEE REPORT", centerStartX, 50, { align: "center" });
 
     // Date and time (right-aligned)
     doc.setFontSize(8);
@@ -112,15 +112,14 @@ export const ProductsReportButton: React.FC<ProductsReportButtonProps> = ({
     doc.line(margin, 60, pageWidth - margin, 60);
 
     // Prepare data for the table
-    const tableData = products.map((product, index) => [
+    const tableData = employees.map((employee, index) => [
       index + 1,
-      product.name,
-      product.description,
-      `${product.price} BDT`,
-      `${product.tax_rate}%`,
-      product.category,
-      product.stock,
-      product.unit,
+      employee.name,
+      employee.email,
+      employee.contact,
+      employee.department,
+      employee.role,
+      employee.status,
     ]);
 
     // Generate table
@@ -129,13 +128,12 @@ export const ProductsReportButton: React.FC<ProductsReportButtonProps> = ({
       head: [
         [
           "#",
-          "Product",
-          "Description",
-          "Price",
-          "Tax Rate",
-          "Category",
-          "Stock",
-          "Unit",
+          "Name",
+          "Email Address",
+          "Contact Number",
+          "Department",
+          "Role",
+          "Status",
         ],
       ],
       body: tableData,
@@ -162,7 +160,6 @@ export const ProductsReportButton: React.FC<ProductsReportButtonProps> = ({
         4: { cellWidth: "auto" },
         5: { cellWidth: "auto" },
         6: { cellWidth: "auto" },
-        7: { cellWidth: "auto" },
       },
       theme: "grid",
     });

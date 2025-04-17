@@ -172,12 +172,12 @@ export const InvoicesReportButton: React.FC<InvoicesReportButtonProps> = ({
         fillColor: [248, 248, 248],
       },
       columnStyles: {
-        0: { cellWidth: 7 },
-        1: { cellWidth: 20 },
-        2: { cellWidth: 50 },
-        3: { cellWidth: 40 },
-        4: { cellWidth: 30 },
-        5: { cellWidth: 35 },
+        0: { cellWidth: "auto" },
+        1: { cellWidth: "auto" },
+        2: { cellWidth: "auto" },
+        3: { cellWidth: "auto" },
+        4: { cellWidth: "auto" },
+        5: { cellWidth: "auto" },
       },
 
       theme: "grid",

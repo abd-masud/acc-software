@@ -10,6 +10,7 @@ export const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
   currentCustomer,
   onSave,
 }) => {
+  const [customerId, setCustomerId] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [delivery, setDelivery] = useState("");
   const [email, setEmail] = useState("");
@@ -18,6 +19,7 @@ export const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
 
   useEffect(() => {
     if (currentCustomer) {
+      setCustomerId(currentCustomer.customer_id);
       setCustomerName(currentCustomer.name);
       setDelivery(currentCustomer.delivery);
       setEmail(currentCustomer.email);
@@ -32,6 +34,7 @@ export const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
     try {
       const updatedCustomer = {
         ...currentCustomer,
+        customerId,
         name: customerName,
         delivery,
         email,
@@ -51,6 +54,11 @@ export const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
       <div className="flex items-center pb-3">
         <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
         <h2 className="text-[13px] font-[500]">Edit Customer</h2>
+      </div>
+      <div className="mb-2">
+        <label className="text-[14px]" htmlFor="customer_id">
+          Customer ID: {customerId}
+        </label>
       </div>
       <div className="mb-4">
         <label className="text-[14px]" htmlFor="name">

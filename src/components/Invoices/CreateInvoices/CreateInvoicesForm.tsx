@@ -23,6 +23,7 @@ export const CreateInvoicesForm = () => {
   const [customerDetails, setCustomerDetails] = useState<Customers>({
     key: "",
     id: 0,
+    customer_id: "",
     name: "",
     delivery: "",
     email: "",
@@ -143,6 +144,7 @@ export const CreateInvoicesForm = () => {
       setCustomerDetails({
         key: "",
         id: 0,
+        customer_id: "",
         name: "",
         delivery: "",
         email: "",
