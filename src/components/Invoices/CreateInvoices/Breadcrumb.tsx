@@ -26,7 +26,7 @@ export const Breadcrumb = () => {
           className="text-[14px] font-[500] py-2 px-3 rounded cursor-pointer transition-all duration-300 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3]"
           href={"/invoices/invoices-list"}
         >
-          View List
+          Invoices List
         </Link>
       </main>
     </>

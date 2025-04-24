@@ -117,7 +117,6 @@ export const ProductsReportButton: React.FC<ProductsReportButtonProps> = ({
       product.name,
       product.description,
       `${product.price} BDT`,
-      `${product.tax_rate}%`,
       product.category,
       product.stock,
       product.unit,
@@ -127,16 +126,7 @@ export const ProductsReportButton: React.FC<ProductsReportButtonProps> = ({
     autoTable(doc, {
       startY: 65,
       head: [
-        [
-          "#",
-          "Product",
-          "Description",
-          "Price",
-          "Tax Rate",
-          "Category",
-          "Stock",
-          "Unit",
-        ],
+        ["#", "Product", "Description", "Price", "Category", "Stock", "Unit"],
       ],
       body: tableData,
       margin: { horizontal: margin },
@@ -162,7 +152,6 @@ export const ProductsReportButton: React.FC<ProductsReportButtonProps> = ({
         4: { cellWidth: "auto" },
         5: { cellWidth: "auto" },
         6: { cellWidth: "auto" },
-        7: { cellWidth: "auto" },
       },
       theme: "grid",
     });

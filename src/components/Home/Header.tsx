@@ -16,7 +16,7 @@ export const HomeHeader = () => {
           src={user?.logo || logo}
           height={40}
           width={40}
-          alt="Copa Accounting Logo"
+          alt="Copa Business Logo"
         />
         <h1 className="text-[22px] font-bold text-gray-800">
           {user?.company || "Your Company"}

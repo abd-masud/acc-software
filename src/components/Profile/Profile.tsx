@@ -281,7 +281,7 @@ export const ProfileCompound = () => {
                       onChange={handleInputChange}
                       placeholder="Enter first name"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#307DF1] focus:border-[#307DF1] transition-all"
+                      className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                     />
                   </div>
                   <div className="space-y-2">
@@ -296,7 +296,7 @@ export const ProfileCompound = () => {
                       onChange={handleInputChange}
                       placeholder="Enter last name"
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#307DF1] focus:border-[#307DF1] transition-all"
+                      className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                     />
                   </div>
                   <div className="space-y-2">
@@ -310,7 +310,7 @@ export const ProfileCompound = () => {
                       value={formData.company}
                       onChange={handleInputChange}
                       placeholder="Enter company name"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#307DF1] focus:border-[#307DF1] transition-all"
+                      className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                     />
                   </div>
                   <div className="space-y-2">
@@ -330,7 +330,7 @@ export const ProfileCompound = () => {
                       )}
                       <button
                         onClick={triggerLogoInput}
-                        className="flex items-center gap-2 bg-[#307DF1] hover:bg-[#2a6fd8] text-white px-3 py-[10px] rounded-lg text-sm shadow-sm"
+                        className="flex items-center gap-2 bg-[#307DF1] hover:bg-[#2a6fd8] text-white px-3 py-[13px] rounded-lg text-sm shadow-sm"
                       >
                         <FaUpload className="text-xs" />
                         {previewLogo ? "Change Logo" : "Upload Logo"}
@@ -391,7 +391,7 @@ export const ProfileCompound = () => {
                       id="email"
                       value={formData.email}
                       disabled
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700"
+                      className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                     />
                   ) : (
                     <p className="text-gray-900 font-medium">
@@ -411,7 +411,7 @@ export const ProfileCompound = () => {
                       value={formData.contact}
                       onChange={handleInputChange}
                       placeholder="Enter contact number"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#307DF1] focus:border-[#307DF1] transition-all"
+                      className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                     />
                   ) : (
                     <p className="text-gray-900 font-medium">
@@ -433,7 +433,7 @@ export const ProfileCompound = () => {
                     value={formData.address}
                     onChange={handleInputChange}
                     placeholder="Enter your address"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#307DF1] focus:border-[#307DF1] transition-all"
+                    className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                   />
                 ) : (
                   <p className="text-gray-900 font-medium">

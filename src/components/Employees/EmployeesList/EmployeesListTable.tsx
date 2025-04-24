@@ -1,20 +1,14 @@
 "use client";
 
-import {
-  Table,
-  TableColumnsType,
-  Button,
-  Dropdown,
-  MenuProps,
-  Popconfirm,
-  message,
-  Input,
-} from "antd";
+import { Table, TableColumnsType, Button, message, Input, Modal } from "antd";
 import React, { useMemo, useState } from "react";
-import { MdDelete, MdEdit } from "react-icons/md";
+import { MdOutlineDeleteSweep } from "react-icons/md";
 import { Employees, EmployeesTableProps } from "@/types/employees";
 import { EmployeesReportButton } from "./EmployeesReport";
 import { EditEmployeesModal } from "./EditEmployeesModal";
+import { FaEdit } from "react-icons/fa";
+import Link from "next/link";
+import { PiInvoiceBold } from "react-icons/pi";
 
 export const EmployeesListTable: React.FC<EmployeesTableProps> = ({
   employees,
@@ -22,20 +16,34 @@ export const EmployeesListTable: React.FC<EmployeesTableProps> = ({
   loading,
 }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentEmployee, setCurrentEmployee] = useState<Employees | null>(
     null
   );
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employees | null>(
+    null
+  );
   const [searchText, setSearchText] = useState("");
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
 
   const showEditModal = (employee: Employees) => {
     setCurrentEmployee(employee);
     setIsEditModalOpen(true);
   };
 
-  const filteredEmployees = useMemo(() => {
-    if (!searchText) return employees;
+  const showDeleteModal = (customer: Employees) => {
+    setEmployeeToDelete(customer);
+    setDeleteConfirmationText("");
+    setIsDeleteModalOpen(true);
+  };
 
-    return employees.filter((employee) =>
+  const filteredEmployees = useMemo(() => {
+    const sortedEmployees = [...employees].sort((a, b) => {
+      return b.id - a.id;
+    });
+    if (!searchText) return sortedEmployees;
+
+    return sortedEmployees.filter((employee) =>
       Object.values(employee).some(
         (value) =>
           value &&
@@ -67,56 +75,30 @@ export const EmployeesListTable: React.FC<EmployeesTableProps> = ({
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async () => {
+    if (!employeeToDelete) return;
+
     try {
       const response = await fetch("/api/employees", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id: employeeToDelete.id }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete employee");
+        throw new Error("Failed to delete customer");
       }
 
+      message.success("Customer deleted successfully");
+      setIsDeleteModalOpen(false);
+      setDeleteConfirmationText("");
       fetchEmployees();
     } catch {
       message.error("Delete failed");
     }
   };
-
-  const getMenuItems = (record: Employees): MenuProps["items"] => [
-    {
-      key: "edit",
-      label: (
-        <Button
-          icon={<MdEdit />}
-          onClick={() => showEditModal(record)}
-          type="link"
-        >
-          Edit
-        </Button>
-      ),
-    },
-    {
-      key: "delete",
-      label: (
-        <Popconfirm
-          title={`Delete ${record.name}?`}
-          onConfirm={() => handleDelete(record.id)}
-          okText="Yes"
-          cancelText="No"
-        >
-          <Button type="link" danger>
-            <MdDelete />
-            Delete
-          </Button>
-        </Popconfirm>
-      ),
-    },
-  ];
 
   const columns: TableColumnsType<Employees> = [
     {
@@ -151,9 +133,29 @@ export const EmployeesListTable: React.FC<EmployeesTableProps> = ({
     {
       title: "Action",
       render: (_, record) => (
-        <Dropdown menu={{ items: getMenuItems(record) }} trigger={["click"]}>
-          <Button>Options</Button>
-        </Dropdown>
+        <div className="flex justify-center items-center gap-2">
+          <button
+            className="text-white text-[14px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+            onClick={() => showEditModal(record)}
+            title="Edit"
+          >
+            <FaEdit />
+          </button>
+          <Link
+            className="text-white hover:text-white text-[16px] bg-green-600 hover:bg-green-700 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+            href={`/customer-invoices/${record.id}`}
+            title="Invoice"
+          >
+            <PiInvoiceBold />
+          </Link>
+          <button
+            className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+            onClick={() => showDeleteModal(record)}
+            title="Delete"
+          >
+            <MdOutlineDeleteSweep />
+          </button>
+        </div>
       ),
     },
   ];
@@ -191,6 +193,44 @@ export const EmployeesListTable: React.FC<EmployeesTableProps> = ({
         currentEmployee={currentEmployee}
         onSave={handleEditSubmit}
       />
+
+      <Modal
+        title="Confirm Delete Employee"
+        open={isDeleteModalOpen}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        footer={[
+          <Button key="back" onClick={() => setIsDeleteModalOpen(false)}>
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            danger
+            onClick={handleDelete}
+            disabled={deleteConfirmationText !== "DELETE"}
+          >
+            Delete Employee
+          </Button>,
+        ]}
+        destroyOnClose
+      >
+        <div className="space-y-4">
+          <p>
+            To confirm, type{" "}
+            <span className="font-bold">&quot;DELETE&quot;</span> in the box
+            below
+          </p>
+          <input
+            placeholder="DELETE"
+            className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+            value={deleteConfirmationText}
+            onChange={(e) => setDeleteConfirmationText(e.target.value)}
+          />
+          <p className="text-red-500 text-[12px] font-bold">
+            Warning: This action will permanently delete the employee record.
+          </p>
+        </div>
+      </Modal>
     </main>
   );
 };

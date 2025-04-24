@@ -88,7 +88,7 @@ export const RolesAndPermissionsForm = () => {
   const togglePermission = (permissionId: string) => {
     setPermissions(
       permissions.map((p) =>
-        p.id === permissionId ? { ...p, enabled: !p.enabled } : p
+        p.id == permissionId ? { ...p, enabled: !p.enabled } : p
       )
     );
   };
@@ -96,7 +96,7 @@ export const RolesAndPermissionsForm = () => {
   const handleRolePermissionChange = (roleId: string, permissionId: string) => {
     setRoles(
       roles.map((role) => {
-        if (role.id === roleId) {
+        if (role.id == roleId) {
           const hasPermission = role.permissions.includes(permissionId);
           return {
             ...role,
@@ -111,7 +111,7 @@ export const RolesAndPermissionsForm = () => {
   };
 
   const handleAddRole = () => {
-    if (newRole.name.trim() === "") return;
+    if (newRole.name.trim() == "") return;
 
     const role: Role = {
       id: `r${roles.length + 1}`,

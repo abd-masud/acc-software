@@ -9,20 +9,54 @@ import {
   Space,
   Select,
 } from "antd";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { InvoiceData, InvoiceItem, InvoicesTableProps } from "@/types/invoices";
 import { InvoicesReportButton } from "./InvoicesReport";
 import { Customers } from "@/types/customers";
 import dayjs, { Dayjs } from "dayjs";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const SalesReportTable: React.FC<InvoicesTableProps> = ({
   invoices,
   loading,
 }) => {
+  const { user } = useAuth();
   const [searchText, setSearchText] = useState("");
   const [fromDate, setFromDate] = useState<Dayjs | null>(null);
   const [toDate, setToDate] = useState<Dayjs | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
+  const [currencyCode, setCurrencyCode] = useState("USD");
+
+  useEffect(() => {
+    const fetchCurrencies = async () => {
+      try {
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        };
+
+        if (user?.id) {
+          headers["user_id"] = user.id.toString();
+        }
+        const currencyRes = await fetch("/api/currencies", {
+          method: "GET",
+          headers: headers,
+        });
+
+        const currencyJson = await currencyRes.json();
+
+        if (currencyRes.status == 404 || !currencyJson.success) {
+          setCurrencyCode("USD");
+        } else if (currencyJson.data && currencyJson.data.length > 0) {
+          setCurrencyCode(currencyJson.data[0].currency || "USD");
+        }
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        setCurrencyCode("USD");
+      }
+    };
+
+    fetchCurrencies();
+  }, [user?.id]);
 
   // Extract unique customers from invoices
   const customerOptions = useMemo(() => {
@@ -44,7 +78,7 @@ export const SalesReportTable: React.FC<InvoicesTableProps> = ({
     // Apply customer filter
     if (selectedCustomer) {
       result = result.filter(
-        (invoice) => invoice.customer?.id.toString() === selectedCustomer
+        (invoice) => invoice.customer?.id.toString() == selectedCustomer
       );
     }
 
@@ -156,20 +190,34 @@ export const SalesReportTable: React.FC<InvoicesTableProps> = ({
       render: (record: InvoiceData) => (
         <div>
           {record.subtotal > 0 && (
-            <div>Subtotal: {record.subtotal.toFixed(2)} BDT</div>
+            <div>
+              Subtotal: {record.subtotal.toFixed(2)} {currencyCode}
+            </div>
           )}
-          {record.total_tax > 0 && (
-            <div>Tax: {record.total_tax.toFixed(2)} BDT</div>
+          {record.tax > 0 && (
+            <div>
+              Tax: {record.tax.toFixed(2)} {currencyCode}
+            </div>
           )}
           {record.discount > 0 && (
-            <div>Discount: {record.discount.toFixed(2)} BDT</div>
+            <div>
+              Discount: {record.discount.toFixed(2)} {currencyCode}
+            </div>
           )}
-          {record.total > 0 && <div>Total: {record.total.toFixed(2)} BDT</div>}
+          {record.total > 0 && (
+            <div>
+              Total: {record.total.toFixed(2)} {currencyCode}
+            </div>
+          )}
           {record.paid_amount > 0 && (
-            <div>Paid: {record.paid_amount.toFixed(2)} BDT</div>
+            <div>
+              Paid: {record.paid_amount.toFixed(2)} {currencyCode}
+            </div>
           )}
           {record.due_amount > 0 && (
-            <div>Due: {record.due_amount.toFixed(2)} BDT</div>
+            <div>
+              Due: {record.due_amount.toFixed(2)} {currencyCode}
+            </div>
           )}
         </div>
       ),

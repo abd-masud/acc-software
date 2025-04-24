@@ -1,10 +1,10 @@
 export type Products = {
     key: string;
     id: number;
+    product_id: string;
     name: string;
     description: string;
     price: number;
-    tax_rate: number;
     category: string;
     stock: number;
     unit: string;

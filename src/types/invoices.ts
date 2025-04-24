@@ -1,13 +1,13 @@
 import { Customers } from "./customers";
+import { Products } from "./products";
 
 export type InvoiceItem = {
     id: number;
-    product_id: number;
+    product_id: string;
     product: string;
     quantity: number;
     unit_price: number;
     unit: string;
-    tax_rate: number;
     amount: number;
 };
 
@@ -19,7 +19,7 @@ export type InvoiceData = {
     date: string;
     due_date: string;
     subtotal: number;
-    total_tax: number;
+    tax: number;
     discount: number;
     total: number;
     paid_amount: number;
@@ -49,4 +49,24 @@ export interface EditInvoiceModalProps {
 
 export interface InvoicesReportButtonProps {
     invoices: InvoiceData[];
+}
+
+export interface InvoicesItemProps {
+    InvoiceId: number;
+}
+
+export type CustomerOption = {
+    value: number;
+    label: string;
+    customer: Customers;
+};
+
+export type ProductOption = {
+    value: number;
+    label: string;
+    product: Products;
+};
+
+export interface CustomerInvoicesListProps {
+    CustomerId: number;
 }

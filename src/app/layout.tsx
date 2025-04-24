@@ -46,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>Copa Accounting</title>
+        <title>Copa Business</title>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

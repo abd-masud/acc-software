@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // POST - Create a new customer
 export async function POST(request: NextRequest) {
     try {
-        const { user_id, customer_id, name, delivery, email, contact, remarks } = await request.json();
+        const { user_id, customer_id, name, delivery, email, contact, status } = await request.json();
 
         // Basic validation
         if (!user_id || !customer_id || !name || !delivery || !email || !contact) {
@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
 
         // Insert new customer
         const [result] = await db.query<ResultSetHeader>(
-            `INSERT INTO customers (user_id, customer_id, name, delivery, email, contact, remarks)
+            `INSERT INTO customers (user_id, customer_id, name, delivery, email, contact, status)
              VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [user_id, customer_id, name, delivery, email, contact, remarks]
+            [user_id, customer_id, name, delivery, email, contact, status]
         );
 
         if (result.affectedRows == 1) {
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
 // PUT - Update a customer
 export async function PUT(request: NextRequest) {
     try {
-        const { id, customer_id, name, delivery, email, contact, remarks } = await request.json();
+        const { id, customer_id, name, delivery, email, contact, status } = await request.json();
 
         const db = await connectionToDatabase();
 
@@ -131,9 +131,9 @@ export async function PUT(request: NextRequest) {
         // Update customer
         const [result] = await db.query<ResultSetHeader>(
             `UPDATE customers 
-             SET customer_id =?, name = ?, delivery = ?, email = ?, contact = ?, remarks = ?
+             SET customer_id =?, name = ?, delivery = ?, email = ?, contact = ?, status = ?
              WHERE id = ?`,
-            [customer_id, name, delivery, email, contact, remarks, id]
+            [customer_id, name, delivery, email, contact, status, id]
         );
 
         if (result.affectedRows == 1) {

@@ -5,18 +5,18 @@ import { NextRequest, NextResponse } from 'next/server';
 // POST - Create a new product
 export async function POST(request: NextRequest) {
     try {
-        const { user_id, name, description, price, tax_rate, category, stock, unit } = await request.json();
+        const { user_id, product_id, name, description, price, category, stock, unit } = await request.json();
 
-        if (!user_id || !name || !description || !price || !tax_rate || !category || !stock || !unit) {
+        if (!user_id || !product_id || !name || !description || !price || !category || !stock || !unit) {
             return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
         }
 
         const db = await connectionToDatabase();
 
         const [result] = await db.query<ResultSetHeader>(
-            `INSERT INTO products (user_id, name, description, price, tax_rate, category, stock, unit)
+            `INSERT INTO products (user_id, product_id, name, description, price, category, stock, unit)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [user_id, name, description, price, tax_rate, category, stock, unit]
+            [user_id, product_id, name, description, price, category, stock, unit]
         );
 
         if (result.affectedRows == 1) {
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 // PUT - Update a product
 export async function PUT(request: NextRequest) {
     try {
-        const { id, name, description, price, tax_rate, category, stock, unit } = await request.json();
+        const { id, name, description, price, category, stock, unit } = await request.json();
 
         if (!id) {
             return NextResponse.json({ success: false, message: 'Product ID is required' }, { status: 400 });
@@ -85,9 +85,9 @@ export async function PUT(request: NextRequest) {
 
         const [result] = await db.query<ResultSetHeader>(
             `UPDATE products
-             SET name = ?, description = ?, price = ?, tax_rate = ?, category = ?, stock = ?, unit = ?
+             SET name = ?, description = ?, price = ?, category = ?, stock = ?, unit = ?
              WHERE id = ?`,
-            [name, description, price, tax_rate, category, stock, unit, id]
+            [name, description, price, category, stock, unit, id]
         );
 
         if (result.affectedRows == 1) {

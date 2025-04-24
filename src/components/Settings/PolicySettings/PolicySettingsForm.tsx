@@ -2,52 +2,16 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect, useCallback } from "react";
+import { MdAdd, MdRemove } from "react-icons/md";
 
 export const PolicySettingsForm = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<string | null>("terms");
-  const [content, setContent] = useState<Record<string, string>>({
-    terms: "",
-    privacy: "",
-    refund: "",
-  });
+  const [terms, setTerms] = useState<string[]>([]);
+  const [newTerm, setNewTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const MAX_TERMS = 5;
 
-  useEffect(() => {
-    console.log("User ID in effect:", user?.id);
-    if (activeTab && user?.id) {
-      const fetchAllContent = async () => {
-        setIsLoading(true);
-        try {
-          const response = await fetch("/api/policy", {
-            headers: {
-              user_id: user.id.toString(),
-            },
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            const firstRecord = data.data?.[0];
-            if (firstRecord) {
-              setContent({
-                terms: firstRecord.terms || "",
-                privacy: firstRecord.privacy || "",
-                refund: firstRecord.refund || "",
-              });
-            }
-          }
-        } catch (error) {
-          console.error("Error fetching content:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchAllContent();
-    }
-  }, [user?.id, activeTab]);
-
-  const fetchAllContent = useCallback(async () => {
+  const fetchTerms = useCallback(async () => {
     if (!user?.id) return;
 
     setIsLoading(true);
@@ -58,29 +22,25 @@ export const PolicySettingsForm = () => {
         },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        const firstRecord = data.data?.[0];
-        if (firstRecord) {
-          setContent({
-            terms: firstRecord.terms || "",
-            privacy: firstRecord.privacy || "",
-            refund: firstRecord.refund || "",
-          });
-        }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      const { data } = await response.json();
+      const fetchedTerms = Array.isArray(data?.terms) ? data.terms : [];
+      setTerms(fetchedTerms.slice(0, MAX_TERMS));
     } catch (error) {
-      console.error("Error fetching content:", error);
+      console.error("Error fetching terms:", error);
+      setTerms([]);
     } finally {
       setIsLoading(false);
     }
   }, [user?.id]);
 
   useEffect(() => {
-    if (activeTab && user?.id) {
-      fetchAllContent();
+    if (user?.id) {
+      fetchTerms();
     }
-  }, [user?.id, activeTab, fetchAllContent]);
+  }, [user?.id, fetchTerms]);
 
   const handleSave = async () => {
     if (!user?.id) return;
@@ -88,102 +48,108 @@ export const PolicySettingsForm = () => {
     setIsLoading(true);
 
     try {
-      const getResponse = await fetch("/api/policy", {
-        headers: {
-          user_id: user.id.toString(),
-        },
-      });
-
-      let method = "POST";
-
-      if (getResponse.status === 200) {
-        method = "PUT";
-      } else if (getResponse.status === 404) {
-        method = "POST";
-      } else {
-        throw new Error(
-          `Unexpected GET response status: ${getResponse.status}`
-        );
-      }
-
-      const saveResponse = await fetch("/api/policy", {
-        method,
+      const response = await fetch("/api/policy", {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           user_id: user.id.toString(),
         },
-        body: JSON.stringify(content),
+        body: JSON.stringify({ terms }),
       });
 
-      if (!saveResponse.ok) {
-        throw new Error("Failed to save content");
+      if (!response.ok) {
+        throw new Error("Failed to save terms");
       }
     } catch (error) {
-      console.error("Error saving content:", error);
+      console.error("Error saving terms:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const addTerm = () => {
+    if (newTerm.trim() && terms.length < MAX_TERMS) {
+      setTerms([...terms, newTerm]);
+      setNewTerm("");
+    }
+  };
+
+  const removeTerm = (index: number) => {
+    setTerms(terms.filter((_, i) => i !== index));
+  };
+
+  const updateTerm = (index: number, newText: string) => {
+    const updatedTerms = [...terms];
+    updatedTerms[index] = newText;
+    setTerms(updatedTerms);
+  };
+
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
-      <div className="flex space-x-4 mb-3 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab("terms")}
-          className={`px-4 py-2 rounded-md text-[14px] transition-all duration-300 ${
-            activeTab == "terms"
-              ? "bg-[#307EF3] hover:bg-[#478cf3] text-white"
-              : "bg-gray-200 hover:bg-gray-300"
-          }`}
-        >
-          Terms&nbsp;&&nbsp;Conditions
-        </button>
-        <button
-          onClick={() => setActiveTab("privacy")}
-          className={`px-4 py-2 rounded-md text-[14px] transition-all duration-300 ${
-            activeTab == "privacy"
-              ? "bg-[#307EF3] hover:bg-[#478cf3] text-white"
-              : "bg-gray-200 hover:bg-gray-300"
-          }`}
-        >
-          Privacy&nbsp;Policy
-        </button>
-        <button
-          onClick={() => setActiveTab("refund")}
-          className={`px-4 py-2 rounded-md text-[14px] transition-all duration-300 ${
-            activeTab == "refund"
-              ? "bg-[#307EF3] hover:bg-[#478cf3] text-white"
-              : "bg-gray-200 hover:bg-gray-300"
-          }`}
-        >
-          Refund&nbsp;Policy
-        </button>
+      <div className="sm:flex items-center hidden mb-5">
+        <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
+        <h2 className="text-[13px] font-[500]">Terms & Conditions</h2>
       </div>
 
-      {activeTab && (
-        <div>
-          <textarea
-            className="border text-[14px] py-2 px-[10px] w-full h-64 bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
-            value={content[activeTab]}
-            onChange={(e) =>
-              setContent((prev) => ({ ...prev, [activeTab]: e.target.value }))
-            }
-            placeholder={`Enter ${activeTab.replace(/^./, (c) =>
-              c.toUpperCase()
-            )} content...`}
-            disabled={isLoading}
-          />
-          <div className="mt-2 flex justify-end">
-            <button
-              onClick={handleSave}
+      <div className="space-y-3">
+        {terms.map((term, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <input
+              type="text"
+              maxLength={80}
+              className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300"
+              value={term}
+              onChange={(e) => updateTerm(index, e.target.value)}
               disabled={isLoading}
-              className="text-[14px] bg-[#307EF3] hover:bg-[#478cf3] w-40 py-2 rounded text-white cursor-pointer focus:bg-[#307EF3] transition-all duration-300 "
+              placeholder={`Term ${index + 1}`}
+            />
+            <button
+              onClick={() => removeTerm(index)}
+              disabled={isLoading}
+              className="bg-red-500 hover:bg-red-600 px-3 py-3 rounded text-white cursor-pointer transition-all duration-300"
             >
-              {isLoading ? "Saving..." : "Save Changes"}
+              <MdRemove />
             </button>
           </div>
+        ))}
+      </div>
+
+      {terms.length < MAX_TERMS && (
+        <div className="flex items-center gap-2 mt-4">
+          <input
+            type="text"
+            className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300"
+            value={newTerm}
+            onChange={(e) => setNewTerm(e.target.value)}
+            placeholder={`Add term ${terms.length + 1}`}
+            disabled={isLoading}
+            onKeyDown={(e) => e.key === "Enter" && addTerm()}
+          />
+          <button
+            onClick={addTerm}
+            disabled={isLoading || !newTerm.trim()}
+            className="bg-green-600 hover:bg-green-700 px-3 py-3 rounded text-white cursor-pointer transition-all duration-300"
+          >
+            <MdAdd />
+          </button>
         </div>
       )}
+
+      {terms.length >= MAX_TERMS && (
+        <p className="text-sm text-gray-500 mt-4">
+          Maximum of {MAX_TERMS} terms reached.
+        </p>
+      )}
+
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={handleSave}
+          disabled={isLoading}
+          className="text-[14px] bg-[#307EF3] hover:bg-[#478cf3] w-40 py-2 rounded text-white cursor-pointer focus:bg-[#307EF3] transition-all duration-300"
+        >
+          {isLoading ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
     </main>
   );
 };

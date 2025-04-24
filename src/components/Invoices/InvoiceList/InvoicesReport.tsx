@@ -122,7 +122,7 @@ export const InvoicesReportButton: React.FC<InvoicesReportButtonProps> = ({
       invoice.invoice_id,
       `${invoice.customer?.name || ""}\n${invoice.customer?.email || ""}\n${
         invoice.customer?.contact || ""
-      }\n${invoice.customer?.remarks || ""}`,
+      }`,
       invoice.items
         ?.map((item) => `• ${item.product} (${item.quantity} ${item.unit})`)
         .join("\n") || "N/A",
@@ -135,9 +135,7 @@ export const InvoicesReportButton: React.FC<InvoicesReportButtonProps> = ({
         month: "short",
         year: "numeric",
       })}`,
-      `Subtotal: ${invoice.subtotal.toFixed(
-        2
-      )} Tk\nTax: ${invoice.total_tax.toFixed(
+      `Subtotal: ${invoice.subtotal.toFixed(2)} Tk\nTax: ${invoice.tax.toFixed(
         2
       )} Tk\nDiscount: ${invoice.discount.toFixed(
         2

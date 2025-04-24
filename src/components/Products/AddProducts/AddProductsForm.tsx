@@ -3,23 +3,68 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Products } from "@/types/products";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export const AddProductsForm = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [product_id, setProductId] = useState("");
+  const [currencyCode, setCurrencyCode] = useState("USD");
 
   const [formValues, setFormValues] = useState<Omit<Products, "id">>({
     key: "",
+    product_id: "",
     name: "",
     description: "",
     price: 0,
-    tax_rate: 10,
     category: "",
     stock: 0,
     unit: "pcs",
   });
+
+  useEffect(() => {
+    const generateProductId = () => {
+      const compPrefix = user?.company
+        ? user.company.slice(0, 2).toUpperCase()
+        : "CO";
+      const random = Math.floor(10000 + Math.random() * 90000);
+      return `P${compPrefix}${random}`;
+    };
+
+    setProductId(generateProductId());
+  }, [user]);
+
+  useEffect(() => {
+    const fetchCurrencies = async () => {
+      try {
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        };
+
+        if (user?.id) {
+          headers["user_id"] = user.id.toString();
+        }
+        const currencyRes = await fetch("/api/currencies", {
+          method: "GET",
+          headers: headers,
+        });
+
+        const currencyJson = await currencyRes.json();
+
+        if (currencyRes.status == 404 || !currencyJson.success) {
+          setCurrencyCode("USD");
+        } else if (currencyJson.data && currencyJson.data.length > 0) {
+          setCurrencyCode(currencyJson.data[0].currency || "USD");
+        }
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        setCurrencyCode("USD");
+      }
+    };
+
+    fetchCurrencies();
+  }, [user?.id]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -30,7 +75,7 @@ export const AddProductsForm = () => {
     setFormValues({
       ...formValues,
       [id]:
-        id === "price" || id === "tax_rate" || id === "stock"
+        id == "price" || id == "tax_rate" || id == "stock"
           ? Number(value)
           : value,
     });
@@ -43,6 +88,7 @@ export const AddProductsForm = () => {
     const payload = {
       ...formValues,
       user_id: user?.id,
+      product_id: product_id,
     };
 
     try {
@@ -57,10 +103,10 @@ export const AddProductsForm = () => {
       if (res.ok) {
         setFormValues({
           key: "",
+          product_id: "",
           name: "",
           description: "",
           price: 0,
-          tax_rate: 10,
           category: "",
           stock: 0,
           unit: "pcs",
@@ -83,24 +129,39 @@ export const AddProductsForm = () => {
         <h2 className="text-[13px] font-[500]">Add Product Form</h2>
       </div>
       <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="text-[14px]" htmlFor="name">
-            Product Name
-          </label>
-          <input
-            placeholder="Enter product name"
-            className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-            type="text"
-            id="name"
-            value={formValues.name}
-            onChange={handleChange}
-            required
-          />
+        <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4 gap-0">
+          <div className="mb-4">
+            <label className="text-[14px]" htmlFor="product_id">
+              Product ID
+            </label>
+            <input
+              placeholder="Enter product id"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              type="text"
+              id="product_id"
+              value={product_id}
+              readOnly
+            />
+          </div>
+          <div className="mb-4">
+            <label className="text-[14px]" htmlFor="name">
+              Product Name
+            </label>
+            <input
+              placeholder="Enter product name"
+              className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              type="text"
+              id="name"
+              value={formValues.name}
+              onChange={handleChange}
+              required
+            />
+          </div>
         </div>
 
         <div className="mb-4">
           <label className="text-[14px]" htmlFor="description">
-            Description
+            Description (Optional)
           </label>
           <textarea
             placeholder="Enter product description"
@@ -112,10 +173,10 @@ export const AddProductsForm = () => {
           />
         </div>
 
-        <div className="grid sm:grid-cols-3 grid-cols-1 gap-4">
+        <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="price">
-              Price
+              Price ({currencyCode})
             </label>
             <input
               placeholder="0.00"
@@ -123,30 +184,11 @@ export const AddProductsForm = () => {
               type="number"
               id="price"
               min="0"
-              step="0.01"
               value={formValues.price}
               onChange={handleChange}
               required
             />
           </div>
-
-          <div className="mb-4">
-            <label className="text-[14px]" htmlFor="tax_rate">
-              Tax Rate (%)
-            </label>
-            <input
-              placeholder="10"
-              className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-              type="number"
-              id="tax_rate"
-              min="0"
-              max="100"
-              step="0.1"
-              value={formValues.tax_rate}
-              onChange={handleChange}
-            />
-          </div>
-
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="unit">
               Unit

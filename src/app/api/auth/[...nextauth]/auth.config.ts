@@ -88,12 +88,29 @@ export const authOptions: AuthOptions = {
                         );
                         if (newUser.length > 0) {
                             user.id = newUser[0].id.toString();
+                            user.name = newUser[0].name;
+                            user.last_name = newUser[0].last_name;
+                            user.email = newUser[0].email;
+                            user.contact = newUser[0].contact;
+                            user.company = newUser[0].company;
+                            user.logo = newUser[0].logo;
+                            user.address = newUser[0].address;
                             user.role = newUser[0].role;
+                            user.image = newUser[0].image;
                         }
                     } else {
                         user.id = rows[0].id.toString();
+                        user.name = rows[0].name;
+                        user.last_name = rows[0].last_name;
+                        user.email = rows[0].email;
+                        user.contact = rows[0].contact;
+                        user.company = rows[0].company;
+                        user.logo = rows[0].logo;
+                        user.address = rows[0].address;
                         user.role = rows[0].role;
+                        user.image = rows[0].image;
                     }
+
                     return true;
                 } catch {
                     return false;

@@ -2,21 +2,28 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Customers } from "@/types/customers";
-import { InvoiceData, InvoiceItem } from "@/types/invoices";
+import { CustomerOption, InvoiceItem, ProductOption } from "@/types/invoices";
 import { Products } from "@/types/products";
 import { useRouter } from "next/navigation";
+import Select, { StylesConfig } from "react-select";
 import { useState, useEffect } from "react";
 import { FaTrash } from "react-icons/fa";
+import Link from "next/link";
+import dayjs from "dayjs";
+import { DatePicker } from "antd";
 
 export const CreateInvoicesForm = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [invoice_id, setInvoiceNumber] = useState("");
+  const [invoice_id, setInvoiceId] = useState("");
   const [nextId, setNextId] = useState(1);
   const [customers, setCustomers] = useState<Customers[]>([]);
   const [products, setProducts] = useState<Products[]>([]);
-
+  const [currencyCode, setCurrencyCode] = useState("USD");
+  const [taxRate, setTaxRate] = useState(0);
+  const [notes, setNotes] = useState("");
+  const [discountAmount, setDiscountAmount] = useState(0);
   const [selectedCustomer, setSelectedCustomer] = useState<Customers | null>(
     null
   );
@@ -28,35 +35,45 @@ export const CreateInvoicesForm = () => {
     delivery: "",
     email: "",
     contact: "",
-    remarks: "",
+    status: "",
   });
 
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([
     {
       id: 0,
-      product_id: 0,
+      product_id: "",
       product: "",
       quantity: 1,
-      unit_price: 0,
       unit: "",
-      tax_rate: 0,
+      unit_price: 0,
       amount: 0,
     },
   ]);
 
   const [invoiceOptions, setInvoiceOptions] = useState({
-    date: new Date().toISOString().split("T")[0],
-    due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0],
-    discount: 0,
-    paid_amount: "",
-    notes: "",
+    date: dayjs().format("YYYY-MM-DD"),
+    due_date: dayjs().add(7, "day").format("YYYY-MM-DD"),
+    paid_amount: 0,
   });
 
-  // Fetch customers and products
+  const dateFormat = "DD MMM YYYY";
+
+  // Prepare customer options for react-select
+  const customerOptions = customers.map((customer) => ({
+    value: customer.id,
+    label: `${customer.name} (${customer.customer_id})`,
+    customer: customer,
+  }));
+
+  const productOptions = products.map((product) => ({
+    value: product.id,
+    label: `${product.name} (${product.product_id})`,
+    product: product,
+  }));
+
+  // Fetch customers
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCustomers = async () => {
       try {
         const headers: HeadersInit = {
           "Content-Type": "application/json",
@@ -77,6 +94,25 @@ export const CreateInvoicesForm = () => {
             Array.isArray(customersData.data) ? customersData.data : []
           );
         }
+      } catch (error) {
+        console.error("Failed to fetch customers:", error);
+      }
+    };
+
+    fetchCustomers();
+  }, [user?.id]);
+
+  // Fetch products
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        };
+
+        if (user?.id) {
+          headers["user_id"] = user.id.toString();
+        }
 
         const productsRes = await fetch("/api/products", {
           method: "GET",
@@ -90,11 +126,42 @@ export const CreateInvoicesForm = () => {
           );
         }
       } catch (error) {
-        console.error("Failed to fetch data:", error);
+        console.error("Failed to fetch products:", error);
       }
     };
 
-    fetchData();
+    fetchProducts();
+  }, [user?.id]);
+
+  useEffect(() => {
+    const fetchCurrencies = async () => {
+      try {
+        const headers: HeadersInit = {
+          "Content-Type": "application/json",
+        };
+
+        if (user?.id) {
+          headers["user_id"] = user.id.toString();
+        }
+        const currencyRes = await fetch("/api/currencies", {
+          method: "GET",
+          headers: headers,
+        });
+
+        const currencyJson = await currencyRes.json();
+
+        if (currencyRes.status == 404 || !currencyJson.success) {
+          setCurrencyCode("USD");
+        } else if (currencyJson.data && currencyJson.data.length > 0) {
+          setCurrencyCode(currencyJson.data[0].currency || "USD");
+        }
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        setCurrencyCode("USD");
+      }
+    };
+
+    fetchCurrencies();
   }, [user?.id]);
 
   // Calculate invoice totals
@@ -104,79 +171,33 @@ export const CreateInvoicesForm = () => {
       0
     );
 
-    const total_tax = invoiceItems.reduce(
-      (sum, item) => sum + (item.amount * (item.tax_rate / 100) || 0),
-      0
-    );
-
-    const total = subtotal + total_tax - invoiceOptions.discount;
+    const total_tax = subtotal * (taxRate / 100);
+    const total = subtotal + total_tax - discountAmount;
     const due_amount = total - Number(invoiceOptions.paid_amount);
 
-    return { subtotal, total_tax, total, due_amount };
+    return {
+      subtotal,
+      tax: total_tax,
+      total,
+      due_amount,
+      discount: discountAmount,
+    };
   };
 
-  const { subtotal, total_tax, total, due_amount } = calculateTotals();
+  const { subtotal, discount, tax, total, due_amount } = calculateTotals();
 
   // Generate invoice number on component mount
   useEffect(() => {
-    const generateInvoiceNumber = () => {
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      const randomNum = Math.floor(100000 + Math.random() * 900000);
-      return `INV-${year}${month}${day}-${randomNum}`;
+    const generateCustomerId = () => {
+      const compPrefix = user?.company
+        ? user.company.slice(0, 2).toUpperCase()
+        : "CO";
+      const random = Math.floor(10000 + Math.random() * 90000);
+      return `I${compPrefix}${random}`;
     };
 
-    setInvoiceNumber(generateInvoiceNumber());
-  }, []);
-
-  // Handle customer selection
-  const handleCustomerSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const customerId = parseInt(e.target.value);
-    const customer = customers.find((c) => c.id === customerId);
-
-    if (customer) {
-      setSelectedCustomer(customer);
-      setCustomerDetails(customer);
-    } else {
-      setSelectedCustomer(null);
-      setCustomerDetails({
-        key: "",
-        id: 0,
-        customer_id: "",
-        name: "",
-        delivery: "",
-        email: "",
-        contact: "",
-        remarks: "",
-      });
-    }
-  };
-
-  // Handle product selection for an item
-  const handleProductSelect = (itemId: number, product_id: number) => {
-    const product = products.find((p) => p.id === product_id);
-
-    if (product) {
-      setInvoiceItems(
-        invoiceItems.map((item) => {
-          if (item.id === itemId) {
-            return {
-              ...item,
-              product_id: product.id,
-              product: product.name,
-              unit: product.unit,
-              unit_price: product.price,
-              tax_rate: product.tax_rate,
-              amount: item.quantity * product.price,
-            };
-          }
-          return item;
-        })
-      );
-    }
-  };
+    setInvoiceId(generateCustomerId());
+  }, [user]);
 
   const handleItemChange = (
     id: number,
@@ -185,13 +206,13 @@ export const CreateInvoicesForm = () => {
   ) => {
     setInvoiceItems(
       invoiceItems.map((item) => {
-        if (item.id === id) {
+        if (item.id == id) {
           const updatedItem = {
             ...item,
-            [field]: field === "product" ? value : Number(value),
+            [field]: field == "product" ? value : Number(value),
           };
 
-          if (field === "quantity" || field === "unit_price") {
+          if (field == "quantity" || field == "unit_price") {
             updatedItem.amount = updatedItem.quantity * updatedItem.unit_price;
           }
 
@@ -207,12 +228,11 @@ export const CreateInvoicesForm = () => {
       ...invoiceItems,
       {
         id: nextId,
-        product_id: 0,
+        product_id: "",
         product: "",
         quantity: 1,
         unit_price: 0,
         unit: "",
-        tax_rate: 0,
         amount: 0,
       },
     ]);
@@ -225,52 +245,35 @@ export const CreateInvoicesForm = () => {
     }
   };
 
-  const handleOptionsChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    const { id, value } = e.target;
-
-    setInvoiceOptions({
-      ...invoiceOptions,
-      [id]:
-        id === "status"
-          ? (value as "draft" | "sent" | "paid" | "overdue")
-          : id === "notes"
-          ? value
-          : Number(value) || 0,
-    });
-  };
-
   const handleDateChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    value: dayjs.Dayjs | null,
     field: "date" | "due_date"
   ) => {
-    setInvoiceOptions({
-      ...invoiceOptions,
-      [field]: e.target.value,
-    });
+    if (value) {
+      setInvoiceOptions({
+        ...invoiceOptions,
+        [field]: value.format("YYYY-MM-DD"),
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
-    const invoiceData: InvoiceData = {
-      id: 0,
+    const invoiceData = {
       customer: customerDetails,
       items: invoiceItems,
       invoice_id,
       date: invoiceOptions.date,
       due_date: invoiceOptions.due_date,
       subtotal,
-      total_tax,
-      discount: invoiceOptions.discount,
+      tax,
+      discount,
       total,
       paid_amount: Number(invoiceOptions.paid_amount),
       due_amount,
-      notes: invoiceOptions.notes,
+      notes,
       user_id: user?.id as number,
     };
 
@@ -295,6 +298,61 @@ export const CreateInvoicesForm = () => {
     }
   };
 
+  const customerSelectStyles: StylesConfig<CustomerOption, false> = {
+    control: (base) => ({
+      ...base,
+      borderColor: "#E5E7EB",
+      "&:hover": {
+        borderColor: "#E5E7EB",
+      },
+      minHeight: "48px",
+      fontSize: "14px",
+      boxShadow: "none",
+      backgroundColor: "#F2F4F7",
+    }),
+    option: (base, state) => ({
+      ...base,
+      fontSize: "14px",
+      backgroundColor: state.isSelected ? "#F2F4F7" : "white",
+      color: "black",
+      "&:hover": {
+        backgroundColor: "#F2F4F7",
+      },
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+    }),
+  };
+
+  const productSelectStyles: StylesConfig<ProductOption, false> = {
+    control: (base) => ({
+      ...base,
+      borderColor: "#E5E7EB",
+      "&:hover": {
+        borderColor: "#E5E7EB",
+      },
+      minHeight: "48px",
+      fontSize: "14px",
+      boxShadow: "none",
+      backgroundColor: "#F2F4F7",
+    }),
+    option: (base, state) => ({
+      ...base,
+      fontSize: "14px",
+      backgroundColor: state.isSelected ? "#F2F4F7" : "white",
+      color: "black",
+      "&:hover": {
+        backgroundColor: "#F2F4F7",
+      },
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+    }),
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+  };
+
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
       <div className="flex items-center pb-5">
@@ -305,12 +363,12 @@ export const CreateInvoicesForm = () => {
       <form onSubmit={handleSubmit}>
         {/* Invoice Header */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="mb-4">
+          <div>
             <label className="text-[14px] block mb-1" htmlFor="invoice_id">
               Invoice ID
             </label>
             <input
-              className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="invoice_id"
               value={invoice_id}
@@ -318,30 +376,32 @@ export const CreateInvoicesForm = () => {
             />
           </div>
 
-          <div className="mb-4">
+          <div>
             <label className="text-[14px] block mb-1" htmlFor="date">
               Invoice Date
             </label>
-            <input
-              className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
+            <DatePicker
+              className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="date"
               id="date"
-              value={invoiceOptions.date}
-              onChange={(e) => handleDateChange(e, "date")}
+              format={dateFormat}
+              value={dayjs(invoiceOptions.date)}
+              onChange={(value) => handleDateChange(value, "date")}
               required
             />
           </div>
 
-          <div className="mb-4">
+          <div>
             <label className="text-[14px] block mb-1" htmlFor="due_date">
               Due Date
             </label>
-            <input
-              className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
+            <DatePicker
+              className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="date"
               id="due_date"
-              value={invoiceOptions.due_date}
-              onChange={(e) => handleDateChange(e, "due_date")}
+              format={dateFormat}
+              value={dayjs(invoiceOptions.due_date)}
+              onChange={(value) => handleDateChange(value, "due_date")}
               required
             />
           </div>
@@ -349,25 +409,54 @@ export const CreateInvoicesForm = () => {
 
         {/* Customer Details */}
         <div className="mb-6 p-4 border rounded-lg">
-          <h3 className="text-[15px] font-semibold mb-3">Customer Details</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-[15px] font-semibold mb-3">Customer Details</h3>
+            <Link
+              className="text-[12px] py-1 px-3 rounded bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors duration-300"
+              href={"/customers/add-customers"}
+            >
+              Add Customers
+            </Link>
+          </div>
           <div className="mb-4">
-            <label className="text-[14px]" htmlFor="customerSelect">
+            <label className="text-[14px]" htmlFor="customer">
               Customer Name
             </label>
-            <select
-              id="customerSelect"
-              className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
-              value={selectedCustomer?.id || ""}
-              onChange={handleCustomerSelect}
+            <Select<{
+              value: number;
+              label: string;
+              customer: Customers;
+            }>
+              id="customer"
+              className="text-[14px] mt-2"
+              options={customerOptions}
+              value={customerOptions.find(
+                (option) => option.value == selectedCustomer?.id
+              )}
+              onChange={(selectedOption) => {
+                if (selectedOption) {
+                  setSelectedCustomer(selectedOption.customer);
+                  setCustomerDetails(selectedOption.customer);
+                } else {
+                  setSelectedCustomer(null);
+                  setCustomerDetails({
+                    key: "",
+                    id: 0,
+                    customer_id: "",
+                    name: "",
+                    delivery: "",
+                    email: "",
+                    contact: "",
+                    status: "",
+                  });
+                }
+              }}
+              placeholder="Select customer"
+              isClearable
+              isSearchable
+              styles={customerSelectStyles}
               required
-            >
-              <option value="">Select a customer</option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="delivery">
@@ -375,7 +464,7 @@ export const CreateInvoicesForm = () => {
             </label>
             <input
               placeholder="Enter delivery address"
-              className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="delivery"
               value={customerDetails.delivery}
@@ -389,7 +478,7 @@ export const CreateInvoicesForm = () => {
               </label>
               <input
                 placeholder="Enter email address"
-                className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="email"
                 id="email"
                 value={customerDetails.email}
@@ -402,25 +491,13 @@ export const CreateInvoicesForm = () => {
               </label>
               <input
                 placeholder="Enter contact number"
-                className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="text"
                 id="contact"
                 value={customerDetails.contact}
                 readOnly
               />
             </div>
-          </div>
-          <div>
-            <label className="text-[14px]" htmlFor="remarks">
-              Remarks
-            </label>
-            <textarea
-              placeholder="Enter remarks"
-              className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
-              id="remarks"
-              value={customerDetails.remarks}
-              readOnly
-            />
           </div>
         </div>
 
@@ -431,13 +508,13 @@ export const CreateInvoicesForm = () => {
             <button
               type="button"
               onClick={addInvoiceItem}
-              className="text-[14px] py-1 px-3 rounded bg-blue-100 text-blue-600 hover:bg-blue-200"
+              className="text-[12px] py-1 px-3 rounded bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors duration-300"
             >
               Add Item
             </button>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto relative">
             <table className="border rounded-lg xl:w-full w-[1024px]">
               <thead className="bg-gray-50">
                 <tr>
@@ -454,9 +531,6 @@ export const CreateInvoicesForm = () => {
                     Unit Price
                   </th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tax Rate
-                  </th>
-                  <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Amount
                   </th>
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -468,27 +542,65 @@ export const CreateInvoicesForm = () => {
                 {invoiceItems.map((item) => (
                   <tr key={item.id} className="border-t">
                     <td className="px-4 py-2">
-                      <select
-                        className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
-                        value={item.product_id}
+                      <Select<{
+                        value: number;
+                        label: string;
+                        product: Products;
+                      }>
+                        className="text-[14px] mt-2"
+                        options={productOptions}
+                        value={productOptions.find(
+                          (option) =>
+                            option.value.toString() === item.product_id
+                        )}
+                        onChange={(selectedOption) => {
+                          if (selectedOption) {
+                            const product = selectedOption.product;
+                            setInvoiceItems(
+                              invoiceItems.map((i) =>
+                                i.id == item.id
+                                  ? {
+                                      ...i,
+                                      product_id: product.product_id,
+                                      product: product.name,
+                                      unit: product.unit,
+                                      unit_price: product.price,
+                                      amount: i.quantity * product.price,
+                                    }
+                                  : i
+                              )
+                            );
+                          } else {
+                            setInvoiceItems(
+                              invoiceItems.map((i) =>
+                                i.id == item.id
+                                  ? {
+                                      ...i,
+                                      product_id: "",
+                                      product: "",
+                                      unit: "",
+                                      unit_price: 0,
+                                      amount: 0,
+                                    }
+                                  : i
+                              )
+                            );
+                          }
+                        }}
+                        placeholder="Select product"
+                        isClearable
+                        isSearchable
+                        menuPosition="fixed"
+                        styles={productSelectStyles}
                         required
-                        onChange={(e) =>
-                          handleProductSelect(item.id, parseInt(e.target.value))
-                        }
-                      >
-                        <option value="0">Select Product</option>
-                        {products.map((product) => (
-                          <option key={product.id} value={product.id}>
-                            {product.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </td>
                     <td className="px-4 py-2">
                       <input
                         type="number"
                         min="1"
-                        className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
+                        placeholder="Enter quantity"
+                        className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                         value={item.quantity}
                         onChange={(e) =>
                           handleItemChange(item.id, "quantity", e.target.value)
@@ -500,7 +612,8 @@ export const CreateInvoicesForm = () => {
                       <input
                         type="text"
                         min="1"
-                        className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
+                        placeholder="Enter unit"
+                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                         value={item.unit}
                         readOnly
                       />
@@ -509,7 +622,8 @@ export const CreateInvoicesForm = () => {
                       <input
                         type="number"
                         min="0"
-                        className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
+                        placeholder="Enter unit price"
+                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                         value={item.unit_price}
                         readOnly
                       />
@@ -517,16 +631,8 @@ export const CreateInvoicesForm = () => {
                     <td className="px-4 py-2">
                       <input
                         type="number"
-                        min="0"
-                        className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
-                        value={item.tax_rate}
-                        readOnly
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="number"
-                        className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
+                        placeholder="Enter amount"
+                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                         value={item.amount.toFixed(2)}
                         readOnly
                       />
@@ -560,8 +666,8 @@ export const CreateInvoicesForm = () => {
                 placeholder="Enter notes..."
                 className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
                 id="notes"
-                value={invoiceOptions.notes}
-                onChange={handleOptionsChange}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
               />
             </div>
           </div>
@@ -570,43 +676,72 @@ export const CreateInvoicesForm = () => {
             <div className="flex justify-between mb-2">
               <span className="text-[14px]">Subtotal:</span>
               <span className="text-[14px] font-medium">
-                {subtotal.toFixed(2)} BDT
+                {subtotal.toFixed(2)} {currencyCode}
               </span>
             </div>
             <div className="flex justify-between mb-2">
-              <span className="text-[14px]">Total Tax:</span>
-              <span className="text-[14px] font-medium">
-                {total_tax.toFixed(2)} BDT
-              </span>
+              <span className="text-[14px]">Tax:</span>
+              <div className="space-x-1 mr-[14px]">
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  className="border text-[14px] w-20 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
+                  value={taxRate}
+                  onChange={(e) => setTaxRate(Number(e.target.value))}
+                />
+                <span className="text-[14px] font-medium">%</span>
+              </div>
             </div>
             <div className="flex justify-between mb-2">
               <span className="text-[14px]">Discount:</span>
-              <span className="text-[14px] font-medium">
-                {invoiceOptions.discount.toFixed(2)} BDT
-              </span>
+              <div className="space-x-1">
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  className="border text-[14px] w-20 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
+                  value={discountAmount}
+                  onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                />
+                <span className="text-[14px] font-medium">{currencyCode}</span>
+              </div>
             </div>
-            <div className="border-t my-2"></div>
+
             <div className="flex justify-between font-semibold mb-2">
               <span className="text-[14px]">Total Amount:</span>
-              <span className="text-[14px]">{total.toFixed(2)} BDT</span>
+              <span className="text-[14px]">
+                {total.toFixed(2)} {currencyCode}
+              </span>
             </div>
             <div className="flex justify-between items-center mb-2">
               <span className="text-[14px]">Paid Amount:</span>
-              <input
-                type="number"
-                min="0"
-                max={total}
-                placeholder="0.00"
-                className="border text-[14px] py-2 w-20 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
-                value={invoiceOptions.paid_amount}
-                onChange={(e) => handleOptionsChange(e)}
-                id="paid_amount"
-              />
+              <div className="space-x-1">
+                <input
+                  type="number"
+                  min="0"
+                  max={total}
+                  placeholder="0.00"
+                  className="border text-[14px] w-20 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
+                  value={invoiceOptions.paid_amount}
+                  onChange={(e) =>
+                    setInvoiceOptions({
+                      ...invoiceOptions,
+                      paid_amount: Number(e.target.value),
+                    })
+                  }
+                />
+                <span className="text-[14px] font-semibold">
+                  {currencyCode}
+                </span>
+              </div>
             </div>
             <div className="border-t my-2"></div>
             <div className="flex justify-between font-semibold text-blue-600">
               <span className="text-[14px]">Due Amount:</span>
-              <span className="text-[14px]">{due_amount.toFixed(2)} BDT</span>
+              <span className="text-[14px]">
+                {due_amount.toFixed(2)} {currencyCode}
+              </span>
             </div>
           </div>
         </div>

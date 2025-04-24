@@ -38,7 +38,7 @@ export const SMTPSettingsForm = () => {
       // Update existing
       setSettings(
         settings.map((item) =>
-          item.id === editingId ? { ...data, id: editingId } : item
+          item.id == editingId ? { ...data, id: editingId } : item
         )
       );
       setEditingId(null);

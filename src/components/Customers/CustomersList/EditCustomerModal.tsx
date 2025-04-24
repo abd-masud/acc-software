@@ -15,7 +15,6 @@ export const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
   const [delivery, setDelivery] = useState("");
   const [email, setEmail] = useState("");
   const [contact, setContact] = useState("");
-  const [remarks, setRemarks] = useState("");
 
   useEffect(() => {
     if (currentCustomer) {
@@ -24,7 +23,6 @@ export const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
       setDelivery(currentCustomer.delivery);
       setEmail(currentCustomer.email);
       setContact(currentCustomer.contact);
-      setRemarks(currentCustomer.remarks);
     }
   }, [currentCustomer]);
 
@@ -39,7 +37,6 @@ export const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
         delivery,
         email,
         contact,
-        remarks,
       };
 
       await onSave(updatedCustomer);
@@ -57,8 +54,16 @@ export const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
       </div>
       <div className="mb-2">
         <label className="text-[14px]" htmlFor="customer_id">
-          Customer ID: {customerId}
+          Customer ID
         </label>
+        <input
+          placeholder="Enter customer id"
+          className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+          type="text"
+          id="customer_id"
+          value={customerId}
+          readOnly
+        />
       </div>
       <div className="mb-4">
         <label className="text-[14px]" htmlFor="name">
@@ -99,7 +104,8 @@ export const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
             type="email"
             id="email"
             value={email}
-            readOnly
+            onChange={(e) => setEmail(e.target.value)}
+            required
           />
         </div>
         <div className="mb-4">
@@ -131,18 +137,6 @@ export const EditCustomerModal: React.FC<EditCustomerModalProps> = ({
             }}
           />
         </div>
-      </div>
-      <div className="mb-4">
-        <label className="text-[14px]" htmlFor="remarks">
-          Remarks
-        </label>
-        <textarea
-          placeholder="Enter remarks"
-          className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-          id="remarks"
-          value={remarks}
-          onChange={(e) => setRemarks(e.target.value)}
-        />
       </div>
     </Modal>
   );

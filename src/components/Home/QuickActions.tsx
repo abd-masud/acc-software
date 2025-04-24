@@ -11,10 +11,9 @@ type QuickAction = {
   title: string;
   description: string;
   icon: React.ReactNode;
-  bg: string;
   textColor: string;
   link: string;
-  hoverEffect: string;
+  effect: string;
 };
 
 export const QuickActions = () => {
@@ -28,10 +27,9 @@ export const QuickActions = () => {
           size={24}
         />
       ),
-      bg: "bg-blue-50",
       textColor: "text-blue-600",
       link: "/customers/add-customers",
-      hoverEffect: "hover:bg-blue-100 hover:border-blue-300",
+      effect: "bg-blue-50 hover:bg-blue-100 border-blue-300",
     },
     {
       title: "Create Invoice",
@@ -42,10 +40,9 @@ export const QuickActions = () => {
           size={24}
         />
       ),
-      bg: "bg-emerald-50",
       textColor: "text-emerald-600",
       link: "/invoices/create-invoices",
-      hoverEffect: "hover:bg-emerald-100 hover:border-emerald-300",
+      effect: "bg-emerald-50 hover:bg-emerald-100 border-emerald-300",
     },
     {
       title: "Add Products",
@@ -59,10 +56,9 @@ export const QuickActions = () => {
           <FiPlus className="absolute -top-1 -right-1 text-xs bg-white rounded-full p-0.5 border" />
         </>
       ),
-      bg: "bg-amber-50",
       textColor: "text-amber-600",
       link: "/products/add-products",
-      hoverEffect: "hover:bg-amber-100 hover:border-amber-300",
+      effect: "bg-amber-50 hover:bg-amber-100 border-amber-300",
     },
     {
       title: "Sales Report",
@@ -73,10 +69,9 @@ export const QuickActions = () => {
           size={24}
         />
       ),
-      bg: "bg-purple-50",
       textColor: "text-purple-600",
       link: "/sales-report",
-      hoverEffect: "hover:bg-purple-100 hover:border-purple-300",
+      effect: "bg-purple-50 hover:bg-purple-100 border-purple-300",
     },
   ];
 
@@ -94,10 +89,10 @@ export const QuickActions = () => {
           <Link
             key={index}
             href={action.link}
-            className={`group relative p-5 rounded-xl border border-transparent transition-all duration-300 ${action.bg} ${action.hoverEffect} flex flex-col items-center text-center`}
+            className={`group relative p-5 rounded-xl border transition-all duration-300 ${action.effect} flex flex-col items-center text-center`}
           >
             <div
-              className={`relative mb-4 p-3 rounded-full ${action.bg} ${action.textColor}`}
+              className={`relative mb-4 p-3 rounded-full ${action.textColor}`}
             >
               {action.icon}
             </div>

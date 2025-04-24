@@ -16,20 +16,16 @@ export const AddCustomersForm = () => {
     delivery: "",
     email: "",
     contact: "",
-    remarks: "",
+    status: "",
   });
 
   useEffect(() => {
     const generateCustomerId = () => {
       const compPrefix = user?.company
         ? user.company.slice(0, 2).toUpperCase()
-        : "COM";
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      const random = Math.floor(1000 + Math.random() * 9000);
-      return `C${compPrefix}${year}${month}${day}${random}`;
+        : "CO";
+      const random = Math.floor(10000 + Math.random() * 90000);
+      return `C${compPrefix}${random}`;
     };
 
     setCustomerId(generateCustomerId());
@@ -49,6 +45,7 @@ export const AddCustomersForm = () => {
       ...formValues,
       user_id: user?.id,
       customer_id: customer_id,
+      status: "New",
     };
 
     try {
@@ -67,7 +64,7 @@ export const AddCustomersForm = () => {
           delivery: "",
           email: "",
           contact: "",
-          remarks: "",
+          status: "",
         });
         router.push("/customers/customers-list");
       } else {
@@ -94,7 +91,7 @@ export const AddCustomersForm = () => {
             </label>
             <input
               placeholder="Enter customer id"
-              className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="customer_id"
               value={customer_id}
@@ -175,18 +172,6 @@ export const AddCustomersForm = () => {
               }}
             />
           </div>
-        </div>
-        <div className="">
-          <label className="text-[14px]" htmlFor="remarks">
-            Remarks
-          </label>
-          <textarea
-            placeholder="Enter remarks"
-            className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-            id="remarks"
-            value={formValues.remarks}
-            onChange={handleChange}
-          />
         </div>
         <div className="flex justify-end">
           <input

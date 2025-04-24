@@ -49,7 +49,7 @@ export const SideBar = () => {
       >
         <Image height={30} src={logo} alt={"Logo"} priority />
         <span className="text-white text-[18px] font-bold ml-2">
-          Copa Accounting
+          Copa Business
         </span>
       </Link>
       <Link href={"/"} className={linkClass("/")} onClick={closeSubmenu}>
@@ -142,6 +142,49 @@ export const SideBar = () => {
             onClick={handleSubMenuClick}
           >
             Invoices List
+          </Link>
+        </div>
+      </div>
+
+      <button
+        onClick={() => toggleSection("quotes")}
+        className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+          pathname.includes("/quotes") ? "text-white bg-[#1E2639]" : ""
+        }`}
+      >
+        <div className="flex items-center">
+          <div
+            className={`h-[23px] w-[3px] group-hover:bg-[#307DF1] transition duration-300 ${
+              pathname.includes("/quotes") ? "bg-[#307DF1]" : "bg-transparent"
+            }`}
+          ></div>
+          <FaMoneyBillTrendUp className="ml-[21px] text-[16px] mr-3 w-5" />
+          Quotes
+        </div>
+        <FaChevronDown />
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-500 transform ${
+          openSection == "quotes"
+            ? "max-h-[90px] opacity-100"
+            : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="pl-[56px] bg-[#1D1B31] text-[13px]">
+          <Link
+            className={subLinkClass("/quotes/create-quotes")}
+            href="/quotes/create-quotes"
+            onClick={handleSubMenuClick}
+          >
+            Create Quotes
+          </Link>
+
+          <Link
+            className={subLinkClass("/quotes/quotes-list")}
+            href="/quotes/quotes-list"
+            onClick={handleSubMenuClick}
+          >
+            Quotes List
           </Link>
         </div>
       </div>
@@ -264,11 +307,19 @@ export const SideBar = () => {
       <div
         className={`overflow-hidden transition-all duration-500 transform ${
           openSection == "settings"
-            ? "max-h-[190px] opacity-100"
+            ? "max-h-[225px] opacity-100"
             : "max-h-0 opacity-0"
         }`}
       >
         <div className="pl-[56px] bg-[#1D1B31] text-[13px]">
+          <Link
+            className={subLinkClass("/settings/currency-settings")}
+            href="/settings/currency-settings"
+            onClick={handleSubMenuClick}
+          >
+            Currency Settings
+          </Link>
+
           <Link
             className={subLinkClass("/settings/general-settings")}
             href="/settings/general-settings"

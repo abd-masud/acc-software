@@ -2,9 +2,9 @@
 
 import { Modal, message } from "antd";
 import { useEffect, useState } from "react";
-import { EditInvoiceModalProps, InvoiceItem } from "@/types/invoices";
+import { EditInvoiceModalProps } from "@/types/invoices";
 
-export const EditInvoicesModal: React.FC<EditInvoiceModalProps> = ({
+export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
   isOpen,
   onClose,
   currentInvoice,
@@ -13,7 +13,6 @@ export const EditInvoicesModal: React.FC<EditInvoiceModalProps> = ({
   const [invoiceId, setInvoiceId] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [delivery, setDelivery] = useState("");
-  const [items, setItems] = useState<InvoiceItem[]>([]);
   const [total, setTotal] = useState("");
   const [paid, setPaid] = useState("");
   const [due, setDue] = useState("");
@@ -23,7 +22,6 @@ export const EditInvoicesModal: React.FC<EditInvoiceModalProps> = ({
       setInvoiceId(currentInvoice.invoice_id);
       setCustomerName(currentInvoice.customer.name);
       setDelivery(currentInvoice.customer.delivery);
-      setItems(currentInvoice.items);
       setTotal(currentInvoice.total.toFixed(2));
       setPaid(currentInvoice.paid_amount.toFixed(2));
       const calculatedDue = (
@@ -63,7 +61,7 @@ export const EditInvoicesModal: React.FC<EditInvoiceModalProps> = ({
     <Modal open={isOpen} onOk={handleSubmit} onCancel={onClose} okText="Save">
       <div className="flex items-center pb-3">
         <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
-        <h2 className="text-[13px] font-[500]">Edit Invoice</h2>
+        <h2 className="text-[13px] font-[500]">Invoice</h2>
       </div>
       <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
         <div className="mb-4">
@@ -103,27 +101,6 @@ export const EditInvoicesModal: React.FC<EditInvoiceModalProps> = ({
           value={delivery}
           readOnly
         />
-      </div>
-      <div className="mb-4">
-        <h3 className="text-[14px] font-medium mb-2">Invoice Items</h3>
-        <div className="grid sm:gap-0 gap-2">
-          {items.map((item, index) => (
-            <div key={index} className="grid sm:grid-cols-4 grid-cols-2">
-              <div className="border px-3 py-1">
-                <p className="text-[14px]">{item.product}</p>
-              </div>
-              <div className="border px-3 py-1">
-                <p className="text-[14px]">{`${item.quantity} ${item.unit}`}</p>
-              </div>
-              <div className="border px-3 py-1">
-                <p className="text-[14px]">{`${item.amount} BDT`}</p>
-              </div>
-              <div className="border px-3 py-1">
-                <p className="text-[14px]">{`${item.tax_rate}% Tax`}</p>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
 
       <div className="grid md:grid-cols-3 grid-cols-1 gap-3">

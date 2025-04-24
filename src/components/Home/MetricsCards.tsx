@@ -12,63 +12,116 @@ export const MetricsCards = () => {
   const [invoicesData, setInvoicesData] = useState<InvoiceData[]>([]);
   const [productsData, setProductsData] = useState<Products[]>([]);
   const [customersData, setCustomersData] = useState<Customers[]>([]);
+  const [currencyCode, setCurrencyCode] = useState("USD");
   const [loading, setLoading] = useState<boolean>(true);
 
-  const fetchData = useCallback(async () => {
+  const getHeaders = useCallback(() => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (user?.id) {
+      headers["user_id"] = user.id.toString();
+    }
+
+    return headers;
+  }, [user?.id]);
+
+  const fetchInvoices = useCallback(async () => {
+    try {
+      const response = await fetch("/api/invoices", {
+        method: "GET",
+        headers: getHeaders(),
+      });
+      const json: InvoiceApiResponse = await response.json();
+      if (!response.ok || !json.success) {
+        throw new Error(json.message || "Failed to fetch invoices");
+      }
+      setInvoicesData(json.data);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
+    }
+  }, [getHeaders]);
+
+  const fetchProducts = useCallback(async () => {
+    try {
+      const response = await fetch("/api/products", {
+        method: "GET",
+        headers: getHeaders(),
+      });
+      const json: ProductApiResponse = await response.json();
+      if (!response.ok || !json.success) {
+        throw new Error(json.message || "Failed to fetch products");
+      }
+      setProductsData(json.data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  }, [getHeaders]);
+
+  const fetchCustomers = useCallback(async () => {
+    try {
+      const response = await fetch("/api/customers", {
+        method: "GET",
+        headers: getHeaders(),
+      });
+      const json: CustomerApiResponse = await response.json();
+      if (!response.ok || !json.success) {
+        throw new Error(json.message || "Failed to fetch customers");
+      }
+      setCustomersData(json.data);
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    }
+  }, [getHeaders]);
+
+  const fetchCurrency = useCallback(async () => {
+    try {
+      const response = await fetch("/api/currencies", {
+        method: "GET",
+        headers: getHeaders(),
+      });
+
+      const json = await response.json();
+
+      if (response.status == 404 || !json.success) {
+        setCurrencyCode("USD");
+        return;
+      }
+
+      if (json.data && json.data.length > 0) {
+        setCurrencyCode(json.data[0].currency || "USD");
+      } else {
+        setCurrencyCode("USD");
+      }
+    } catch (error) {
+      console.error("Error fetching currency:", error);
+      setCurrencyCode("USD");
+    }
+  }, [getHeaders]);
+
+  const fetchAllData = useCallback(async () => {
     setLoading(true);
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-
-      if (user?.id) {
-        headers["user_id"] = user.id.toString();
-      }
-
-      // Fetch invoices
-      const invoicesResponse = await fetch("/api/invoices", {
-        method: "GET",
-        headers,
-      });
-      const invoicesJson: InvoiceApiResponse = await invoicesResponse.json();
-      if (!invoicesResponse.ok || !invoicesJson.success) {
-        throw new Error(invoicesJson.message || "Failed to fetch invoices");
-      }
-      setInvoicesData(invoicesJson.data);
-
-      // Fetch products
-      const productsResponse = await fetch("/api/products", {
-        method: "GET",
-        headers,
-      });
-      const productsJson: ProductApiResponse = await productsResponse.json();
-      if (!productsResponse.ok || !productsJson.success) {
-        throw new Error(productsJson.message || "Failed to fetch products");
-      }
-      setProductsData(productsJson.data);
-
-      // Fetch customers
-      const customersResponse = await fetch("/api/customers", {
-        method: "GET",
-        headers,
-      });
-      const customersJson: CustomerApiResponse = await customersResponse.json();
-      if (!customersResponse.ok || !customersJson.success) {
-        throw new Error(customersJson.message || "Failed to fetch customers");
-      }
-      setCustomersData(customersJson.data);
+      await Promise.all([
+        fetchInvoices(),
+        fetchProducts(),
+        fetchCustomers(),
+        fetchCurrency(),
+      ]);
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [fetchInvoices, fetchProducts, fetchCustomers, fetchCurrency]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (user) {
+      fetchAllData();
+    }
+  }, [fetchAllData, user]);
 
-  // Calculate metrics from the fetched data
   const calculateMetrics = () => {
     const totalRevenue = invoicesData.reduce((sum, invoice) => {
       return sum + invoice.paid_amount;
@@ -84,26 +137,26 @@ export const MetricsCards = () => {
     return [
       {
         title: "Total Revenue",
-        value: `$${totalRevenue.toLocaleString()}`,
-        change: "On Target", // Status instead of change
+        value: `${totalRevenue.toLocaleString()} ${currencyCode}`,
+        change: <span className="text-green-600">On Target</span>,
         icon: <FiTrendingUp className="text-green-500" size={24} />,
       },
       {
         title: "Receivables",
-        value: `$${totalDue.toLocaleString()}`,
-        change: "Action Needed", // Status indicator
+        value: `${totalDue.toLocaleString()} ${currencyCode}`,
+        change: <span className="text-red-600">Action Needed</span>,
         icon: <FiFileText className="text-yellow-500" size={24} />,
       },
       {
         title: "Products",
-        value: totalProducts.toString(),
-        change: "In Stock", // Inventory status
+        value: `${totalProducts.toString()} Items`,
+        change: <span className="text-green-600">In Stock</span>,
         icon: <FiPackage className="text-blue-500" size={24} />,
       },
       {
         title: "Customers",
-        value: totalCustomers.toString(),
-        change: "Active", // Customer status
+        value: `${totalCustomers.toString()}`,
+        change: <span className="text-green-600">Active</span>,
         icon: <FiUsers className="text-purple-500" size={24} />,
       },
     ];
@@ -132,7 +185,7 @@ export const MetricsCards = () => {
       {metrics.map((metric, index) => (
         <div
           key={index}
-          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border"
         >
           <div className="flex justify-between items-start">
             <div>
@@ -142,9 +195,11 @@ export const MetricsCards = () => {
               <p className="text-2xl font-bold mt-2 text-gray-800">
                 {metric.value}
               </p>
-              <p className="text-sm mt-1 text-green-600">{metric.change}</p>
+              <p className="text-sm mt-1">{metric.change}</p>
             </div>
-            <div className="p-2 rounded-lg bg-gray-50">{metric.icon}</div>
+            <div className="p-2 rounded-lg bg-gray-50 border">
+              {metric.icon}
+            </div>
           </div>
         </div>
       ))}

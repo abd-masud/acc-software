@@ -46,14 +46,14 @@ export async function POST(req: NextRequest) {
 
     // Send the OTP email to the user
     await transporter.sendMail({
-      from: `Copa Accounting <${process.env.EMAIL_USER}>`,
+      from: `Copa Business <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Your OTP Code",
       html: `
-        <h1>Hi, Welcome to Copa Accounting!</h1>
+        <h1>Hi, Welcome to Copa Business!</h1>
         <p><b>OTP:</b> Dear User, your OTP code is <b>${otp}</b>. Please do not share this PIN with anyone.
         <br>It is valid for 2 minutes.</p>
-        <p>Best Regards,<br>Copa Accounting</p>
+        <p>Best Regards,<br>Copa Business</p>
       `,
     });
 

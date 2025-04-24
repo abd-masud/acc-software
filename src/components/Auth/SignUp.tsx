@@ -158,7 +158,7 @@ export const SignUpComponent = () => {
                   alt={"Logo"}
                 />
                 <p className="text-black font-[600] sm:text-[24px] text-[22px]">
-                  Copa Accounting
+                  Copa Business
                 </p>
               </div>
             </Link>
@@ -324,7 +324,7 @@ export const SignUpComponent = () => {
               />
               <label className="text-[14px] text-[#131226]" htmlFor="terms">
                 By clicking &quot;Register&quot;, you confirm that you agree to
-                Copa Accounting{" "}
+                Copa Business{" "}
                 <Link
                   className="text-[#307EF3] font-bold"
                   href={"/terms-conditions"}

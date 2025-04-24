@@ -63,9 +63,7 @@ export const SalesReportComponent = () => {
   const Invoices = useMemo(() => {
     return invoicesData
       .map((invoice) => {
-        const customer = customersData.find(
-          (c) => c.id === invoice.customer.id
-        );
+        const customer = customersData.find((c) => c.id == invoice.customer.id);
         return customer ? { ...invoice, customer } : null;
       })
       .filter((invoice): invoice is InvoiceData => invoice !== null);

@@ -6,7 +6,7 @@ export interface Customers {
     delivery: string;
     email: string;
     contact: string;
-    remarks: string;
+    status: string;
 }
 
 export type CustomerApiResponse = {

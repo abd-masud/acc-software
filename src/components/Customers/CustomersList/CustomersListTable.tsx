@@ -1,20 +1,13 @@
 "use client";
 
-import {
-  Table,
-  TableColumnsType,
-  Button,
-  Dropdown,
-  MenuProps,
-  Popconfirm,
-  message,
-  Input,
-} from "antd";
+import { Table, TableColumnsType, Modal, message, Input, Button } from "antd";
 import React, { useState, useMemo } from "react";
-import { MdDelete, MdEdit } from "react-icons/md";
 import { Customers, CustomersTableProps } from "@/types/customers";
 import { EditCustomerModal } from "./EditCustomerModal";
-import { CustomersReportButton } from "./CustomersReport";
+import { FaEdit } from "react-icons/fa";
+import { PiInvoiceBold } from "react-icons/pi";
+import { MdOutlineDeleteSweep } from "react-icons/md";
+import Link from "next/link";
 
 export const CustomersListTable: React.FC<CustomersTableProps> = ({
   customers,
@@ -22,19 +15,34 @@ export const CustomersListTable: React.FC<CustomersTableProps> = ({
   loading,
 }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [currentCustomer, setCurrentCustomer] = useState<Customers | null>(
     null
   );
+  const [customerToDelete, setCustomerToDelete] = useState<Customers | null>(
+    null
+  );
   const [searchText, setSearchText] = useState("");
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+
   const showEditModal = (customer: Customers) => {
     setCurrentCustomer(customer);
     setIsEditModalOpen(true);
   };
 
-  const filteredCustomers = useMemo(() => {
-    if (!searchText) return customers;
+  const showDeleteModal = (customer: Customers) => {
+    setCustomerToDelete(customer);
+    setDeleteConfirmationText("");
+    setIsDeleteModalOpen(true);
+  };
 
-    return customers.filter((customer) =>
+  const filteredCustomers = useMemo(() => {
+    const sortedCustomers = [...customers].sort((a, b) => {
+      return b.id - a.id;
+    });
+    if (!searchText) return sortedCustomers;
+
+    return sortedCustomers.filter((customer) =>
       Object.values(customer).some(
         (value) =>
           value &&
@@ -66,56 +74,30 @@ export const CustomersListTable: React.FC<CustomersTableProps> = ({
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async () => {
+    if (!customerToDelete) return;
+
     try {
       const response = await fetch("/api/customers", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id: customerToDelete.id }),
       });
 
       if (!response.ok) {
         throw new Error("Failed to delete customer");
       }
 
+      message.success("Customer deleted successfully");
+      setIsDeleteModalOpen(false);
+      setDeleteConfirmationText("");
       fetchCustomers();
     } catch {
       message.error("Delete failed");
     }
   };
-
-  const getMenuItems = (record: Customers): MenuProps["items"] => [
-    {
-      key: "edit",
-      label: (
-        <Button
-          icon={<MdEdit />}
-          onClick={() => showEditModal(record)}
-          type="link"
-        >
-          Edit
-        </Button>
-      ),
-    },
-    {
-      key: "delete",
-      label: (
-        <Popconfirm
-          title={`Delete ${record.name}?`}
-          onConfirm={() => handleDelete(record.id)}
-          okText="Yes"
-          cancelText="No"
-        >
-          <Button type="link" danger>
-            <MdDelete />
-            Delete
-          </Button>
-        </Popconfirm>
-      ),
-    },
-  ];
 
   const columns: TableColumnsType<Customers> = [
     {
@@ -143,16 +125,50 @@ export const CustomersListTable: React.FC<CustomersTableProps> = ({
       title: "Contact Number",
       dataIndex: "contact",
     },
-    {
-      title: "Remarks",
-      dataIndex: "remarks",
-    },
+    // {
+    //   title: "Status",
+    //   dataIndex: "status",
+    //   render: (status: string) => {
+    //     let color = "";
+    //     switch (status) {
+    //       case "Unpaid":
+    //         color = "red";
+    //         break;
+    //       case "Paid":
+    //         color = "green";
+    //         break;
+    //       default:
+    //         color = "blue";
+    //     }
+    //     return <span style={{ color }}>{status}</span>;
+    //   },
+    // },
     {
       title: "Action",
       render: (_, record) => (
-        <Dropdown menu={{ items: getMenuItems(record) }} trigger={["click"]}>
-          <Button>Options</Button>
-        </Dropdown>
+        <div className="flex justify-center items-center gap-2">
+          <button
+            className="text-white text-[14px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+            onClick={() => showEditModal(record)}
+            title="Edit"
+          >
+            <FaEdit />
+          </button>
+          <Link
+            className="text-white hover:text-white text-[16px] bg-green-600 hover:bg-green-700 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+            href={`/invoices/customer-invoices/${record.id}`}
+            title="Invoice"
+          >
+            <PiInvoiceBold />
+          </Link>
+          <button
+            className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+            onClick={() => showDeleteModal(record)}
+            title="Delete"
+          >
+            <MdOutlineDeleteSweep />
+          </button>
+        </div>
       ),
     },
   ];
@@ -168,11 +184,10 @@ export const CustomersListTable: React.FC<CustomersTableProps> = ({
           <Input
             type="text"
             placeholder="Search..."
-            className="border text-[14px] w-32 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300"
+            className="border text-[14px] sm:w-40 w-32 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-          <CustomersReportButton customers={filteredCustomers} />
         </div>
       </div>
       <Table
@@ -190,6 +205,44 @@ export const CustomersListTable: React.FC<CustomersTableProps> = ({
         currentCustomer={currentCustomer}
         onSave={handleEditSubmit}
       />
+
+      <Modal
+        title="Confirm Delete Customer"
+        open={isDeleteModalOpen}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        footer={[
+          <Button key="back" onClick={() => setIsDeleteModalOpen(false)}>
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            danger
+            onClick={handleDelete}
+            disabled={deleteConfirmationText !== "DELETE"}
+          >
+            Delete Customer
+          </Button>,
+        ]}
+        destroyOnClose
+      >
+        <div className="space-y-4">
+          <p>
+            To confirm, type{" "}
+            <span className="font-bold">&quot;DELETE&quot;</span> in the box
+            below
+          </p>
+          <input
+            placeholder="DELETE"
+            className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+            value={deleteConfirmationText}
+            onChange={(e) => setDeleteConfirmationText(e.target.value)}
+          />
+          <p className="text-red-500 text-[12px] font-bold">
+            Warning: This action will permanently delete the customer record.
+          </p>
+        </div>
+      </Modal>
     </main>
   );
 };
