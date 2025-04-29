@@ -2,8 +2,10 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect, useCallback } from "react";
+import { FaEdit } from "react-icons/fa";
+import { MdOutlineDeleteSweep } from "react-icons/md";
 
-type GeneralType = "department" | "role" | "status" | "currency" | "category";
+type GeneralType = "department" | "role" | "status" | "category";
 
 interface GeneralItem {
   id?: string;
@@ -14,7 +16,6 @@ interface GeneralGeneralsData {
   department: GeneralItem[];
   role: GeneralItem[];
   status: GeneralItem[];
-  currency: GeneralItem[];
   category: GeneralItem[];
 }
 
@@ -25,7 +26,6 @@ export const GeneralSettingsForm = () => {
     department: [],
     role: [],
     status: [],
-    currency: [],
     category: [],
   });
   const [newItemName, setNewItemName] = useState("");
@@ -43,16 +43,15 @@ export const GeneralSettingsForm = () => {
 
       if (response.ok) {
         const result = await response.json();
-        setData(
-          result.data || {
-            department: [],
-            role: [],
-            status: [],
-            currency: [],
-            category: [],
-          }
-        );
-        console.log(result);
+        const apiData = result.data?.[0] || {};
+        const transformedData = {
+          department:
+            apiData.department?.map((name: string) => ({ name })) || [],
+          role: apiData.role?.map((name: string) => ({ name })) || [],
+          status: apiData.status?.map((name: string) => ({ name })) || [],
+          category: apiData.category?.map((name: string) => ({ name })) || [],
+        };
+        setData(transformedData);
       }
     } catch (error) {
       console.error("Error fetching generals:", error);
@@ -71,11 +70,10 @@ export const GeneralSettingsForm = () => {
     if (!newItemName.trim()) return;
 
     const newItem = { name: newItemName.trim() };
-    const key = `${activeTab}s` as keyof GeneralGeneralsData;
 
-    setData((prev) => ({
+    setData((prev: GeneralGeneralsData) => ({
       ...prev,
-      [key]: [...(prev[key] as GeneralItem[]), newItem],
+      [activeTab]: [...prev[activeTab], newItem],
     }));
 
     setNewItemName("");
@@ -89,11 +87,9 @@ export const GeneralSettingsForm = () => {
   const handleUpdateItem = () => {
     if (!editingItem || !newItemName.trim()) return;
 
-    const key = `${activeTab}s` as keyof GeneralGeneralsData;
-
     setData((prev) => ({
       ...prev,
-      [key]: (prev[key] as GeneralItem[]).map((i) =>
+      [activeTab]: prev[activeTab].map((i) =>
         i == editingItem ? { ...i, name: newItemName.trim() } : i
       ),
     }));
@@ -103,11 +99,9 @@ export const GeneralSettingsForm = () => {
   };
 
   const handleDeleteItem = (item: GeneralItem) => {
-    const key = `${activeTab}s` as keyof GeneralGeneralsData;
-
     setData((prev) => ({
       ...prev,
-      [key]: (prev[key] as GeneralItem[]).filter((i) => i !== item),
+      [activeTab]: prev[activeTab].filter((i) => i !== item),
     }));
   };
 
@@ -117,27 +111,34 @@ export const GeneralSettingsForm = () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/generals", {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           user_id: user.id.toString(),
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          user_id: user.id,
+          department: data.department.map((item) => item.name),
+          role: data.role.map((item) => item.name),
+          status: data.status.map((item) => item.name),
+          category: data.category.map((item) => item.name),
+        }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save generals");
+        throw new Error(await response.text());
       }
+
+      await fetchGenerals();
     } catch (error) {
       console.error("Error saving generals:", error);
+      alert("Failed to save. Please check console for details.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const currentItems = data[
-    activeTab as keyof GeneralGeneralsData
-  ] as GeneralItem[];
+  const currentItems = data[activeTab] || [];
 
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
@@ -173,16 +174,6 @@ export const GeneralSettingsForm = () => {
           Statuses
         </button>
         <button
-          onClick={() => setActiveTab("currency")}
-          className={`px-4 py-2 rounded-md text-[14px] transition-all duration-300 ${
-            activeTab == "currency"
-              ? "bg-[#307EF3] hover:bg-[#478cf3] text-white"
-              : "bg-gray-200 hover:bg-gray-300"
-          }`}
-        >
-          Currencies
-        </button>
-        <button
           onClick={() => setActiveTab("category")}
           className={`px-4 py-2 rounded-md text-[14px] transition-all duration-300 ${
             activeTab == "category"
@@ -207,7 +198,7 @@ export const GeneralSettingsForm = () => {
             <>
               <button
                 onClick={handleUpdateItem}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm"
+                className="bg-[#307EF3] hover:bg-[#478cf3] text-white px-4 py-[9px] rounded text-sm"
               >
                 Update
               </button>
@@ -216,7 +207,7 @@ export const GeneralSettingsForm = () => {
                   setEditingItem(null);
                   setNewItemName("");
                 }}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded text-sm"
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-[9px] rounded text-sm"
               >
                 Cancel
               </button>
@@ -224,7 +215,7 @@ export const GeneralSettingsForm = () => {
           ) : (
             <button
               onClick={handleAddItem}
-              className="bg-[#307EF3] hover:bg-[#478cf3] text-white px-4 py-2 rounded text-sm"
+              className="bg-[#307EF3] hover:bg-[#478cf3] text-white px-4 py-[9px] rounded text-sm"
             >
               Add
             </button>
@@ -247,15 +238,15 @@ export const GeneralSettingsForm = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEditItem(item)}
-                      className="text-blue-500 hover:text-blue-700 text-sm"
+                      className="text-white text-[14px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
                     >
-                      Edit
+                      <FaEdit />
                     </button>
                     <button
                       onClick={() => handleDeleteItem(item)}
-                      className="text-red-500 hover:text-red-700 text-sm"
+                      className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
                     >
-                      Delete
+                      <MdOutlineDeleteSweep />
                     </button>
                   </div>
                 </li>

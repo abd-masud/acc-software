@@ -5,12 +5,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import { InvoiceData, InvoiceItem, InvoicesTableProps } from "@/types/invoices";
 import { InvoicesModal } from "./InvoicesModal";
 import Link from "next/link";
-import {
-  MdOutlineDeleteSweep,
-  MdOutlinePictureAsPdf,
-  MdPaid,
-} from "react-icons/md";
+import { MdOutlineDeleteSweep, MdOutlinePictureAsPdf } from "react-icons/md";
 import { useAuth } from "@/contexts/AuthContext";
+import { FaInfo } from "react-icons/fa";
+import { FaMoneyBills } from "react-icons/fa6";
 
 export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
   invoices,
@@ -145,7 +143,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       dataIndex: "invoice_id",
     },
     {
-      title: "Customer",
+      title: "Customer Info",
       children: [
         {
           title: "Customer ID",
@@ -192,7 +190,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
           }
         >
           {Array.isArray(items)
-            ? `${items.length} ${items.length === 1 ? "item" : "items"}`
+            ? `${items.length} ${items.length == 1 ? "item" : "items"}`
             : "N/A"}
         </div>
       ),
@@ -227,7 +225,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       ],
     },
     {
-      title: "Financials",
+      title: "Financial Info",
       children: [
         {
           title: "Subtotal",
@@ -268,6 +266,12 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       ],
     },
     {
+      title: "Payment",
+      dataIndex: "pay_type",
+      render: (text) =>
+        text ? text.charAt(0).toUpperCase() + text.slice(1) : "",
+    },
+    {
       title: "Status",
       render: (record: InvoiceData) => {
         const status = record.due_amount > 0 ? "Due" : "Paid";
@@ -287,12 +291,19 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       render: (_, record) => (
         <div className="flex justify-center items-center gap-2">
           <button
-            className="text-white text-[16px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+            className="text-white text-[14px] bg-green-600 hover:bg-green-700 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
             onClick={() => showInvoiceModal(record)}
             title="Pay"
           >
-            <MdPaid />
+            <FaMoneyBills />
           </button>
+          <Link
+            className="text-white hover:text-white text-[12px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+            title="Partial"
+            href={`/invoices/partial-invoices/${record.id}`}
+          >
+            <FaInfo />
+          </Link>
           <Link
             className="text-white hover:text-white text-[16px] bg-yellow-500 hover:bg-yellow-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
             href={`/invoices/${record.id}`}

@@ -6,11 +6,20 @@ import logo from "../../../public/images/logo.png";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { AiFillDashboard, AiFillProduct } from "react-icons/ai";
-import { FaGear, FaMoneyBillTrendUp, FaUsers } from "react-icons/fa6";
+import {
+  FaCubesStacked,
+  FaGear,
+  FaMoneyBillTrendUp,
+  FaUsers,
+} from "react-icons/fa6";
 import { FaChevronDown, FaUserTie } from "react-icons/fa";
 import { GiNotebook } from "react-icons/gi";
 
-export const SideBar = () => {
+interface SideBarProps {
+  closeSidebar?: () => void;
+}
+
+export const SideBar = ({ closeSidebar }: SideBarProps) => {
   const pathname = usePathname();
   const [openSection, setOpenSection] = useState<string | null>(null);
 
@@ -18,12 +27,10 @@ export const SideBar = () => {
     setOpenSection(openSection == section ? null : section);
   };
 
-  const handleSubMenuClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.stopPropagation();
-  };
-
-  const closeSubmenu = () => {
-    setOpenSection(null);
+  const handleLinkClick = () => {
+    if (window.innerWidth < 768 && closeSidebar) {
+      closeSidebar();
+    }
   };
 
   const linkClass = (route: string) =>
@@ -42,17 +49,18 @@ export const SideBar = () => {
     }`;
 
   return (
-    <main className="bg-[#131226] h-screen">
+    <main className="bg-[#131226] h-screen overflow-y-auto overflow-x-hidden scrollbar-hide">
       <Link
         className="text-white font-bold flex items-center text-[30px] px-8 py-[19.5px]"
         href={"/"}
+        onClick={handleLinkClick}
       >
         <Image height={30} src={logo} alt={"Logo"} priority />
         <span className="text-white text-[18px] font-bold ml-2">
           Copa Business
         </span>
       </Link>
-      <Link href={"/"} className={linkClass("/")} onClick={closeSubmenu}>
+      <Link href={"/"} className={linkClass("/")} onClick={handleLinkClick}>
         <div className={linkBar("/")}></div>
         <AiFillDashboard className="ml-[21px] text-[16px] mr-3 w-5" />
         Dashboard
@@ -88,7 +96,7 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/customers/add-customers")}
             href="/customers/add-customers"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             Add Customers
           </Link>
@@ -96,7 +104,7 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/customers/customers-list")}
             href="/customers/customers-list"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             Customers List
           </Link>
@@ -131,7 +139,7 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/invoices/create-invoices")}
             href="/invoices/create-invoices"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             Create Invoices
           </Link>
@@ -139,7 +147,7 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/invoices/invoices-list")}
             href="/invoices/invoices-list"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             Invoices List
           </Link>
@@ -174,7 +182,7 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/quotes/create-quotes")}
             href="/quotes/create-quotes"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             Create Quotes
           </Link>
@@ -182,7 +190,7 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/quotes/quotes-list")}
             href="/quotes/quotes-list"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             Quotes List
           </Link>
@@ -217,7 +225,7 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/products/add-products")}
             href="/products/add-products"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             Add Products
           </Link>
@@ -225,7 +233,7 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/products/products-list")}
             href="/products/products-list"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             Products List
           </Link>
@@ -262,7 +270,7 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/employees/add-employees")}
             href="/employees/add-employees"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             Add Employees
           </Link>
@@ -270,22 +278,118 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/employees/employees-list")}
             href="/employees/employees-list"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             Employees List
           </Link>
         </div>
       </div>
 
-      <Link
-        href={"/sales-report"}
-        className={linkClass("/sales-report")}
-        onClick={closeSubmenu}
+      <button
+        onClick={() => toggleSection("sales-report")}
+        className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+          pathname.includes("/sales-report") ? "text-white bg-[#1E2639]" : ""
+        }`}
       >
-        <div className={linkBar("/sales-report")}></div>
-        <GiNotebook className="ml-[21px] text-[16px] mr-3 w-5" />
-        Sales Report
-      </Link>
+        <div className="flex items-center">
+          <div
+            className={`h-[23px] w-[3px] group-hover:bg-[#307DF1] transition duration-300 ${
+              pathname.includes("/sales-report")
+                ? "bg-[#307DF1]"
+                : "bg-transparent"
+            }`}
+          ></div>
+          <GiNotebook className="ml-[21px] text-[16px] mr-3 w-5" />
+          Sales Report
+        </div>
+        <FaChevronDown />
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-500 transform ${
+          openSection == "sales-report"
+            ? "max-h-[135px] opacity-100"
+            : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="pl-[56px] bg-[#1D1B31] text-[13px]">
+          <Link
+            className={subLinkClass("/sales-report/all-sales-report")}
+            href="/sales-report/all-sales-report"
+            onClick={handleLinkClick}
+          >
+            All Sales Report
+          </Link>
+
+          <Link
+            className={subLinkClass("/sales-report/date-to-date-sales")}
+            href="/sales-report/date-to-date-sales"
+            onClick={handleLinkClick}
+          >
+            Date to Date Sales
+          </Link>
+
+          <Link
+            className={subLinkClass("/sales-report/party-ledger")}
+            href="/sales-report/party-ledger"
+            onClick={handleLinkClick}
+          >
+            Party Ledger
+          </Link>
+        </div>
+      </div>
+
+      <button
+        onClick={() => toggleSection("stock-manage")}
+        className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+          pathname.includes("/stock-manage") ? "text-white bg-[#1E2639]" : ""
+        }`}
+      >
+        <div className="flex items-center">
+          <div
+            className={`h-[23px] w-[3px] group-hover:bg-[#307DF1] transition duration-300 ${
+              pathname.includes("/stock-manage")
+                ? "bg-[#307DF1]"
+                : "bg-transparent"
+            }`}
+          ></div>
+          <FaCubesStacked className="ml-[21px] text-[16px] mr-3 w-5" />
+          Stock Manage
+        </div>
+        <FaChevronDown />
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-500 transform ${
+          openSection == "stock-manage"
+            ? "max-h-[135px] opacity-100"
+            : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="pl-[56px] bg-[#1D1B31] text-[13px]">
+          <Link
+            className={subLinkClass("/stock-manage/stock-in")}
+            href="/stock-manage/stock-in"
+            onClick={handleLinkClick}
+          >
+            Stock In
+          </Link>
+
+          <Link
+            className={subLinkClass("/stock-manage/stock-out")}
+            href="/stock-manage/stock-out"
+            onClick={handleLinkClick}
+          >
+            Stock Out
+          </Link>
+
+          <Link
+            className={subLinkClass("/stock-manage/stock-in-hand")}
+            href="/stock-manage/stock-in-hand"
+            onClick={handleLinkClick}
+          >
+            Stock In Hand
+          </Link>
+        </div>
+      </div>
 
       <button
         onClick={() => toggleSection("settings")}
@@ -315,7 +419,7 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/settings/currency-settings")}
             href="/settings/currency-settings"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             Currency Settings
           </Link>
@@ -323,7 +427,7 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/settings/general-settings")}
             href="/settings/general-settings"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             General Settings
           </Link>
@@ -331,7 +435,7 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/settings/policy-settings")}
             href="/settings/policy-settings"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             Policy Settings
           </Link>
@@ -339,7 +443,7 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/settings/smtp-settings")}
             href="/settings/smtp-settings"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             SMTP Settings
           </Link>
@@ -347,7 +451,7 @@ export const SideBar = () => {
           <Link
             className={subLinkClass("/settings/roles-and-permissions")}
             href="/settings/roles-and-permissions"
-            onClick={handleSubMenuClick}
+            onClick={handleLinkClick}
           >
             Roles & Permissions
           </Link>

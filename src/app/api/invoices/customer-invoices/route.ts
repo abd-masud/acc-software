@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
                 [Number(customer_id)]
             );
 
-            if (invoices.length === 0) {
+            if (invoices.length == 0) {
                 return NextResponse.json(
                     { success: false, message: "No invoices found for this customer" },
                     { status: 404 }

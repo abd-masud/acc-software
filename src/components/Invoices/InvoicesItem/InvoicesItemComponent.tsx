@@ -25,7 +25,7 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            invoice_id: InvoiceId.toString(),
+            id: InvoiceId.toString(),
           },
         });
 
@@ -105,6 +105,8 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
 
     fetchCurrencies();
   }, [user?.id]);
+
+  const paymentType = invoiceData?.pay_type || "";
 
   function formatDate(dateString: string | number | Date): string {
     const date = new Date(dateString);
@@ -386,19 +388,51 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
                 </h3>
                 <div className="flex items-center text-[12px] gap-5">
                   <div className="flex items-center gap-1">
-                    <div className="h-3 w-3 border border-black rounded-sm"></div>
+                    <div
+                      className={`h-3 w-3 border border-black rounded-sm flex items-center justify-center ${
+                        paymentType == "cash" ? "bg-black" : ""
+                      }`}
+                    >
+                      {paymentType == "cash" && (
+                        <span className="text-white text-[10px]">✓</span>
+                      )}
+                    </div>
                     <span>Cash</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="h-3 w-3 border border-black rounded-sm"></div>
+                    <div
+                      className={`h-3 w-3 border border-black rounded-sm flex items-center justify-center ${
+                        paymentType == "wallet" ? "bg-black" : ""
+                      }`}
+                    >
+                      {paymentType == "wallet" && (
+                        <span className="text-white text-[10px]">✓</span>
+                      )}
+                    </div>
                     <span>Wallet</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="h-3 w-3 border border-black rounded-sm"></div>
+                    <div
+                      className={`h-3 w-3 border border-black rounded-sm flex items-center justify-center ${
+                        paymentType == "bank" ? "bg-black" : ""
+                      }`}
+                    >
+                      {paymentType == "bank" && (
+                        <span className="text-white text-[10px]">✓</span>
+                      )}
+                    </div>
                     <span>Bank</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="h-3 w-3 border border-black rounded-sm"></div>
+                    <div
+                      className={`h-3 w-3 border border-black rounded-sm flex items-center justify-center ${
+                        paymentType == "others" ? "bg-black" : ""
+                      }`}
+                    >
+                      {paymentType == "others" && (
+                        <span className="text-white text-[10px]">✓</span>
+                      )}
+                    </div>
                     <span>Others</span>
                   </div>
                 </div>

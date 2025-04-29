@@ -11,6 +11,13 @@ export type InvoiceItem = {
     amount: number;
 };
 
+export type PaymentEntry = {
+    id?: number;
+    paid_amount: number;
+    due_amount: number;
+    date: string;
+};
+
 export type InvoiceData = {
     id: number;
     customer: Customers;
@@ -24,7 +31,9 @@ export type InvoiceData = {
     total: number;
     paid_amount: number;
     due_amount: number;
+    pay_type: string;
     notes: string;
+    sub_invoice?: PaymentEntry[];
     user_id?: number;
 };
 
@@ -69,4 +78,38 @@ export type ProductOption = {
 
 export interface CustomerInvoicesListProps {
     CustomerId: number;
+}
+
+export interface PartialInvoicesItemProps {
+    InvoiceId: number;
+}
+
+export interface SubInvoice {
+    id?: number;
+    date: string;
+    paid_amount: number;
+    due_amount: number;
+}
+
+export interface FlattenedInvoice {
+    id: number;
+    invoice_id: string;
+    customer: {
+        name: string;
+    };
+    sub_invoice?: SubInvoice[];
+    sub_item?: SubInvoice | null;
+}
+
+export interface PartialInvoicesTableProps {
+    invoices: Array<{
+        id: number;
+        invoice_id: string;
+        customer: {
+            name: string;
+        };
+        sub_invoice?: SubInvoice[];
+    }>;
+    loading: boolean;
+    fetchInvoices: () => Promise<void>;
 }

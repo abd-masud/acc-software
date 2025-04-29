@@ -3,11 +3,11 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Breadcrumb } from "./Breadcrumb";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { SalesReportTable } from "./SalesReportTable";
 import { InvoiceApiResponse, InvoiceData } from "@/types/invoices";
 import { CustomerApiResponse, Customers } from "@/types/customers";
+import { DateToDateSalesTable } from "./DateToDateSalesTable";
 
-export const SalesReportComponent = () => {
+export const DateToDateSalesComponent = () => {
   const { user } = useAuth();
   const [invoicesData, setInvoicesData] = useState<InvoiceData[]>([]);
   const [customersData, setCustomersData] = useState<Customers[]>([]);
@@ -72,7 +72,7 @@ export const SalesReportComponent = () => {
   return (
     <main className="bg-[#F2F4F7] min-h-[calc(100vh-70px)] p-5">
       <Breadcrumb />
-      <SalesReportTable
+      <DateToDateSalesTable
         invoices={Invoices}
         fetchInvoices={fetchData}
         loading={loading}

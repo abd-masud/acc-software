@@ -106,7 +106,7 @@ export const PolicySettingsForm = () => {
             <button
               onClick={() => removeTerm(index)}
               disabled={isLoading}
-              className="bg-red-500 hover:bg-red-600 px-3 py-3 rounded text-white cursor-pointer transition-all duration-300"
+              className="bg-red-500 hover:bg-red-600 px-3 py-3 rounded-full text-white cursor-pointer transition-all duration-300"
             >
               <MdRemove />
             </button>
@@ -123,12 +123,12 @@ export const PolicySettingsForm = () => {
             onChange={(e) => setNewTerm(e.target.value)}
             placeholder={`Add term ${terms.length + 1}`}
             disabled={isLoading}
-            onKeyDown={(e) => e.key === "Enter" && addTerm()}
+            onKeyDown={(e) => e.key == "Enter" && addTerm()}
           />
           <button
             onClick={addTerm}
             disabled={isLoading || !newTerm.trim()}
-            className="bg-green-600 hover:bg-green-700 px-3 py-3 rounded text-white cursor-pointer transition-all duration-300"
+            className="bg-green-600 hover:bg-green-700 px-3 py-3 rounded-full text-white cursor-pointer transition-all duration-300"
           >
             <MdAdd />
           </button>
@@ -147,7 +147,7 @@ export const PolicySettingsForm = () => {
           disabled={isLoading}
           className="text-[14px] bg-[#307EF3] hover:bg-[#478cf3] w-40 py-2 rounded text-white cursor-pointer focus:bg-[#307EF3] transition-all duration-300"
         >
-          {isLoading ? "Saving..." : "Save Changes"}
+          {isLoading ? "Saving..." : "Save Settings"}
         </button>
       </div>
     </main>

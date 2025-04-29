@@ -5,7 +5,7 @@ import { RowDataPacket } from 'mysql2';
 export async function GET(request: NextRequest) {
     try {
         const db = await connectionToDatabase();
-        const invoiceId = request.headers.get('invoice_id');
+        const invoiceId = request.headers.get('id');
 
         if (!invoiceId) {
             return NextResponse.json(

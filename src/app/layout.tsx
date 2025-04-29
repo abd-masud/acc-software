@@ -5,7 +5,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Providers from "@/providers/Providers";
 import QueryProvider from "@/providers/QueryProvider";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { SideBar } from "@/components/SideBar/SideBar";
 import { Header } from "@/components/Header/Header";
@@ -34,6 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const [isSidebarVisible, setSidebarVisible] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
 
   const toggleSidebar = () => setSidebarVisible((prev) => !prev);
@@ -42,6 +43,24 @@ export default function RootLayout({
   const isHiddenPage = HIDDEN_PAGES.includes(
     pathname as (typeof HIDDEN_PAGES)[number]
   );
+
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
+
+  useEffect(() => {
+    if (isSidebarVisible && isMobile) {
+      document.body.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
+  }, [isSidebarVisible, isMobile]);
 
   return (
     <html lang="en">
@@ -62,7 +81,7 @@ export default function RootLayout({
                     }`}
                     aria-hidden={!isSidebarVisible}
                   >
-                    <SideBar />
+                    <SideBar closeSidebar={closeSidebar} />
                   </div>
                   {isSidebarVisible && (
                     <div

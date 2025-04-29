@@ -3,15 +3,17 @@
 import { useAuth } from "@/contexts/AuthContext";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import logo from "../../../public/images/logo.png";
+import logo from "../../../../public/images/logo.png";
+import barcode from "../../../../public/images/barcode.gif";
 import { useEffect, useState } from "react";
 import { InvoicesReportButtonProps } from "@/types/invoices";
 
-export const InvoicesReportButton: React.FC<InvoicesReportButtonProps> = ({
+export const PartyLedgerReportButton: React.FC<InvoicesReportButtonProps> = ({
   invoices,
 }) => {
   const { user } = useAuth();
   const [logoUrl, setLogoUrl] = useState<string>("");
+  const [barcodeUrl, setBarcodeUrl] = useState<string>("");
 
   useEffect(() => {
     const getLogoUrl = async () => {
@@ -28,11 +30,26 @@ export const InvoicesReportButton: React.FC<InvoicesReportButtonProps> = ({
       }
     };
 
+    const getBarcodeUrl = async () => {
+      try {
+        const response = await fetch(barcode.src);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onload = () => {
+          setBarcodeUrl(reader.result as string);
+        };
+        reader.readAsDataURL(blob);
+      } catch (error) {
+        console.error("Error loading barcode:", error);
+      }
+    };
+
     getLogoUrl();
+    getBarcodeUrl();
   }, []);
 
   const handleGenerateReport = () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 14;
     const currentDate = new Date();
@@ -43,18 +60,17 @@ export const InvoicesReportButton: React.FC<InvoicesReportButtonProps> = ({
       year: "numeric",
     });
 
-    // Header Layout
     const logoWidth = 25;
     const logoHeight = 25;
+    const barcodeWidth = 100;
+    const barcodeHeight = 15;
     const centerStartX = pageWidth / 2;
 
-    // Add logo (either user's logo or default logo)
     if (user?.logo) {
       doc.addImage(user.logo, "JPEG", margin, 15, logoWidth, logoHeight);
     } else if (logoUrl) {
       doc.addImage(logoUrl, "PNG", margin, 15, logoWidth, logoHeight);
     } else {
-      // Fallback placeholder
       doc.setFillColor(240, 240, 240);
       doc.rect(margin, 15, logoWidth, logoHeight, "F");
       doc.setTextColor(150, 150, 150);
@@ -65,7 +81,17 @@ export const InvoicesReportButton: React.FC<InvoicesReportButtonProps> = ({
       });
     }
 
-    // Center-aligned company information (all caps)
+    if (barcodeUrl) {
+      doc.addImage(
+        barcodeUrl,
+        "GIF",
+        pageWidth - margin - barcodeWidth,
+        180,
+        barcodeWidth,
+        barcodeHeight
+      );
+    }
+
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
     doc.text(user?.company?.toUpperCase() || "COMPANY NAME", centerStartX, 20, {
@@ -91,12 +117,10 @@ export const InvoicesReportButton: React.FC<InvoicesReportButtonProps> = ({
       }
     );
 
-    // Report title (centered)
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("INVOICE REPORT", centerStartX, 50, { align: "center" });
+    doc.text("SALES REPORT", centerStartX, 50, { align: "center" });
 
-    // Date and time (right-aligned)
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.text(`Date: ${formattedDate}`, margin + 11, 55, {
@@ -112,76 +136,156 @@ export const InvoicesReportButton: React.FC<InvoicesReportButtonProps> = ({
       { align: "right" }
     );
 
-    // Divider line
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, 60, pageWidth - margin, 60);
 
-    // Prepare data for the table
+    const totals = {
+      subtotal: 0,
+      tax: 0,
+      discount: 0,
+      total: 0,
+      payment: 0,
+      due: 0,
+    };
+
+    invoices.forEach((invoice) => {
+      totals.subtotal += invoice.subtotal || 0;
+      totals.tax += invoice.tax || 0;
+      totals.discount += invoice.discount || 0;
+      totals.total += invoice.total || 0;
+      totals.payment += invoice.paid_amount || 0;
+      totals.due += invoice.due_amount || 0;
+    });
+
     const tableData = invoices.map((invoice, index) => [
       index + 1,
       invoice.invoice_id,
-      `${invoice.customer?.name || ""}\n${invoice.customer?.email || ""}\n${
-        invoice.customer?.contact || ""
-      }`,
-      invoice.items
-        ?.map((item) => `• ${item.product} (${item.quantity} ${item.unit})`)
-        .join("\n") || "N/A",
-      `Date: ${new Date(invoice.date).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })}\nDue: ${new Date(invoice.due_date).toLocaleDateString("en-GB", {
+      `${new Date(invoice.date).toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "short",
         year: "numeric",
       })}`,
-      `Subtotal: ${invoice.subtotal.toFixed(2)} Tk\nTax: ${invoice.tax.toFixed(
-        2
-      )} Tk\nDiscount: ${invoice.discount.toFixed(
-        2
-      )} Tk\nTotal: ${invoice.total.toFixed(
-        2
-      )} Tk\nPaid: ${invoice.paid_amount.toFixed(
-        2
-      )} Tk\nDue: ${invoice.due_amount.toFixed(2)} Tk`,
+      `${invoice.customer?.name || ""}(${invoice.customer?.customer_id || ""})`,
+      invoice.items?.length || 0,
+      invoice.subtotal,
+      invoice.tax,
+      invoice.discount,
+      invoice.total,
+      invoice.paid_amount,
+      invoice.due_amount,
+      invoice.due_amount == 0 ? "Paid" : "Due",
+      invoice.notes,
     ]);
 
-    // Generate table
+    const totalsRow = [
+      "",
+      "TOTAL",
+      "",
+      "",
+      "",
+      totals.subtotal,
+      totals.tax,
+      totals.discount,
+      totals.total,
+      totals.payment,
+      totals.due,
+      "",
+      "",
+    ];
+
     autoTable(doc, {
       startY: 65,
       head: [
-        ["#", "Invoice ID", "Customer Info", "Items", "Dates", "Financials"],
+        [
+          "#",
+          "Invoice ID",
+          "Date",
+          "Customer",
+          "Items",
+          "Subtotal",
+          "Tax",
+          "Discount",
+          "Total",
+          "Payment",
+          "Due",
+          "Status",
+          "Remarks",
+        ],
       ],
-
-      body: tableData,
+      body: [...tableData, totalsRow],
       margin: { horizontal: margin },
       styles: {
         fontSize: 8,
         cellPadding: 2,
         halign: "left",
+        fillColor: false,
+        lineColor: [0, 0, 0],
+        lineWidth: 0.1,
       },
       headStyles: {
-        fillColor: [48, 126, 243],
-        textColor: [255, 255, 255],
         fontSize: 9,
         fontStyle: "bold",
+        fillColor: false,
+        textColor: [0, 0, 0],
       },
-      alternateRowStyles: {
-        fillColor: [248, 248, 248],
+      bodyStyles: {
+        fillColor: false,
       },
       columnStyles: {
-        0: { cellWidth: 7 },
-        1: { cellWidth: 20 },
-        2: { cellWidth: 50 },
-        3: { cellWidth: 40 },
-        4: { cellWidth: 30 },
-        5: { cellWidth: 35 },
+        0: { cellWidth: "auto" },
+        1: { cellWidth: "auto" },
+        2: { cellWidth: "auto" },
+        3: { cellWidth: "auto" },
+        4: { cellWidth: "auto" },
+        5: { cellWidth: "auto" },
+        6: { cellWidth: "auto" },
+        7: { cellWidth: "auto" },
+        8: { cellWidth: "auto" },
+        9: { cellWidth: "auto" },
+        10: { cellWidth: "auto" },
+        11: { cellWidth: "auto" },
+        12: { cellWidth: "auto" },
       },
-
-      theme: "grid",
+      didParseCell: (data) => {
+        data.cell.styles.lineWidth = 0.1;
+        data.cell.styles.lineColor = [0, 0, 0];
+        if (data.row.index == tableData.length) {
+          data.cell.styles.fontStyle = "bold";
+          if (data.row.index == tableData.length && data.column.index == 0) {
+            doc.setDrawColor(0, 0, 0);
+            doc.setLineWidth(0.2);
+          }
+        }
+      },
     });
 
-    // Footer
+    const signatureY = (doc as any).lastAutoTable.finalY + 20;
+    const signatureWidth = 40;
+    const signatureSpacing = (pageWidth - margin * 2 - signatureWidth * 4) / 3;
+
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+
+    for (let i = 0; i < 4; i++) {
+      const x = margin + i * (signatureWidth + signatureSpacing);
+
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.2);
+      doc.line(x, signatureY, x + signatureWidth, signatureY);
+
+      doc.text(
+        [
+          "Prepared by",
+          "Accountant Manager",
+          "Audit Officer",
+          "Propretor Signature",
+        ][i],
+        x + signatureWidth / 2,
+        signatureY + 5,
+        { align: "center" }
+      );
+    }
+
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
@@ -200,12 +304,10 @@ export const InvoicesReportButton: React.FC<InvoicesReportButtonProps> = ({
       );
     }
 
-    // Open PDF in new tab for preview
     const pdfBlob = doc.output("blob");
     const pdfUrl = URL.createObjectURL(pdfBlob);
     window.open(pdfUrl, "_blank");
 
-    // Clean up the URL object after use
     setTimeout(() => {
       URL.revokeObjectURL(pdfUrl);
     }, 100);

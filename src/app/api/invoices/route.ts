@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // POST - Create a new invoice
 export async function POST(request: NextRequest) {
     try {
-        const { user_id, invoice_id, customer, items, date, due_date, subtotal, tax, discount, total, paid_amount, due_amount, notes } = await request.json();
+        const { user_id, invoice_id, customer, items, date, due_date, subtotal, tax, discount, total, paid_amount, due_amount, pay_type, sub_invoice, notes } = await request.json();
 
         // Basic validation
         if (!user_id || !invoice_id || !customer || !items) {
@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
 
         // Insert new invoice
         const [result] = await db.query<ResultSetHeader>(
-            `INSERT INTO invoices (user_id, invoice_id, customer, items, date, due_date, subtotal, tax, discount, total, paid_amount, due_amount, notes)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [user_id, invoice_id, JSON.stringify(customer), JSON.stringify(items), date, due_date, subtotal, tax, discount, total, paid_amount, due_amount, notes]
+            `INSERT INTO invoices (user_id, invoice_id, customer, items, date, due_date, subtotal, tax, discount, total, paid_amount, due_amount, pay_type, sub_invoice, notes)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [user_id, invoice_id, JSON.stringify(customer), JSON.stringify(items), date, due_date, subtotal, tax, discount, total, paid_amount, due_amount, pay_type, JSON.stringify(sub_invoice), notes]
         );
 
         if (result.affectedRows == 1) {
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
 // PUT - Update an invoice
 export async function PUT(request: NextRequest) {
     try {
-        const { id, invoice_id, customer, items, date, due_date, subtotal, tax, discount, total, paid_amount, due_amount, notes } = await request.json();
+        const { id, invoice_id, customer, items, date, due_date, subtotal, tax, discount, total, paid_amount, due_amount, pay_type, sub_invoice, notes } = await request.json();
 
         if (!id) {
             return NextResponse.json(
@@ -127,10 +127,10 @@ export async function PUT(request: NextRequest) {
             `UPDATE invoices 
              SET invoice_id = ?, customer = ?, items = ?, date = ?, due_date = ?, 
                  subtotal = ?, tax = ?, discount = ?, total = ?, 
-                 paid_amount = ?, due_amount = ?, notes = ?
+                 paid_amount = ?, due_amount = ?, pay_type = ?, sub_invoice = ?, notes = ?
              WHERE id = ?`,
             [invoice_id, JSON.stringify(customer), JSON.stringify(items), date, due_date,
-                subtotal, tax, discount, total, paid_amount, due_amount, notes, id]
+                subtotal, tax, discount, total, paid_amount, due_amount, pay_type, JSON.stringify(sub_invoice), notes, id]
         );
 
         if (result.affectedRows == 1) {

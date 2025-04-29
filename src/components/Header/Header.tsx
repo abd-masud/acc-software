@@ -104,7 +104,7 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
         >
           <button className="flex items-center border-2 border-[#307DF1] rounded-full overflow-hidden">
             <Image
-              className="h-[42px] w-[42px]"
+              className="h-10 w-10"
               src={user?.image || dummy}
               height={225}
               width={225}

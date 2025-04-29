@@ -1,248 +1,208 @@
 "use client";
 
-import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
 
-type Permission = {
+type Permissions = {
   id: string;
   name: string;
-  description: string;
-  enabled: boolean;
 };
 
-type Role = {
+type ModulePermission = {
   id: string;
   name: string;
-  description: string;
-  permissions: string[]; // permission IDs
+  canView: boolean;
 };
+
+type PermissionResponse = {
+  role: string;
+  allowedModules: string[];
+};
+
+const SIDEBAR_MODULES = [
+  "customers",
+  "invoices",
+  "quotes",
+  "products",
+  "employees",
+  "sales-report",
+  "stock-manage",
+  "settings",
+];
 
 export const RolesAndPermissionsForm = () => {
-  // Sample permissions data
-  const [permissions, setPermissions] = useState<Permission[]>([
-    {
-      id: "p1",
-      name: "create_content",
-      description: "Create new content",
-      enabled: false,
-    },
-    {
-      id: "p2",
-      name: "edit_content",
-      description: "Edit existing content",
-      enabled: false,
-    },
-    {
-      id: "p3",
-      name: "delete_content",
-      description: "Delete content",
-      enabled: false,
-    },
-    {
-      id: "p4",
-      name: "manage_users",
-      description: "Add/edit/remove users",
-      enabled: false,
-    },
-    {
-      id: "p5",
-      name: "view_analytics",
-      description: "View system analytics",
-      enabled: false,
-    },
-    {
-      id: "p6",
-      name: "configure_system",
-      description: "Change system settings",
-      enabled: false,
-    },
-  ]);
+  const { user } = useAuth();
+  const [roles, setRoles] = useState<Permissions[]>([]);
+  const [roleModules, setRoleModules] = useState<
+    Record<string, ModulePermission[]>
+  >({});
+  const [loading, setLoading] = useState(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
-  // Sample roles data
-  const [roles, setRoles] = useState<Role[]>([
-    {
-      id: "r1",
-      name: "Admin",
-      description: "Full system access",
-      permissions: ["p1", "p2", "p3", "p4", "p5", "p6"],
-    },
-    {
-      id: "r2",
-      name: "Editor",
-      description: "Content management",
-      permissions: ["p1", "p2"],
-    },
-    {
-      id: "r3",
-      name: "Viewer",
-      description: "Read-only access",
-      permissions: ["p5"],
-    },
-  ]);
+  // Fetch roles + permissions
+  useEffect(() => {
+    const fetchRolesAndModules = async () => {
+      if (!user?.id) return;
 
-  const [newRole, setNewRole] = useState({
-    name: "",
-    description: "",
-    permissions: [] as string[],
-  });
+      try {
+        setLoading(true);
 
-  const togglePermission = (permissionId: string) => {
-    setPermissions(
-      permissions.map((p) =>
-        p.id == permissionId ? { ...p, enabled: !p.enabled } : p
-      )
-    );
-  };
+        // 1. Fetch role definitions
+        const rolesRes = await fetch("/api/generals");
+        const rolesData = await rolesRes.json();
+        const allRoles: string[] = rolesData.data[0].role || [];
 
-  const handleRolePermissionChange = (roleId: string, permissionId: string) => {
-    setRoles(
-      roles.map((role) => {
-        if (role.id == roleId) {
-          const hasPermission = role.permissions.includes(permissionId);
-          return {
-            ...role,
-            permissions: hasPermission
-              ? role.permissions.filter((p) => p !== permissionId)
-              : [...role.permissions, permissionId],
+        // 2. Fetch module access permissions
+        const permissionsRes = await fetch("/api/permissions", {
+          headers: { user_id: user.id.toString() },
+        });
+        const permissionsData = await permissionsRes.json();
+
+        // Handle case where no permissions exist yet
+        const permissionsList = Array.isArray(permissionsData.data)
+          ? permissionsData.data
+          : [];
+
+        // 3. Build module access structure
+        const modulesByRole: Record<string, ModulePermission[]> = {};
+
+        allRoles.forEach((roleName) => {
+          const roleAccess = permissionsList.find(
+            (p: PermissionResponse) => p.role == roleName
+          ) || {
+            role: roleName,
+            allowedModules: [],
           };
-        }
-        return role;
-      })
-    );
-  };
 
-  const handleAddRole = () => {
-    if (newRole.name.trim() == "") return;
+          modulesByRole[roleName] = SIDEBAR_MODULES.map((module, idx) => ({
+            id: idx.toString(),
+            name: module,
+            canView: roleAccess.allowedModules.includes(module),
+          }));
+        });
 
-    const role: Role = {
-      id: `r${roles.length + 1}`,
-      name: newRole.name,
-      description: newRole.description,
-      permissions: permissions.filter((p) => p.enabled).map((p) => p.id),
+        setRoleModules(modulesByRole);
+
+        // 4. Set basic role info
+        setRoles(
+          allRoles.map((name, id) => ({
+            id: id.toString(),
+            name,
+          }))
+        );
+      } catch (error) {
+        console.error("Fetch error:", error);
+      } finally {
+        setLoading(false);
+        setInitialLoadComplete(true);
+      }
     };
 
-    setRoles([...roles, role]);
-    setNewRole({ name: "", description: "", permissions: [] });
-    setPermissions(permissions.map((p) => ({ ...p, enabled: false })));
+    fetchRolesAndModules();
+  }, [user?.id]);
+
+  const toggleModule = (roleName: string, moduleId: string) => {
+    setRoleModules((prev) => {
+      const updated = { ...prev };
+      updated[roleName] = updated[roleName].map((mod) =>
+        mod.id == moduleId ? { ...mod, canView: !mod.canView } : mod
+      );
+      return updated;
+    });
   };
 
+  const saveAllPermissions = async () => {
+    if (!initialLoadComplete) return;
+
+    const payload = Object.keys(roleModules).map((roleName) => ({
+      role: roleName,
+      allowedModules: roleModules[roleName]
+        .filter((mod) => mod.canView)
+        .map((mod) => mod.name),
+    }));
+
+    try {
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+
+      if (user?.id) {
+        headers["user_id"] = user.id.toString();
+      }
+
+      const res = await fetch(`/api/permissions`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      if (result.success) {
+      } else {
+      }
+    } catch (err) {
+      console.error("Error saving permissions", err);
+    }
+  };
+
+  if (!initialLoadComplete) {
+    return (
+      <div className="bg-gray-100 min-h-screen mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-white rounded-lg shadow-md w-full h-[313px]"></div>
+          <div className="bg-white rounded-lg shadow-md w-full h-[313px]"></div>
+          <div className="bg-white rounded-lg shadow-md w-full h-[313px]"></div>
+          <div className="bg-white rounded-lg shadow-md w-full h-[313px]"></div>
+          <div className="bg-white rounded-lg shadow-md w-full h-[313px]"></div>
+          <div className="bg-white rounded-lg shadow-md w-full h-[313px]"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
-      <h2 className="text-xl font-semibold mb-6">Roles and Permissions</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Permissions Section */}
-        <section className="border p-4 rounded-lg">
-          <h3 className="font-medium mb-4">Available Permissions</h3>
-          <div className="space-y-3">
-            {permissions.map((permission) => (
-              <div key={permission.id} className="flex items-center">
-                <input
-                  type="checkbox"
-                  id={permission.id}
-                  checked={permission.enabled}
-                  onChange={() => togglePermission(permission.id)}
-                  className="h-4 w-4 text-blue-600 rounded"
-                />
-                <label htmlFor={permission.id} className="ml-2 block">
-                  <span className="font-medium">{permission.name}</span>
-                  <span className="text-gray-500 text-sm block">
-                    {permission.description}
-                  </span>
-                </label>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Roles Section */}
-        <section>
-          <div className="border p-4 rounded-lg mb-6">
-            <h3 className="font-medium mb-4">Create New Role</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Role Name
-                </label>
-                <input
-                  type="text"
-                  value={newRole.name}
-                  onChange={(e) =>
-                    setNewRole({ ...newRole, name: e.target.value })
-                  }
-                  className="w-full p-2 border rounded"
-                  placeholder="e.g. Moderator"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <input
-                  type="text"
-                  value={newRole.description}
-                  onChange={(e) =>
-                    setNewRole({ ...newRole, description: e.target.value })
-                  }
-                  className="w-full p-2 border rounded"
-                  placeholder="Brief description of the role"
-                />
-              </div>
-              <button
-                onClick={handleAddRole}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                Create Role
-              </button>
-            </div>
-          </div>
-
-          <div className="border p-4 rounded-lg">
-            <h3 className="font-medium mb-4">Existing Roles</h3>
-            <div className="space-y-6">
-              {roles.map((role) => (
-                <div
-                  key={role.id}
-                  className="border-b pb-4 last:border-b-0 last:pb-0"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h4 className="font-medium">{role.name}</h4>
-                      <p className="text-sm text-gray-500">
-                        {role.description}
-                      </p>
-                    </div>
-                    <button className="text-red-600 text-sm">Delete</button>
-                  </div>
-                  <div className="space-y-2">
-                    {permissions.map((permission) => (
-                      <div
-                        key={`${role.id}-${permission.id}`}
-                        className="flex items-center"
-                      >
-                        <input
-                          type="checkbox"
-                          id={`${role.id}-${permission.id}`}
-                          checked={role.permissions.includes(permission.id)}
-                          onChange={() =>
-                            handleRolePermissionChange(role.id, permission.id)
-                          }
-                          className="h-4 w-4 text-blue-600 rounded"
-                        />
-                        <label
-                          htmlFor={`${role.id}-${permission.id}`}
-                          className="ml-2 text-sm"
-                        >
-                          {permission.name}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
+    <div className="bg-gray-100 min-h-screen mt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {roles.map((role) => (
+          <div
+            key={role.id}
+            className="bg-white rounded-lg shadow-md p-6 divide-y"
+          >
+            <h3 className="text-lg font-semibold mb-2">{role.name}</h3>
+            <div className="space-y-2 pt-3">
+              {roleModules[role.name]?.map((mod) => (
+                <div key={mod.id} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={mod.canView}
+                    onChange={() => toggleModule(role.name, mod.id)}
+                    id={`mod-${role.name}-${mod.id}`}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label
+                    htmlFor={`mod-${role.name}-${mod.id}`}
+                    className="ml-2 capitalize text-sm font-medium text-gray-700"
+                  >
+                    {mod.name.replace(/-/g, " ")}
+                  </label>
                 </div>
               ))}
             </div>
           </div>
-        </section>
+        ))}
       </div>
-    </main>
+
+      {roles.length > 0 && (
+        <div className="mt-8 text-center">
+          <button
+            onClick={saveAllPermissions}
+            disabled={loading}
+            className="text-[14px] font-[500] py-2 px-3 rounded cursor-pointer transition-all duration-300 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3]"
+          >
+            {loading ? "Saving..." : "Save Settings"}
+          </button>
+        </div>
+      )}
+    </div>
   );
 };

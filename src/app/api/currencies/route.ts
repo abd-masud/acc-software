@@ -69,7 +69,7 @@ export async function PUT(request: NextRequest) {
             [user_id]
         );
 
-        if (existingCurrency.length === 0) {
+        if (existingCurrency.length == 0) {
             // Insert new
             const [result] = await db.query<ResultSetHeader>(
                 `INSERT INTO currencies (user_id, currency) VALUES (?, ?)`,

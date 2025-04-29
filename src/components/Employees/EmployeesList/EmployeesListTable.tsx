@@ -7,8 +7,6 @@ import { Employees, EmployeesTableProps } from "@/types/employees";
 import { EmployeesReportButton } from "./EmployeesReport";
 import { EditEmployeesModal } from "./EditEmployeesModal";
 import { FaEdit } from "react-icons/fa";
-import Link from "next/link";
-import { PiInvoiceBold } from "react-icons/pi";
 
 export const EmployeesListTable: React.FC<EmployeesTableProps> = ({
   employees,
@@ -141,13 +139,6 @@ export const EmployeesListTable: React.FC<EmployeesTableProps> = ({
           >
             <FaEdit />
           </button>
-          <Link
-            className="text-white hover:text-white text-[16px] bg-green-600 hover:bg-green-700 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-            href={`/customer-invoices/${record.id}`}
-            title="Invoice"
-          >
-            <PiInvoiceBold />
-          </Link>
           <button
             className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
             onClick={() => showDeleteModal(record)}

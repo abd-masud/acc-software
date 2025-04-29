@@ -24,6 +24,7 @@ export const CreateInvoicesForm = () => {
   const [taxRate, setTaxRate] = useState(0);
   const [notes, setNotes] = useState("");
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [paymentType, setPaymentType] = useState("cash");
   const [selectedCustomer, setSelectedCustomer] = useState<Customers | null>(
     null
   );
@@ -56,7 +57,7 @@ export const CreateInvoicesForm = () => {
     paid_amount: 0,
   });
 
-  const dateFormat = "DD MMM YYYY";
+  const dateFormat = "DD MMMM YYYY";
 
   // Prepare customer options for react-select
   const customerOptions = customers.map((customer) => ({
@@ -261,6 +262,11 @@ export const CreateInvoicesForm = () => {
     e.preventDefault();
     setLoading(true);
 
+    const sub_invoice = {
+      paid_amount: Number(invoiceOptions.paid_amount),
+      due_amount: due_amount,
+      date: invoiceOptions.date,
+    };
     const invoiceData = {
       customer: customerDetails,
       items: invoiceItems,
@@ -273,7 +279,9 @@ export const CreateInvoicesForm = () => {
       total,
       paid_amount: Number(invoiceOptions.paid_amount),
       due_amount,
+      pay_type: paymentType,
       notes,
+      sub_invoice,
       user_id: user?.id as number,
     };
 
@@ -550,8 +558,7 @@ export const CreateInvoicesForm = () => {
                         className="text-[14px] mt-2"
                         options={productOptions}
                         value={productOptions.find(
-                          (option) =>
-                            option.value.toString() === item.product_id
+                          (option) => option.value.toString() == item.product_id
                         )}
                         onChange={(selectedOption) => {
                           if (selectedOption) {
@@ -658,6 +665,58 @@ export const CreateInvoicesForm = () => {
         {/* Invoice Summary */}
         <div className="flex md:flex-row flex-col md:items-start items-end md:gap-4 gap-0">
           <div className="w-full">
+            {/* Payment Method Section */}
+            <div className="mb-4">
+              <label className="text-[15px] font-semibold block mb-2">
+                Payment Method
+              </label>
+              <div className="space-y-2">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    className="text-blue-500 focus:ring-blue-500"
+                    name="paymentType"
+                    value="cash"
+                    checked={paymentType == "cash"}
+                    onChange={() => setPaymentType("cash")}
+                  />
+                  <span className="text-[14px]">Cash</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    className="text-blue-500 focus:ring-blue-500"
+                    name="paymentType"
+                    value="wallet"
+                    checked={paymentType == "wallet"}
+                    onChange={() => setPaymentType("wallet")}
+                  />
+                  <span className="text-[14px]">Wallet</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    className="text-blue-500 focus:ring-blue-500"
+                    name="paymentType"
+                    value="bank"
+                    checked={paymentType == "bank"}
+                    onChange={() => setPaymentType("bank")}
+                  />
+                  <span className="text-[14px]">Bank</span>
+                </label>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    className="text-blue-500 focus:ring-blue-500"
+                    name="paymentType"
+                    value="others"
+                    checked={paymentType == "others"}
+                    onChange={() => setPaymentType("others")}
+                  />
+                  <span className="text-[14px]">Others</span>
+                </label>
+              </div>
+            </div>
             <div className="mb-4">
               <label className="text-[14px] block mb-1" htmlFor="notes">
                 Notes
@@ -681,7 +740,7 @@ export const CreateInvoicesForm = () => {
             </div>
             <div className="flex justify-between mb-2">
               <span className="text-[14px]">Tax:</span>
-              <div className="space-x-1 mr-[14px]">
+              <div className="space-x-1 mr-[17px]">
                 <input
                   type="number"
                   min="0"
