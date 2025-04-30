@@ -3,14 +3,14 @@
 import { Table, TableColumnsType, Button, message, Input, Modal } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { InvoiceData, InvoiceItem, InvoicesTableProps } from "@/types/invoices";
-import { InvoicesModal } from "./CustomerInvoicesModal";
+import { ClosedInvoicesModal } from "./ClosedInvoicesModal";
 import Link from "next/link";
 import { MdOutlineDeleteSweep, MdOutlinePictureAsPdf } from "react-icons/md";
 import { useAuth } from "@/contexts/AuthContext";
-import { FaMoneyBills } from "react-icons/fa6";
 import { FaInfo } from "react-icons/fa";
+import { FaMoneyBills } from "react-icons/fa6";
 
-export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
+export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
   invoices,
   fetchInvoices,
   loading,
@@ -40,9 +40,13 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
   };
 
   const filteredInvoices = useMemo(() => {
-    if (!searchText) return invoices;
+    const sortedInvoices = [...invoices]
+      .filter((invoice) => invoice.due_amount == 0)
+      .sort((a, b) => b.id - a.id);
 
-    return invoices.filter((invoice) =>
+    if (!searchText) return sortedInvoices;
+
+    return sortedInvoices.filter((invoice) =>
       Object.values(invoice).some(
         (value) =>
           value &&
@@ -122,9 +126,9 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       }
 
       message.success("Customer deleted successfully");
-      fetchInvoices();
       setIsDeleteModalOpen(false);
       setDeleteConfirmationText("");
+      fetchInvoices();
     } catch {
       message.error("Delete failed");
     }
@@ -140,10 +144,34 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       dataIndex: "invoice_id",
     },
     {
-      title: "Customer",
-      render: (record: InvoiceData) => (
-        <span>{record.customer?.name || "-"}</span>
-      ),
+      title: "Customer Info",
+      children: [
+        {
+          title: "Customer ID",
+          dataIndex: ["customer", "customer_id"],
+          render: (text: string) => text || "-",
+        },
+        {
+          title: "Name",
+          dataIndex: ["customer", "name"],
+          render: (text: string) => text || "-",
+        },
+        {
+          title: "Email",
+          dataIndex: ["customer", "email"],
+          render: (text: string) => text || "-",
+        },
+        {
+          title: "Phone",
+          dataIndex: ["customer", "contact"],
+          render: (text: string) => text || "-",
+        },
+        {
+          title: "Address",
+          dataIndex: ["customer", "delivery"],
+          render: (text: string) => text || "-",
+        },
+      ],
     },
     {
       title: "Items",
@@ -198,7 +226,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       ],
     },
     {
-      title: "Financials",
+      title: "Financial Info",
       children: [
         {
           title: "Subtotal",
@@ -302,7 +330,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       <div className="flex sm:justify-between justify-end items-center mb-5">
         <div className="sm:flex items-center hidden">
           <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
-          <h2 className="text-[13px] font-[500]">Invoices Info</h2>
+          <h2 className="text-[13px] font-[500]">Closed Invoices Info</h2>
         </div>
         <div className="flex items-center justify-end gap-2">
           <Input
@@ -323,7 +351,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
         rowKey="id"
       />
 
-      <InvoicesModal
+      <ClosedInvoicesModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         currentInvoice={currentInvoice}

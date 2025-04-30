@@ -1,13 +1,13 @@
 import { Customers } from "./customers";
+import { Products } from "./products";
 
 export type QuoteItem = {
     id: number;
-    product_id: number;
+    product_id: string;
     product: string;
     quantity: number;
     unit_price: number;
     unit: string;
-    tax_rate: number;
     amount: number;
 };
 
@@ -17,9 +17,8 @@ export type QuoteData = {
     items: QuoteItem[];
     quote_id: string;
     date: string;
-    due_date: string;
     subtotal: number;
-    total_tax: number;
+    tax: number;
     discount: number;
     total: number;
     notes: string;
@@ -47,4 +46,24 @@ export interface EditQuoteModalProps {
 
 export interface QuotesReportButtonProps {
     quotes: QuoteData[];
+}
+
+export interface QuotesItemProps {
+    QuoteId: number;
+}
+
+export type CustomerOption = {
+    value: number;
+    label: string;
+    customer: Customers;
+};
+
+export type ProductOption = {
+    value: number;
+    label: string;
+    product: Products;
+};
+
+export interface CustomerQuotesListProps {
+    CustomerId: number;
 }

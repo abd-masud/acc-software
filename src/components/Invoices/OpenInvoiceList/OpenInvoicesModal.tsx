@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { EditInvoiceModalProps } from "@/types/invoices";
 import dayjs from "dayjs";
 
-export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
+export const OpenInvoicesModal: React.FC<EditInvoiceModalProps> = ({
   isOpen,
   onClose,
   currentInvoice,

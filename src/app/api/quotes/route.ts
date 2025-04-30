@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // POST - Create a new quote
 export async function POST(request: NextRequest) {
     try {
-        const { user_id, quote_id, customer, items, date, due_date, subtotal, total_tax, discount, total, notes } = await request.json();
+        const { user_id, quote_id, customer, items, date, subtotal, tax, discount, total, notes } = await request.json();
 
         // Basic validation
         if (!user_id || !quote_id || !customer || !items) {
@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
 
         // Insert new quote
         const [result] = await db.query<ResultSetHeader>(
-            `INSERT INTO quotes (user_id, quote_id, customer, items, date, due_date, subtotal, total_tax, discount, total, notes)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [user_id, quote_id, JSON.stringify(customer), JSON.stringify(items), date, due_date, subtotal, total_tax, discount, total, notes]
+            `INSERT INTO quotes (user_id, quote_id, customer, items, date, subtotal, tax, discount, total, notes)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [user_id, quote_id, JSON.stringify(customer), JSON.stringify(items), date, subtotal, tax, discount, total, notes]
         );
 
         if (result.affectedRows == 1) {
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
 // PUT - Update an quote
 export async function PUT(request: NextRequest) {
     try {
-        const { id, quote_id, customer, items, date, due_date, subtotal, total_tax, discount, total, notes } = await request.json();
+        const { id, quote_id, customer, items, date, subtotal, tax, discount, total, notes } = await request.json();
 
         if (!id) {
             return NextResponse.json(
@@ -125,11 +125,12 @@ export async function PUT(request: NextRequest) {
         // Update quote
         const [result] = await db.query<ResultSetHeader>(
             `UPDATE quotes 
-             SET quote_id = ?, customer = ?, items = ?, date = ?, due_date = ?, 
-                 subtotal = ?, total_tax = ?, discount = ?, total = ?, notes = ?
+             SET quote_id = ?, customer = ?, items = ?, date = ?,
+                 subtotal = ?, tax = ?, discount = ?, total = ?, 
+                 notes = ?
              WHERE id = ?`,
-            [quote_id, JSON.stringify(customer), JSON.stringify(items), date, due_date,
-                subtotal, total_tax, discount, total, notes, id]
+            [quote_id, JSON.stringify(customer), JSON.stringify(items), date,
+                subtotal, tax, discount, total, notes, id]
         );
 
         if (result.affectedRows == 1) {

@@ -6,6 +6,7 @@ import { Customers, CustomersTableProps } from "@/types/customers";
 import { EditCustomerModal } from "./EditCustomerModal";
 import { FaEdit } from "react-icons/fa";
 import { PiInvoiceBold } from "react-icons/pi";
+import { LiaFileInvoiceDollarSolid } from "react-icons/lia";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 import Link from "next/link";
 
@@ -160,6 +161,13 @@ export const CustomersListTable: React.FC<CustomersTableProps> = ({
             title="Invoice"
           >
             <PiInvoiceBold />
+          </Link>
+          <Link
+            className="text-white hover:text-white text-[15px] bg-yellow-500 hover:bg-yellow-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+            href={`/quotes/customer-quotes/${record.id}`}
+            title="Quote"
+          >
+            <LiaFileInvoiceDollarSolid />
           </Link>
           <button
             className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"

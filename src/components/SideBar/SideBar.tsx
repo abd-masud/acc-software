@@ -131,7 +131,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
       <div
         className={`overflow-hidden transition-all duration-500 transform ${
           openSection == "invoices"
-            ? "max-h-[90px] opacity-100"
+            ? "max-h-[180px] opacity-100"
             : "max-h-0 opacity-0"
         }`}
       >
@@ -150,6 +150,22 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
             onClick={handleLinkClick}
           >
             Invoices List
+          </Link>
+
+          <Link
+            className={subLinkClass("/invoices/open-invoices-list")}
+            href="/invoices/open-invoices-list"
+            onClick={handleLinkClick}
+          >
+            Open Invoices
+          </Link>
+
+          <Link
+            className={subLinkClass("/invoices/closed-invoices-list")}
+            href="/invoices/closed-invoices-list"
+            onClick={handleLinkClick}
+          >
+            Closed Invoices
           </Link>
         </div>
       </div>

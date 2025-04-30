@@ -291,9 +291,10 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       render: (_, record) => (
         <div className="flex justify-center items-center gap-2">
           <button
-            className="text-white text-[14px] bg-green-600 hover:bg-green-700 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+            className="text-white text-[14px] bg-green-600 hover:bg-green-700 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center disabled:bg-gray-400"
             onClick={() => showInvoiceModal(record)}
             title="Pay"
+            disabled={record.due_amount == 0}
           >
             <FaMoneyBills />
           </button>

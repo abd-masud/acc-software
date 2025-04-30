@@ -5,6 +5,8 @@ import React, { useEffect, useState } from "react";
 import { FlattenedInvoice, PartialInvoicesTableProps } from "@/types/invoices";
 import { useAuth } from "@/contexts/AuthContext";
 import dayjs from "dayjs";
+import Link from "next/link";
+import { MdOutlinePictureAsPdf } from "react-icons/md";
 
 export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
   invoices,
@@ -108,7 +110,6 @@ export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
     },
     {
       title: "Paid Amount",
-      align: "right",
       render: (record: FlattenedInvoice) =>
         record.sub_item?.paid_amount && record.sub_item.paid_amount > 0
           ? `${record.sub_item.paid_amount.toFixed(2)} ${currencyCode}`
@@ -116,7 +117,6 @@ export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
     },
     {
       title: "Due Amount",
-      align: "right",
       render: (record: FlattenedInvoice) =>
         record.sub_item?.due_amount && record.sub_item.due_amount > 0
           ? `${record.sub_item.due_amount.toFixed(2)} ${currencyCode}`
@@ -124,7 +124,6 @@ export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
     },
     {
       title: "Status",
-      fixed: "right",
       render: (record: FlattenedInvoice) => {
         const dueAmount = record.sub_item?.due_amount || 0;
         const status = dueAmount > 0 ? "Due" : "Paid";
@@ -140,6 +139,22 @@ export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
         );
       },
     },
+    {
+      title: "Action",
+      render: (record: FlattenedInvoice) => {
+        return (
+          <div className="flex justify-center">
+            <Link
+              className="text-white hover:text-white text-[16px] bg-yellow-500 hover:bg-yellow-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+              href={`/invoices/partial-invoices-report/${record.id}`}
+              title="Invoice"
+            >
+              <MdOutlinePictureAsPdf />
+            </Link>
+          </div>
+        );
+      },
+    },
   ];
 
   return (
@@ -149,6 +164,12 @@ export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
           <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
           <h2 className="text-[13px] font-[500]">Partial Invoices Info</h2>
         </div>
+        <Link
+          className="text-[12px] font-[500] py-[7px] px-3 rounded cursor-pointer transition-all duration-300 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3]"
+          href={`/invoices/partial-invoices-report/${invoices[0]?.id}`}
+        >
+          Report
+        </Link>
       </div>
       <Table
         scroll={{ x: "max-content" }}

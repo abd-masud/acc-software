@@ -2,54 +2,43 @@
 
 import { Table, TableColumnsType, Button, message, Input, Modal } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
-import { InvoiceData, InvoiceItem, InvoicesTableProps } from "@/types/invoices";
-import { InvoicesModal } from "./CustomerInvoicesModal";
+import { QuoteData, QuoteItem, QuotesTableProps } from "@/types/quotes";
 import Link from "next/link";
 import { MdOutlineDeleteSweep, MdOutlinePictureAsPdf } from "react-icons/md";
 import { useAuth } from "@/contexts/AuthContext";
-import { FaMoneyBills } from "react-icons/fa6";
-import { FaInfo } from "react-icons/fa";
 
-export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
-  invoices,
-  fetchInvoices,
+export const QuotesListTable: React.FC<QuotesTableProps> = ({
+  quotes,
+  fetchQuotes,
   loading,
 }) => {
   const { user } = useAuth();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [currentInvoice, setCurrentInvoice] = useState<InvoiceData | null>(
-    null
-  );
-  const [invoiceToDelete, setInvoiceToDelete] = useState<InvoiceData | null>(
-    null
-  );
+  const [quoteToDelete, setQuoteToDelete] = useState<QuoteData | null>(null);
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [searchText, setSearchText] = useState("");
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
 
-  const showInvoiceModal = (invoice: InvoiceData) => {
-    setCurrentInvoice(invoice);
-    setIsEditModalOpen(true);
-  };
-
-  const showDeleteModal = (invoice: InvoiceData) => {
-    setInvoiceToDelete(invoice);
+  const showDeleteModal = (quote: QuoteData) => {
+    setQuoteToDelete(quote);
     setDeleteConfirmationText("");
     setIsDeleteModalOpen(true);
   };
 
-  const filteredInvoices = useMemo(() => {
-    if (!searchText) return invoices;
+  const filteredQuotes = useMemo(() => {
+    const sortedQuotes = [...quotes].sort((a, b) => {
+      return b.id - a.id;
+    });
+    if (!searchText) return sortedQuotes;
 
-    return invoices.filter((invoice) =>
-      Object.values(invoice).some(
+    return sortedQuotes.filter((quote) =>
+      Object.values(quote).some(
         (value) =>
           value &&
           value.toString().toLowerCase().includes(searchText.toLowerCase())
       )
     );
-  }, [invoices, searchText]);
+  }, [quotes, searchText]);
 
   useEffect(() => {
     const fetchCurrencies = async () => {
@@ -82,39 +71,16 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
     fetchCurrencies();
   }, [user?.id]);
 
-  const handleEditSubmit = async (updatedInvoice: InvoiceData) => {
-    try {
-      const response = await fetch("/api/invoices", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedInvoice),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update invoice");
-      }
-
-      message.success("Invoice updated successfully");
-      setIsEditModalOpen(false);
-      fetchInvoices();
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
-  };
-
   const handleDelete = async () => {
-    if (!invoiceToDelete) return;
+    if (!quoteToDelete) return;
 
     try {
-      const response = await fetch("/api/invoices", {
+      const response = await fetch("/api/quotes", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: invoiceToDelete.id }),
+        body: JSON.stringify({ id: quoteToDelete.id }),
       });
 
       if (!response.ok) {
@@ -122,33 +88,57 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       }
 
       message.success("Customer deleted successfully");
-      fetchInvoices();
       setIsDeleteModalOpen(false);
       setDeleteConfirmationText("");
+      fetchQuotes();
     } catch {
       message.error("Delete failed");
     }
   };
 
-  const columns: TableColumnsType<InvoiceData> = [
+  const columns: TableColumnsType<QuoteData> = [
     {
       title: "#",
       render: (_, __, index) => index + 1,
     },
     {
-      title: "Invoice ID",
-      dataIndex: "invoice_id",
+      title: "Quote ID",
+      dataIndex: "quote_id",
     },
     {
-      title: "Customer",
-      render: (record: InvoiceData) => (
-        <span>{record.customer?.name || "-"}</span>
-      ),
+      title: "Customer Info",
+      children: [
+        {
+          title: "Customer ID",
+          dataIndex: ["customer", "customer_id"],
+          render: (text: string) => text || "-",
+        },
+        {
+          title: "Name",
+          dataIndex: ["customer", "name"],
+          render: (text: string) => text || "-",
+        },
+        {
+          title: "Email",
+          dataIndex: ["customer", "email"],
+          render: (text: string) => text || "-",
+        },
+        {
+          title: "Phone",
+          dataIndex: ["customer", "contact"],
+          render: (text: string) => text || "-",
+        },
+        {
+          title: "Address",
+          dataIndex: ["customer", "delivery"],
+          render: (text: string) => text || "-",
+        },
+      ],
     },
     {
       title: "Items",
       dataIndex: "items",
-      render: (items: InvoiceItem[]) => (
+      render: (items: QuoteItem[]) => (
         <div
           className="cursor-default"
           title={
@@ -169,36 +159,19 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       ),
     },
     {
-      title: "Dates",
-      children: [
-        {
-          title: "Invoice Date",
-          dataIndex: "date",
-          render: (date: string) =>
-            date
-              ? new Date(date).toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "-",
-        },
-        {
-          title: "Due Date",
-          dataIndex: "due_date",
-          render: (dueDate: string) =>
-            dueDate
-              ? new Date(dueDate).toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "-",
-        },
-      ],
+      title: "Quote Date",
+      dataIndex: "date",
+      render: (date: string) =>
+        date
+          ? new Date(date).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : "-",
     },
     {
-      title: "Financials",
+      title: "Financial Info",
       children: [
         {
           title: "Subtotal",
@@ -224,64 +197,16 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
           render: (value: number) =>
             value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
         },
-        {
-          title: "Paid",
-          dataIndex: "paid_amount",
-          render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
-        },
-        {
-          title: "Due",
-          dataIndex: "due_amount",
-          render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
-        },
       ],
-    },
-    {
-      title: "Payment",
-      dataIndex: "pay_type",
-      render: (text) =>
-        text ? text.charAt(0).toUpperCase() + text.slice(1) : "",
-    },
-    {
-      title: "Status",
-      render: (record: InvoiceData) => {
-        const status = record.due_amount > 0 ? "Due" : "Paid";
-        return (
-          <span
-            className={`font-semibold ${
-              status == "Paid" ? "text-green-600" : "text-red-500"
-            }`}
-          >
-            {status}
-          </span>
-        );
-      },
     },
     {
       title: "Action",
       render: (_, record) => (
         <div className="flex justify-center items-center gap-2">
-          <button
-            className="text-white text-[14px] bg-green-600 hover:bg-green-700 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center disabled:bg-gray-400"
-            onClick={() => showInvoiceModal(record)}
-            title="Pay"
-            disabled={record.due_amount == 0}
-          >
-            <FaMoneyBills />
-          </button>
-          <Link
-            className="text-white hover:text-white text-[12px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-            title="Partial"
-            href={`/invoices/partial-invoices/${record.id}`}
-          >
-            <FaInfo />
-          </Link>
           <Link
             className="text-white hover:text-white text-[16px] bg-yellow-500 hover:bg-yellow-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-            href={`/invoices/${record.id}`}
-            title="Invoice"
+            href={`/quotes/${record.id}`}
+            title="Quote"
           >
             <MdOutlinePictureAsPdf />
           </Link>
@@ -302,7 +227,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       <div className="flex sm:justify-between justify-end items-center mb-5">
         <div className="sm:flex items-center hidden">
           <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
-          <h2 className="text-[13px] font-[500]">Invoices Info</h2>
+          <h2 className="text-[13px] font-[500]">Quotes Info</h2>
         </div>
         <div className="flex items-center justify-end gap-2">
           <Input
@@ -317,21 +242,13 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       <Table
         scroll={{ x: "max-content" }}
         columns={columns}
-        dataSource={filteredInvoices}
+        dataSource={filteredQuotes}
         loading={loading}
         bordered
         rowKey="id"
       />
-
-      <InvoicesModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        currentInvoice={currentInvoice}
-        onSave={handleEditSubmit}
-      />
-
       <Modal
-        title="Confirm Delete Invoice"
+        title="Confirm Delete Quote"
         open={isDeleteModalOpen}
         onCancel={() => setIsDeleteModalOpen(false)}
         footer={[
@@ -345,7 +262,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
             onClick={handleDelete}
             disabled={deleteConfirmationText !== "DELETE"}
           >
-            Delete Invoice
+            Delete Quote
           </Button>,
         ]}
         destroyOnClose
@@ -363,7 +280,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
             onChange={(e) => setDeleteConfirmationText(e.target.value)}
           />
           <p className="text-red-500 text-[12px] font-bold">
-            Warning: This action will permanently delete the invoice record.
+            Warning: This action will permanently delete the quote record.
           </p>
         </div>
       </Modal>

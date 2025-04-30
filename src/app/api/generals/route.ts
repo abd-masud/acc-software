@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
             if (generals.length == 0) {
                 return NextResponse.json(
-                    { success: false, message: "Currency not found" },
+                    { success: false, message: "General settings not found" },
                     { status: 404 }
                 );
             }

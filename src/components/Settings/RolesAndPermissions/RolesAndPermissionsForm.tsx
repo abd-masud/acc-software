@@ -48,7 +48,11 @@ export const RolesAndPermissionsForm = () => {
         setLoading(true);
 
         // 1. Fetch role definitions
-        const rolesRes = await fetch("/api/generals");
+        const rolesRes = await fetch("/api/generals", {
+          headers: {
+            user_id: user.id.toString(),
+          },
+        });
         const rolesData = await rolesRes.json();
         const allRoles: string[] = rolesData.data[0].role || [];
 

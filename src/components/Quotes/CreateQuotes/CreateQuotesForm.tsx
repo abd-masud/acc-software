@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Customers } from "@/types/customers";
-import { CustomerOption, InvoiceItem, ProductOption } from "@/types/invoices";
+import { CustomerOption, QuoteItem, ProductOption } from "@/types/quotes";
 import { Products } from "@/types/products";
 import { useRouter } from "next/navigation";
 import Select, { StylesConfig } from "react-select";
@@ -12,11 +12,11 @@ import Link from "next/link";
 import dayjs from "dayjs";
 import { DatePicker } from "antd";
 
-export const CreateInvoicesForm = () => {
+export const CreateQuotesForm = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [invoice_id, setInvoiceId] = useState("");
+  const [quote_id, setQuoteId] = useState("");
   const [nextId, setNextId] = useState(1);
   const [customers, setCustomers] = useState<Customers[]>([]);
   const [products, setProducts] = useState<Products[]>([]);
@@ -24,7 +24,6 @@ export const CreateInvoicesForm = () => {
   const [taxRate, setTaxRate] = useState(0);
   const [notes, setNotes] = useState("");
   const [discountAmount, setDiscountAmount] = useState(0);
-  const [paymentType, setPaymentType] = useState("cash");
   const [selectedCustomer, setSelectedCustomer] = useState<Customers | null>(
     null
   );
@@ -39,7 +38,7 @@ export const CreateInvoicesForm = () => {
     status: "",
   });
 
-  const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([
+  const [quoteItems, setQuoteItems] = useState<QuoteItem[]>([
     {
       id: 0,
       product_id: "",
@@ -51,7 +50,7 @@ export const CreateInvoicesForm = () => {
     },
   ]);
 
-  const [invoiceOptions, setInvoiceOptions] = useState({
+  const [quoteOptions, setQuoteOptions] = useState({
     date: dayjs().format("YYYY-MM-DD"),
     due_date: dayjs().add(7, "day").format("YYYY-MM-DD"),
     paid_amount: 0,
@@ -165,29 +164,27 @@ export const CreateInvoicesForm = () => {
     fetchCurrencies();
   }, [user?.id]);
 
-  // Calculate invoice totals
+  // Calculate quote totals
   const calculateTotals = () => {
-    const subtotal = invoiceItems.reduce(
+    const subtotal = quoteItems.reduce(
       (sum, item) => sum + (item.amount || 0),
       0
     );
 
     const total_tax = subtotal * (taxRate / 100);
     const total = subtotal + total_tax - discountAmount;
-    const due_amount = total - Number(invoiceOptions.paid_amount);
 
     return {
       subtotal,
       tax: total_tax,
       total,
-      due_amount,
       discount: discountAmount,
     };
   };
 
-  const { subtotal, discount, tax, total, due_amount } = calculateTotals();
+  const { subtotal, discount, tax, total } = calculateTotals();
 
-  // Generate invoice number on component mount
+  // Generate quote number on component mount
   useEffect(() => {
     const generateCustomerId = () => {
       const compPrefix = user?.company
@@ -197,16 +194,16 @@ export const CreateInvoicesForm = () => {
       return `I${compPrefix}${random}`;
     };
 
-    setInvoiceId(generateCustomerId());
+    setQuoteId(generateCustomerId());
   }, [user]);
 
   const handleItemChange = (
     id: number,
-    field: keyof InvoiceItem,
+    field: keyof QuoteItem,
     value: string | number
   ) => {
-    setInvoiceItems(
-      invoiceItems.map((item) => {
+    setQuoteItems(
+      quoteItems.map((item) => {
         if (item.id == id) {
           const updatedItem = {
             ...item,
@@ -224,9 +221,9 @@ export const CreateInvoicesForm = () => {
     );
   };
 
-  const addInvoiceItem = () => {
-    setInvoiceItems([
-      ...invoiceItems,
+  const addQuoteItem = () => {
+    setQuoteItems([
+      ...quoteItems,
       {
         id: nextId,
         product_id: "",
@@ -241,18 +238,15 @@ export const CreateInvoicesForm = () => {
   };
 
   const removeItem = (id: number) => {
-    if (invoiceItems.length > 1) {
-      setInvoiceItems(invoiceItems.filter((item) => item.id !== id));
+    if (quoteItems.length > 1) {
+      setQuoteItems(quoteItems.filter((item) => item.id !== id));
     }
   };
 
-  const handleDateChange = (
-    value: dayjs.Dayjs | null,
-    field: "date" | "due_date"
-  ) => {
+  const handleDateChange = (value: dayjs.Dayjs | null, field: "date") => {
     if (value) {
-      setInvoiceOptions({
-        ...invoiceOptions,
+      setQuoteOptions({
+        ...quoteOptions,
         [field]: value.format("YYYY-MM-DD"),
       });
     }
@@ -262,47 +256,35 @@ export const CreateInvoicesForm = () => {
     e.preventDefault();
     setLoading(true);
 
-    const sub_invoice = [
-      {
-        paid_amount: Number(invoiceOptions.paid_amount),
-        due_amount: due_amount,
-        date: invoiceOptions.date,
-      },
-    ];
-    const invoiceData = {
+    const quoteData = {
       customer: customerDetails,
-      items: invoiceItems,
-      invoice_id,
-      date: invoiceOptions.date,
-      due_date: invoiceOptions.due_date,
+      items: quoteItems,
+      quote_id,
+      date: quoteOptions.date,
       subtotal,
       tax,
       discount,
       total,
-      paid_amount: Number(invoiceOptions.paid_amount),
-      due_amount,
-      pay_type: paymentType,
       notes,
-      sub_invoice,
       user_id: user?.id as number,
     };
 
     try {
-      const res = await fetch("/api/invoices", {
+      const res = await fetch("/api/quotes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(invoiceData),
+        body: JSON.stringify(quoteData),
       });
 
       if (res.ok) {
-        router.push("/invoices/invoices-list");
+        router.push("/quotes/quotes-list");
       } else {
-        console.error("Failed to create invoice");
+        console.error("Failed to create quote");
       }
     } catch (error) {
-      console.error("Error creating invoice:", error);
+      console.error("Error creating quote:", error);
     } finally {
       setLoading(false);
     }
@@ -367,51 +349,36 @@ export const CreateInvoicesForm = () => {
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
       <div className="flex items-center pb-5">
         <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
-        <h2 className="text-[13px] font-[500]">Create New Invoice</h2>
+        <h2 className="text-[13px] font-[500]">Create New Quote</h2>
       </div>
 
       <form onSubmit={handleSubmit}>
-        {/* Invoice Header */}
+        {/* Quote Header */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
-            <label className="text-[14px] block mb-1" htmlFor="invoice_id">
-              Invoice ID
+            <label className="text-[14px] block mb-1" htmlFor="quote_id">
+              Quote ID
             </label>
             <input
               className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
-              id="invoice_id"
-              value={invoice_id}
+              id="quote_id"
+              value={quote_id}
               readOnly
             />
           </div>
 
           <div>
             <label className="text-[14px] block mb-1" htmlFor="date">
-              Invoice Date
+              Quote Date
             </label>
             <DatePicker
               className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="date"
               id="date"
               format={dateFormat}
-              value={dayjs(invoiceOptions.date)}
+              value={dayjs(quoteOptions.date)}
               onChange={(value) => handleDateChange(value, "date")}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="text-[14px] block mb-1" htmlFor="due_date">
-              Due Date
-            </label>
-            <DatePicker
-              className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-              type="date"
-              id="due_date"
-              format={dateFormat}
-              value={dayjs(invoiceOptions.due_date)}
-              onChange={(value) => handleDateChange(value, "due_date")}
               required
             />
           </div>
@@ -511,13 +478,13 @@ export const CreateInvoicesForm = () => {
           </div>
         </div>
 
-        {/* Invoice Items */}
+        {/* Quote Items */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3">
-            <h3 className="text-[15px] font-semibold">Invoice Items</h3>
+            <h3 className="text-[15px] font-semibold">Quote Items</h3>
             <button
               type="button"
-              onClick={addInvoiceItem}
+              onClick={addQuoteItem}
               className="text-[12px] py-1 px-3 rounded bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors duration-300"
             >
               Add Item
@@ -549,7 +516,7 @@ export const CreateInvoicesForm = () => {
                 </tr>
               </thead>
               <tbody>
-                {invoiceItems.map((item) => (
+                {quoteItems.map((item) => (
                   <tr key={item.id} className="border-t">
                     <td className="px-4 py-2">
                       <Select<{
@@ -565,8 +532,8 @@ export const CreateInvoicesForm = () => {
                         onChange={(selectedOption) => {
                           if (selectedOption) {
                             const product = selectedOption.product;
-                            setInvoiceItems(
-                              invoiceItems.map((i) =>
+                            setQuoteItems(
+                              quoteItems.map((i) =>
                                 i.id == item.id
                                   ? {
                                       ...i,
@@ -580,8 +547,8 @@ export const CreateInvoicesForm = () => {
                               )
                             );
                           } else {
-                            setInvoiceItems(
-                              invoiceItems.map((i) =>
+                            setQuoteItems(
+                              quoteItems.map((i) =>
                                 i.id == item.id
                                   ? {
                                       ...i,
@@ -647,7 +614,7 @@ export const CreateInvoicesForm = () => {
                       />
                     </td>
                     <td className="px-4 py-2">
-                      {invoiceItems.length > 1 && (
+                      {quoteItems.length > 1 && (
                         <button
                           type="button"
                           onClick={() => removeItem(item.id)}
@@ -664,61 +631,9 @@ export const CreateInvoicesForm = () => {
           </div>
         </div>
 
-        {/* Invoice Summary */}
+        {/* Quote Summary */}
         <div className="flex md:flex-row flex-col md:items-start items-end md:gap-4 gap-0">
           <div className="w-full">
-            {/* Payment Method Section */}
-            <div className="mb-4">
-              <label className="text-[15px] font-semibold block mb-2">
-                Payment Method
-              </label>
-              <div className="space-y-2">
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    className="text-blue-500 focus:ring-blue-500"
-                    name="paymentType"
-                    value="cash"
-                    checked={paymentType == "cash"}
-                    onChange={() => setPaymentType("cash")}
-                  />
-                  <span className="text-[14px]">Cash</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    className="text-blue-500 focus:ring-blue-500"
-                    name="paymentType"
-                    value="wallet"
-                    checked={paymentType == "wallet"}
-                    onChange={() => setPaymentType("wallet")}
-                  />
-                  <span className="text-[14px]">Wallet</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    className="text-blue-500 focus:ring-blue-500"
-                    name="paymentType"
-                    value="bank"
-                    checked={paymentType == "bank"}
-                    onChange={() => setPaymentType("bank")}
-                  />
-                  <span className="text-[14px]">Bank</span>
-                </label>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="radio"
-                    className="text-blue-500 focus:ring-blue-500"
-                    name="paymentType"
-                    value="others"
-                    checked={paymentType == "others"}
-                    onChange={() => setPaymentType("others")}
-                  />
-                  <span className="text-[14px]">Others</span>
-                </label>
-              </div>
-            </div>
             <div className="mb-4">
               <label className="text-[14px] block mb-1" htmlFor="notes">
                 Notes
@@ -775,35 +690,6 @@ export const CreateInvoicesForm = () => {
                 {total.toFixed(2)} {currencyCode}
               </span>
             </div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[14px]">Paid Amount:</span>
-              <div className="space-x-1">
-                <input
-                  type="number"
-                  min="0"
-                  max={total}
-                  placeholder="0.00"
-                  className="border text-[14px] w-20 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
-                  value={invoiceOptions.paid_amount}
-                  onChange={(e) =>
-                    setInvoiceOptions({
-                      ...invoiceOptions,
-                      paid_amount: Number(e.target.value),
-                    })
-                  }
-                />
-                <span className="text-[14px] font-semibold">
-                  {currencyCode}
-                </span>
-              </div>
-            </div>
-            <div className="border-t my-2"></div>
-            <div className="flex justify-between font-semibold text-blue-600">
-              <span className="text-[14px]">Due Amount:</span>
-              <span className="text-[14px]">
-                {due_amount.toFixed(2)} {currencyCode}
-              </span>
-            </div>
           </div>
         </div>
 
@@ -814,7 +700,7 @@ export const CreateInvoicesForm = () => {
             className="text-[14px] font-[500] py-2 w-40 rounded cursor-pointer transition-all duration-300 mt-4 text-white bg-[#307EF3] hover:bg-[#478cf3]"
             disabled={loading}
           >
-            {loading ? "Saving..." : "Save Invoice"}
+            {loading ? "Saving..." : "Save Quote"}
           </button>
         </div>
       </form>

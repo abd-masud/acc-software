@@ -11,17 +11,88 @@ export const CurrencySettingsTable = () => {
   const [data, setData] = useState<CurrencyType[]>([]);
   const [searchText, setSearchText] = useState("");
 
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const fetchData = async () => {
+      try {
+        const jsonRes = await fetch("/data/currency.json");
+        const json = await jsonRes.json();
+
+        const currencyList: CurrencyType[] = Object.entries(json).map(
+          ([code, currency]: any, index) => ({
+            key: code,
+            si: index + 1,
+            currencyName: currency.name,
+            code: currency.code,
+            isDefault: false,
+          })
+        );
+
+        const dbRes = await fetch("/api/currencies", {
+          headers: {
+            user_id: user.id.toString(),
+          },
+        });
+        const dbJson = await dbRes.json();
+        const activeCurrency = dbJson?.data?.[0]?.currency;
+
+        const updated = currencyList.map((item) => ({
+          ...item,
+          isDefault: item.code === activeCurrency,
+        }));
+
+        setData(updated);
+      } catch (err) {
+        console.error("Failed to fetch currency data:", err);
+      }
+    };
+
+    fetchData();
+  }, [user?.id]);
+
   const filteredCurrency = useMemo(() => {
     if (!searchText) return data;
-
     return data.filter((currency) =>
-      Object.values(currency).some(
-        (value) =>
-          value &&
-          value.toString().toLowerCase().includes(searchText.toLowerCase())
+      Object.values(currency).some((value) =>
+        value?.toString().toLowerCase().includes(searchText.toLowerCase())
       )
     );
   }, [data, searchText]);
+
+  const handleDefaultChange = async (key: string) => {
+    if (!user?.id) return;
+
+    const selectedCurrency = data.find((item) => item.key === key);
+    if (!selectedCurrency) return;
+
+    const payload = {
+      user_id: user.id,
+      currency: selectedCurrency.code,
+    };
+
+    try {
+      const response = await fetch("/api/currencies", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const updatedData = data.map((item) => ({
+          ...item,
+          isDefault: item.key === key,
+        }));
+        setData(updatedData);
+      }
+    } catch (error) {
+      console.error("Currency update failed:", error);
+    }
+  };
 
   const columns: ColumnsType<CurrencyType> = [
     {
@@ -50,66 +121,6 @@ export const CurrencySettingsTable = () => {
       ),
     },
   ];
-
-  const handleDefaultChange = async (key: string) => {
-    if (!user?.id) return;
-
-    const selectedCurrency = data.find((item) => item.key == key);
-    if (!selectedCurrency) return;
-
-    const payload = {
-      user_id: user.id,
-      currency: selectedCurrency.code,
-    };
-
-    try {
-      const response = await fetch("/api/currencies", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        const updatedData = data.map((item) => ({
-          ...item,
-          isDefault: item.key == key,
-        }));
-        setData(updatedData);
-      }
-    } catch (error) {
-      console.error("Currency upsert failed:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetch("/data/currency.json")
-      .then((res) => res.json())
-      .then(
-        (
-          currencyData: Record<
-            string,
-            Omit<CurrencyType, "key" | "si" | "isDefault" | "currencyName"> & {
-              name: string;
-            }
-          >
-        ) => {
-          const formattedData: CurrencyType[] = Object.entries(
-            currencyData
-          ).map(([code, currency], index) => ({
-            key: code,
-            si: index + 1,
-            currencyName: currency.name,
-            code: currency.code,
-            isDefault: code == "USD",
-          }));
-          setData(formattedData);
-        }
-      );
-  }, []);
 
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
