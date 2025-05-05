@@ -1,8 +1,17 @@
 "use client";
 
-import { Table, TableColumnsType, Input } from "antd";
+import {
+  Table,
+  TableColumnsType,
+  Button,
+  Input,
+  DatePicker,
+  Alert,
+  Card,
+} from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { InvoiceData, InvoiceItem, InvoicesTableProps } from "@/types/invoices";
+import dayjs, { Dayjs } from "dayjs";
 import { useAuth } from "@/contexts/AuthContext";
 import { AllSalesReportButton } from "./AllSalesReportReport";
 
@@ -12,7 +21,10 @@ export const AllSalesReportTable: React.FC<InvoicesTableProps> = ({
 }) => {
   const { user } = useAuth();
   const [searchText, setSearchText] = useState("");
+  const [fromDate, setFromDate] = useState<Dayjs | null>(null);
+  const [toDate, setToDate] = useState<Dayjs | null>(null);
   const [currencyCode, setCurrencyCode] = useState("USD");
+  const [dateRangeSelected, setDateRangeSelected] = useState(false);
 
   useEffect(() => {
     const fetchCurrencies = async () => {
@@ -45,11 +57,21 @@ export const AllSalesReportTable: React.FC<InvoicesTableProps> = ({
     fetchCurrencies();
   }, [user?.id]);
 
+  useEffect(() => {
+    // Check if both dates are selected
+    if (fromDate && toDate) {
+      setDateRangeSelected(true);
+    } else {
+      setDateRangeSelected(false);
+    }
+  }, [fromDate, toDate]);
+
   const filteredInvoices = useMemo(() => {
     let sortedInvoices = [...invoices].sort((a, b) => {
       return b.id - a.id;
     });
 
+    // Apply text search filter
     if (searchText) {
       sortedInvoices = sortedInvoices.filter((invoice) =>
         Object.values(invoice).some(
@@ -60,8 +82,41 @@ export const AllSalesReportTable: React.FC<InvoicesTableProps> = ({
       );
     }
 
+    // Apply date range filter
+    if (fromDate && toDate) {
+      sortedInvoices = sortedInvoices.filter((invoice) => {
+        const invoiceDate = dayjs(invoice.date);
+        return (
+          invoiceDate.isSame(fromDate, "day") ||
+          invoiceDate.isSame(toDate, "day") ||
+          (invoiceDate.isAfter(fromDate) && invoiceDate.isBefore(toDate))
+        );
+      });
+    } else if (fromDate) {
+      sortedInvoices = sortedInvoices.filter((invoice) => {
+        const invoiceDate = dayjs(invoice.date);
+        return (
+          invoiceDate.isSame(fromDate, "day") || invoiceDate.isAfter(fromDate)
+        );
+      });
+    } else if (toDate) {
+      sortedInvoices = sortedInvoices.filter((invoice) => {
+        const invoiceDate = dayjs(invoice.date);
+        return (
+          invoiceDate.isSame(toDate, "day") || invoiceDate.isBefore(toDate)
+        );
+      });
+    }
+
     return sortedInvoices;
-  }, [invoices, searchText]);
+  }, [invoices, searchText, fromDate, toDate]);
+
+  const handleResetFilters = () => {
+    setSearchText("");
+    setFromDate(null);
+    setToDate(null);
+    setDateRangeSelected(false);
+  };
 
   const columns: TableColumnsType<InvoiceData> = [
     {
@@ -220,6 +275,26 @@ export const AllSalesReportTable: React.FC<InvoicesTableProps> = ({
           <h2 className="text-[13px] font-[500]">Invoice Info</h2>
         </div>
         <div className="sm:flex gap-2">
+          <div className="flex justify-center items-center sm:mb-0 mb-2 gap-2">
+            <DatePicker
+              placeholder="From date"
+              format="DD MMM YYYY"
+              value={fromDate}
+              onChange={(date) => setFromDate(date)}
+            />
+            <DatePicker
+              placeholder="To date"
+              format="DD MMM YYYY"
+              value={toDate}
+              onChange={(date) => setToDate(date)}
+              disabledDate={(current) =>
+                fromDate ? current && current < fromDate.startOf("day") : false
+              }
+            />
+            {(fromDate || toDate || searchText) && (
+              <Button onClick={handleResetFilters}>Reset</Button>
+            )}
+          </div>
           <div className="flex items-center justify-end gap-2">
             <Input
               type="text"
@@ -232,6 +307,7 @@ export const AllSalesReportTable: React.FC<InvoicesTableProps> = ({
           </div>
         </div>
       </div>
+
       <Table
         scroll={{ x: "max-content" }}
         columns={columns}

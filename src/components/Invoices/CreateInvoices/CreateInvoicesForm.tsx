@@ -672,7 +672,7 @@ export const CreateInvoicesForm = () => {
               <label className="text-[15px] font-semibold block mb-2">
                 Payment Method
               </label>
-              <div className="space-y-2">
+              <div className="flex sm:flex-row flex-col sm:gap-5 gap-1">
                 <label className="flex items-center space-x-2">
                   <input
                     type="radio"
@@ -740,7 +740,7 @@ export const CreateInvoicesForm = () => {
                 {subtotal.toFixed(2)} {currencyCode}
               </span>
             </div>
-            <div className="flex justify-between mb-2">
+            <div className="flex justify-between items-center">
               <span className="text-[14px]">Tax:</span>
               <div className="space-x-1 mr-[17px]">
                 <input
@@ -754,7 +754,7 @@ export const CreateInvoicesForm = () => {
                 <span className="text-[14px] font-medium">%</span>
               </div>
             </div>
-            <div className="flex justify-between mb-2">
+            <div className="flex justify-between items-center mb-2">
               <span className="text-[14px]">Discount:</span>
               <div className="space-x-1">
                 <input

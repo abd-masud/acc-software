@@ -3,11 +3,11 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Breadcrumb } from "./Breadcrumb";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { CustomerLedgerTable } from "./CustomerLedgerTable";
 import { InvoiceApiResponse, InvoiceData } from "@/types/invoices";
 import { CustomerApiResponse, Customers } from "@/types/customers";
-import { DateToDateSalesTable } from "./DateToDateSalesTable";
 
-export const DateToDateSalesComponent = () => {
+export const CustomerLedgerComponent = () => {
   const { user } = useAuth();
   const [invoicesData, setInvoicesData] = useState<InvoiceData[]>([]);
   const [customersData, setCustomersData] = useState<Customers[]>([]);
@@ -72,7 +72,7 @@ export const DateToDateSalesComponent = () => {
   return (
     <main className="bg-[#F2F4F7] min-h-[calc(100vh-70px)] p-5">
       <Breadcrumb />
-      <DateToDateSalesTable
+      <CustomerLedgerTable
         invoices={Invoices}
         fetchInvoices={fetchData}
         loading={loading}

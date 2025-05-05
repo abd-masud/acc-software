@@ -4,7 +4,7 @@ import { Table, TableColumnsType, Button, message, Input, Modal } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { Products, ProductsTableProps } from "@/types/products";
 import { EditProductModal } from "./EditProductModal";
-import { ProductsReportButton } from "./ProductsReport";
+// import { ProductsReportButton } from "./ProductsReport";
 import { FaEdit } from "react-icons/fa";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 import { useAuth } from "@/contexts/AuthContext";
@@ -197,11 +197,11 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
           <Input
             type="text"
             placeholder="Search..."
-            className="border text-[14px] w-32 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300"
+            className="border text-[14px] sm:w-40 w-32 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-          <ProductsReportButton products={filteredProducts} />
+          {/* <ProductsReportButton products={filteredProducts} /> */}
         </div>
       </div>
       <Table
@@ -233,7 +233,7 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
             type="primary"
             danger
             onClick={handleDelete}
-            disabled={deleteConfirmationText !== "DELETE-PRODUCT"}
+            disabled={deleteConfirmationText !== "DELETE"}
           >
             Delete Product
           </Button>,
@@ -243,11 +243,11 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
         <div className="space-y-4">
           <p>
             To confirm, type{" "}
-            <span className="font-bold">&quot;DELETE-PRODUCT&quot;</span> in the
-            box below
+            <span className="font-bold">&quot;DELETE&quot;</span> in the box
+            below
           </p>
           <input
-            placeholder="DELETE-PRODUCT"
+            placeholder="DELETE"
             className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
             value={deleteConfirmationText}
             onChange={(e) => setDeleteConfirmationText(e.target.value)}

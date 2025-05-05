@@ -2,8 +2,27 @@
 
 import { Modal, message } from "antd";
 import { EditEmployeeModalProps } from "@/types/employees";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import { hash } from "bcryptjs";
+import { useAuth } from "@/contexts/AuthContext";
+import { StylesConfig } from "react-select";
+import dynamic from "next/dynamic";
+
+const Select = dynamic(() => import("react-select"), {
+  ssr: false,
+  loading: () => <div className="h-[38px] w-full rounded border" />,
+});
+
+interface SelectOption {
+  label: string;
+  value: string;
+}
+
+interface GeneralOptions {
+  department: string[];
+  role: string[];
+  status: string[];
+}
 
 export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
   isOpen,
@@ -11,6 +30,8 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
   currentEmployee,
   onSave,
 }) => {
+  const instanceId = useId();
+  const { user } = useAuth();
   const [employeeName, setEmployeeName] = useState("");
   const [email, setEmail] = useState("");
   const [contact, setContact] = useState("");
@@ -19,6 +40,54 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
   const [status, setStatus] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [generalOptions, setGeneralOptions] = useState<GeneralOptions>({
+    department: [],
+    role: [],
+    status: [],
+  });
+
+  const fetchGenerals = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (user?.id) {
+        headers["user_id"] = user.id.toString();
+      }
+
+      const response = await fetch("/api/generals", {
+        method: "GET",
+        headers,
+      });
+      const json: any = await response.json();
+
+      if (!response.ok || !json.success) {
+        throw new Error(json.message || "Failed to fetch customers");
+      }
+
+      const optionsData = json.data[0] || {};
+      setGeneralOptions({
+        department: optionsData.department || [],
+        role: optionsData.role || [],
+        status: optionsData.status || [],
+      });
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchGenerals();
+  }, [fetchGenerals]);
+
+  const toSelectOptions = (arr: string[] | undefined): SelectOption[] => {
+    return (arr || []).map((item) => ({ label: item, value: item }));
+  };
 
   useEffect(() => {
     if (currentEmployee) {
@@ -64,6 +133,33 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
     } finally {
       setLoading(false);
     }
+  };
+
+  const generalSelectStyles: StylesConfig<any, false> = {
+    control: (base) => ({
+      ...base,
+      borderColor: "#E5E7EB",
+      "&:hover": {
+        borderColor: "#E5E7EB",
+      },
+      minHeight: "48px",
+      fontSize: "14px",
+      boxShadow: "none",
+      backgroundColor: "#F2F4F7",
+    }),
+    option: (base, state) => ({
+      ...base,
+      fontSize: "14px",
+      backgroundColor: state.isSelected ? "#F2F4F7" : "white",
+      color: "black",
+      "&:hover": {
+        backgroundColor: "#F2F4F7",
+      },
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+    }),
   };
 
   return (
@@ -126,12 +222,20 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
           <label className="text-[14px]" htmlFor="department">
             Department
           </label>
-          <input
-            id="department"
-            placeholder="Enter department"
-            className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
+          <Select
+            instanceId={`${instanceId}-department`}
+            inputId="department"
+            className="mt-2"
+            options={toSelectOptions(generalOptions.department)}
+            value={toSelectOptions(generalOptions.department).find(
+              (opt) => opt.value === department
+            )}
+            onChange={(selected) =>
+              setDepartment((selected as SelectOption)?.value || "")
+            }
+            placeholder="Select Department"
+            styles={generalSelectStyles}
+            isClearable
           />
         </div>
       </div>
@@ -141,12 +245,20 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
           <label className="text-[14px]" htmlFor="role">
             Role
           </label>
-          <input
-            id="role"
-            placeholder="Enter role"
-            className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
+          <Select
+            instanceId={`${instanceId}-role`}
+            inputId="role"
+            className="mt-2"
+            options={toSelectOptions(generalOptions.role)}
+            value={toSelectOptions(generalOptions.role).find(
+              (opt) => opt.value === role
+            )}
+            onChange={(selected) =>
+              setRole((selected as SelectOption)?.value || "")
+            }
+            placeholder="Select Role"
+            styles={generalSelectStyles}
+            isClearable
           />
         </div>
 
@@ -154,16 +266,21 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
           <label className="text-[14px]" htmlFor="status">
             Status
           </label>
-          <select
-            className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-            id="status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-            <option value="On Leave">On Leave</option>
-          </select>
+          <Select
+            instanceId={`${instanceId}-status`}
+            inputId="status"
+            className="mt-2"
+            options={toSelectOptions(generalOptions.status)}
+            value={toSelectOptions(generalOptions.status).find(
+              (opt) => opt.value === status
+            )}
+            onChange={(selected) =>
+              setStatus((selected as SelectOption)?.value || "")
+            }
+            placeholder="Select Status"
+            styles={generalSelectStyles}
+            isClearable
+          />
         </div>
       </div>
 

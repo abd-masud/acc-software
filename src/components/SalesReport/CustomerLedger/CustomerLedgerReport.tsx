@@ -8,9 +8,9 @@ import barcode from "../../../../public/images/barcode.gif";
 import { useEffect, useState } from "react";
 import { InvoicesReportButtonProps } from "@/types/invoices";
 
-export const PartyLedgerReportButton: React.FC<InvoicesReportButtonProps> = ({
-  invoices,
-}) => {
+export const CustomerLedgerReportButton: React.FC<
+  InvoicesReportButtonProps
+> = ({ invoices }) => {
   const { user } = useAuth();
   const [logoUrl, setLogoUrl] = useState<string>("");
   const [barcodeUrl, setBarcodeUrl] = useState<string>("");
@@ -119,7 +119,7 @@ export const PartyLedgerReportButton: React.FC<InvoicesReportButtonProps> = ({
 
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("SALES REPORT", centerStartX, 50, { align: "center" });
+    doc.text("CUSTOMER LEDGER", centerStartX, 50, { align: "center" });
 
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");

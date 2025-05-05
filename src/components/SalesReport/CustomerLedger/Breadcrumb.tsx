@@ -9,7 +9,7 @@ export const Breadcrumb = () => {
     <>
       <main className="pb-4 border-b flex justify-between items-center">
         <div>
-          <p className="text-[16px] font-[600]">Party Ledger</p>
+          <p className="text-[16px] font-[600]">Customer Ledger</p>
           <div className="md:block hidden">
             <div className="flex items-center">
               <Link className="text-[12px] text-[#797c8b]" href="/">
@@ -18,7 +18,7 @@ export const Breadcrumb = () => {
               <FaAngleRight className="text-[12px] text-[#797c8b] mx-2" />
               <p className="text-[12px] text-[#797c8b]">Sales Report</p>
               <FaAngleRight className="text-[12px] text-[#797c8b] mx-2" />
-              <p className="text-[12px] text-[#797c8b]">Party Ledger</p>
+              <p className="text-[12px] text-[#797c8b]">Customer Ledger</p>
             </div>
           </div>
         </div>

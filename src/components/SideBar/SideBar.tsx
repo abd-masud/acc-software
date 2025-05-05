@@ -323,7 +323,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
       <div
         className={`overflow-hidden transition-all duration-500 transform ${
           openSection == "sales-report"
-            ? "max-h-[135px] opacity-100"
+            ? "max-h-[90px] opacity-100"
             : "max-h-0 opacity-0"
         }`}
       >
@@ -335,21 +335,12 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
           >
             All Sales Report
           </Link>
-
           <Link
-            className={subLinkClass("/sales-report/date-to-date-sales")}
-            href="/sales-report/date-to-date-sales"
+            className={subLinkClass("/sales-report/customer-ledger")}
+            href="/sales-report/customer-ledger"
             onClick={handleLinkClick}
           >
-            Date to Date Sales
-          </Link>
-
-          <Link
-            className={subLinkClass("/sales-report/party-ledger")}
-            href="/sales-report/party-ledger"
-            onClick={handleLinkClick}
-          >
-            Party Ledger
+            Customer Ledger
           </Link>
         </div>
       </div>

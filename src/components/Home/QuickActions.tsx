@@ -76,8 +76,8 @@ export const QuickActions = () => {
   ];
 
   return (
-    <section className="mb-10">
-      <div className="flex items-center justify-between mb-6">
+    <section className="mb-5">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold text-gray-800">Quick Actions</h2>
         <p className="text-sm text-gray-500 md:block hidden">
           Shortcuts to key functions
@@ -89,20 +89,15 @@ export const QuickActions = () => {
           <Link
             key={index}
             href={action.link}
-            className={`group relative p-5 rounded-xl border transition-all duration-300 ${action.effect} flex flex-col items-center text-center`}
+            className={`group relative rounded-xl py-2 border transition-all duration-300 ${action.effect} flex flex-col items-center text-center`}
           >
-            <div
-              className={`relative mb-4 p-3 rounded-full ${action.textColor}`}
-            >
+            <div className={`relative rounded-full ${action.textColor}`}>
               {action.icon}
             </div>
-            <h3 className={`text-lg font-medium mb-1 ${action.textColor}`}>
+            <h3 className={`text-lg font-medium ${action.textColor}`}>
               {action.title}
             </h3>
             <p className="text-sm text-gray-600">{action.description}</p>
-            <span className="mt-3 text-xs font-medium text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
-              Click to access →
-            </span>
           </Link>
         ))}
       </div>

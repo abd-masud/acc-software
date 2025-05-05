@@ -2,10 +2,18 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Products } from "@/types/products";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useId, useState } from "react";
+import { StylesConfig } from "react-select";
+
+const Select = dynamic(() => import("react-select"), {
+  ssr: false,
+  loading: () => <div className="h-[38px] w-full rounded border" />,
+});
 
 export const AddProductsForm = () => {
+  const instanceId = useId();
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -22,6 +30,47 @@ export const AddProductsForm = () => {
     stock: 0,
     unit: "pcs",
   });
+
+  const [generalOptions, setGeneralOptions] = useState<{
+    category: string[];
+  }>({ category: [] });
+
+  const fetchGenerals = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (user?.id) {
+        headers["user_id"] = user.id.toString();
+      }
+
+      const response = await fetch("/api/generals", {
+        method: "GET",
+        headers,
+      });
+      const json: any = await response.json();
+
+      if (!response.ok || !json.success) {
+        throw new Error(json.message || "Failed to fetch customers");
+      }
+
+      const optionsData = json.data[0] || {};
+      setGeneralOptions({
+        category: optionsData.category || [],
+      });
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchGenerals();
+  }, [fetchGenerals]);
 
   useEffect(() => {
     const generateProductId = () => {
@@ -65,6 +114,18 @@ export const AddProductsForm = () => {
 
     fetchCurrencies();
   }, [user?.id]);
+
+  const toSelectOptions = (arr: string[] | undefined) => {
+    return (arr || []).map((item) => ({ label: item, value: item }));
+  };
+
+  const handleSelectChange =
+    (field: keyof typeof formValues) => (selected: any) => {
+      setFormValues((prev) => ({
+        ...prev,
+        [field]: selected?.value || "",
+      }));
+    };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -121,6 +182,37 @@ export const AddProductsForm = () => {
       setLoading(false);
     }
   };
+
+  const generalSelectStyles: StylesConfig<any, false> = {
+    control: (base) => ({
+      ...base,
+      borderColor: "#E5E7EB",
+      "&:hover": {
+        borderColor: "#E5E7EB",
+      },
+      minHeight: "48px",
+      fontSize: "14px",
+      boxShadow: "none",
+      backgroundColor: "#F2F4F7",
+    }),
+    option: (base, state) => ({
+      ...base,
+      fontSize: "14px",
+      backgroundColor: state.isSelected ? "#F2F4F7" : "white",
+      color: "black",
+      "&:hover": {
+        backgroundColor: "#F2F4F7",
+      },
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+    }),
+  };
+
+  if (loading) {
+    return <div>Loading form...</div>;
+  }
 
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
@@ -215,13 +307,18 @@ export const AddProductsForm = () => {
             <label className="text-[14px]" htmlFor="category">
               Category
             </label>
-            <input
-              placeholder="Electronics, Furniture, etc."
-              className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-              type="text"
-              id="category"
-              value={formValues.category}
-              onChange={handleChange}
+            <Select
+              instanceId={`${instanceId}-category`}
+              inputId="category"
+              className="mt-2"
+              options={toSelectOptions(generalOptions.category)}
+              value={toSelectOptions(generalOptions.category).find(
+                (opt) => opt.value == formValues.category
+              )}
+              onChange={handleSelectChange("category")}
+              placeholder="Select Department"
+              styles={generalSelectStyles}
+              isClearable
             />
           </div>
 

@@ -5,26 +5,26 @@ import {
   TableColumnsType,
   Button,
   Input,
-  DatePicker,
+  Space,
+  Select,
   Alert,
   Card,
 } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { InvoiceData, InvoiceItem, InvoicesTableProps } from "@/types/invoices";
-import dayjs, { Dayjs } from "dayjs";
+import { CustomerLedgerReportButton } from "./CustomerLedgerReport";
+import { Customers } from "@/types/customers";
 import { useAuth } from "@/contexts/AuthContext";
-import { DateToDateSalesReportButton } from "./DateToDateSalesReport";
 
-export const DateToDateSalesTable: React.FC<InvoicesTableProps> = ({
+export const CustomerLedgerTable: React.FC<InvoicesTableProps> = ({
   invoices,
   loading,
 }) => {
   const { user } = useAuth();
   const [searchText, setSearchText] = useState("");
-  const [fromDate, setFromDate] = useState<Dayjs | null>(null);
-  const [toDate, setToDate] = useState<Dayjs | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
   const [currencyCode, setCurrencyCode] = useState("USD");
-  const [dateRangeSelected, setDateRangeSelected] = useState(false);
+  const [customerSelected, setCustomerSelected] = useState(false);
 
   useEffect(() => {
     const fetchCurrencies = async () => {
@@ -58,18 +58,39 @@ export const DateToDateSalesTable: React.FC<InvoicesTableProps> = ({
   }, [user?.id]);
 
   useEffect(() => {
-    // Check if both dates are selected
-    if (fromDate && toDate) {
-      setDateRangeSelected(true);
+    // Check if customer is selected
+    if (selectedCustomer) {
+      setCustomerSelected(true);
     } else {
-      setDateRangeSelected(false);
+      setCustomerSelected(false);
     }
-  }, [fromDate, toDate]);
+  }, [selectedCustomer]);
+
+  // Extract unique customers from invoices
+  const customerOptions = useMemo(() => {
+    const uniqueCustomers = new Map<string, Customers>();
+    invoices.forEach((invoice) => {
+      if (invoice.customer) {
+        uniqueCustomers.set(invoice.customer.id.toString(), invoice.customer);
+      }
+    });
+    return Array.from(uniqueCustomers.values()).map((customer) => ({
+      value: customer.id.toString(),
+      label: customer.name,
+    }));
+  }, [invoices]);
 
   const filteredInvoices = useMemo(() => {
     let sortedInvoices = [...invoices].sort((a, b) => {
       return b.id - a.id;
     });
+
+    // Apply customer filter
+    if (selectedCustomer) {
+      sortedInvoices = sortedInvoices.filter(
+        (invoice) => invoice.customer?.id.toString() == selectedCustomer
+      );
+    }
 
     // Apply text search filter
     if (searchText) {
@@ -82,40 +103,13 @@ export const DateToDateSalesTable: React.FC<InvoicesTableProps> = ({
       );
     }
 
-    // Apply date range filter
-    if (fromDate && toDate) {
-      sortedInvoices = sortedInvoices.filter((invoice) => {
-        const invoiceDate = dayjs(invoice.date);
-        return (
-          invoiceDate.isSame(fromDate, "day") ||
-          invoiceDate.isSame(toDate, "day") ||
-          (invoiceDate.isAfter(fromDate) && invoiceDate.isBefore(toDate))
-        );
-      });
-    } else if (fromDate) {
-      sortedInvoices = sortedInvoices.filter((invoice) => {
-        const invoiceDate = dayjs(invoice.date);
-        return (
-          invoiceDate.isSame(fromDate, "day") || invoiceDate.isAfter(fromDate)
-        );
-      });
-    } else if (toDate) {
-      sortedInvoices = sortedInvoices.filter((invoice) => {
-        const invoiceDate = dayjs(invoice.date);
-        return (
-          invoiceDate.isSame(toDate, "day") || invoiceDate.isBefore(toDate)
-        );
-      });
-    }
-
     return sortedInvoices;
-  }, [invoices, searchText, fromDate, toDate]);
+  }, [invoices, selectedCustomer, searchText]);
 
   const handleResetFilters = () => {
+    setSelectedCustomer(null);
     setSearchText("");
-    setFromDate(null);
-    setToDate(null);
-    setDateRangeSelected(false);
+    setCustomerSelected(false);
   };
 
   const columns: TableColumnsType<InvoiceData> = [
@@ -275,27 +269,22 @@ export const DateToDateSalesTable: React.FC<InvoicesTableProps> = ({
           <h2 className="text-[13px] font-[500]">Invoice Info</h2>
         </div>
         <div className="sm:flex gap-2">
-          <div className="flex justify-center items-center sm:mb-0 mb-2 gap-2">
-            <DatePicker
-              placeholder="From date"
-              format="DD MMM YYYY"
-              value={fromDate}
-              onChange={(date) => setFromDate(date)}
-            />
-            <DatePicker
-              placeholder="To date"
-              format="DD MMM YYYY"
-              value={toDate}
-              onChange={(date) => setToDate(date)}
-              disabledDate={(current) =>
-                fromDate ? current && current < fromDate.startOf("day") : false
-              }
-            />
-            {(fromDate || toDate || searchText) && (
+          <div className="flex items-center sm:mb-0 mb-2 gap-2">
+            <Space direction="horizontal" size={12}>
+              <Select
+                placeholder="Select customer"
+                style={{ width: 200 }}
+                options={customerOptions}
+                value={selectedCustomer}
+                onChange={(value) => setSelectedCustomer(value)}
+                allowClear
+              />
+            </Space>
+            {(selectedCustomer || searchText) && (
               <Button onClick={handleResetFilters}>Reset</Button>
             )}
           </div>
-          {dateRangeSelected && (
+          {customerSelected && (
             <div className="flex items-center justify-end gap-2">
               <Input
                 type="text"
@@ -304,16 +293,16 @@ export const DateToDateSalesTable: React.FC<InvoicesTableProps> = ({
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
               />
-              <DateToDateSalesReportButton invoices={filteredInvoices} />
+              <CustomerLedgerReportButton invoices={filteredInvoices} />
             </div>
           )}
         </div>
       </div>
 
-      {!dateRangeSelected ? (
+      {!customerSelected ? (
         <Card>
           <Alert
-            message="Please select date range to view invoices"
+            message="Please select a customer to view their invoices"
             type="info"
             showIcon
           />

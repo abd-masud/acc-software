@@ -4,7 +4,7 @@ import { Table, TableColumnsType, Button, message, Input, Modal } from "antd";
 import React, { useMemo, useState } from "react";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 import { Employees, EmployeesTableProps } from "@/types/employees";
-import { EmployeesReportButton } from "./EmployeesReport";
+// import { EmployeesReportButton } from "./EmployeesReport";
 import { EditEmployeesModal } from "./EditEmployeesModal";
 import { FaEdit } from "react-icons/fa";
 
@@ -162,11 +162,11 @@ export const EmployeesListTable: React.FC<EmployeesTableProps> = ({
           <Input
             type="text"
             placeholder="Search..."
-            className="border text-[14px] w-32 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300"
+            className="border text-[14px] sm:w-40 w-32 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-          <EmployeesReportButton employees={filteredEmployees} />
+          {/* <EmployeesReportButton employees={filteredEmployees} /> */}
         </div>
       </div>
       <Table

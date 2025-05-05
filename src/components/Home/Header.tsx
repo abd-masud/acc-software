@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export const HomeHeader = () => {
   const { user } = useAuth();
   return (
-    <div className="grid md:grid-cols-2 grid-cols-1 mb-6">
+    <div className="grid md:grid-cols-2 grid-cols-1 mb-4">
       <div className="flex items-center mb-4 md:mb-0">
         <Image
           className="mr-3"
