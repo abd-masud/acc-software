@@ -5,11 +5,14 @@ import { Breadcrumb } from "./Breadcrumb";
 import { InvoiceApiResponse, InvoiceData } from "@/types/invoices";
 import { useAuth } from "@/contexts/AuthContext";
 import { OpenInvoicesListTable } from "./OpenInvoicesListTable";
+import { useAccUserRedirect } from "@/hooks/useAccUser";
 
 export const OpenInvoicesListComponent = () => {
   const { user } = useAuth();
   const [invoicesData, setInvoicesData] = useState<InvoiceData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  useAccUserRedirect();
+  if (!user) return null;
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);

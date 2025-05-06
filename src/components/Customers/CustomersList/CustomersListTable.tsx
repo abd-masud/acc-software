@@ -1,6 +1,14 @@
 "use client";
 
-import { Table, TableColumnsType, Modal, message, Input, Button } from "antd";
+import {
+  Table,
+  TableColumnsType,
+  Modal,
+  message,
+  Input,
+  Button,
+  Tooltip,
+} from "antd";
 import React, { useState, useMemo } from "react";
 import { Customers, CustomersTableProps } from "@/types/customers";
 import { EditCustomerModal } from "./EditCustomerModal";
@@ -126,56 +134,42 @@ export const CustomersListTable: React.FC<CustomersTableProps> = ({
       title: "Contact Number",
       dataIndex: "contact",
     },
-    // {
-    //   title: "Status",
-    //   dataIndex: "status",
-    //   render: (status: string) => {
-    //     let color = "";
-    //     switch (status) {
-    //       case "Unpaid":
-    //         color = "red";
-    //         break;
-    //       case "Paid":
-    //         color = "green";
-    //         break;
-    //       default:
-    //         color = "blue";
-    //     }
-    //     return <span style={{ color }}>{status}</span>;
-    //   },
-    // },
     {
       title: "Action",
       render: (_, record) => (
         <div className="flex justify-center items-center gap-2">
-          <button
-            className="text-white text-[14px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-            onClick={() => showEditModal(record)}
-            title="Edit"
-          >
-            <FaEdit />
-          </button>
-          <Link
-            className="text-white hover:text-white text-[16px] bg-green-600 hover:bg-green-700 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-            href={`/invoices/customer-invoices/${record.id}`}
-            title="Invoice"
-          >
-            <PiInvoiceBold />
-          </Link>
-          <Link
-            className="text-white hover:text-white text-[15px] bg-yellow-500 hover:bg-yellow-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-            href={`/quotes/customer-quotes/${record.id}`}
-            title="Quote"
-          >
-            <LiaFileInvoiceDollarSolid />
-          </Link>
-          <button
-            className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-            onClick={() => showDeleteModal(record)}
-            title="Delete"
-          >
-            <MdOutlineDeleteSweep />
-          </button>
+          <Tooltip title="Edit">
+            <button
+              className="text-white text-[14px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+              onClick={() => showEditModal(record)}
+            >
+              <FaEdit />
+            </button>
+          </Tooltip>
+          <Tooltip title="Invoice">
+            <Link
+              className="text-white hover:text-white text-[16px] bg-green-600 hover:bg-green-700 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+              href={`/invoices/customer-invoices/${record.id}`}
+            >
+              <PiInvoiceBold />
+            </Link>
+          </Tooltip>
+          <Tooltip title="Quote">
+            <Link
+              className="text-white hover:text-white text-[15px] bg-yellow-500 hover:bg-yellow-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+              href={`/quotes/customer-quotes/${record.id}`}
+            >
+              <LiaFileInvoiceDollarSolid />
+            </Link>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <button
+              className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+              onClick={() => showDeleteModal(record)}
+            >
+              <MdOutlineDeleteSweep />
+            </button>
+          </Tooltip>
         </div>
       ),
     },

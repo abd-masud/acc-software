@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { Tooltip } from "antd";
 import { useState, useEffect, useCallback } from "react";
 import { FaEdit } from "react-icons/fa";
 import { MdOutlineDeleteSweep } from "react-icons/md";
@@ -236,18 +237,22 @@ export const GeneralSettingsForm = () => {
                 >
                   <span>{item.name}</span>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEditItem(item)}
-                      className="text-white text-[14px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteItem(item)}
-                      className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-                    >
-                      <MdOutlineDeleteSweep />
-                    </button>
+                    <Tooltip title="Edit">
+                      <button
+                        onClick={() => handleEditItem(item)}
+                        className="text-white text-[14px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+                      >
+                        <FaEdit />
+                      </button>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <button
+                        onClick={() => handleDeleteItem(item)}
+                        className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+                      >
+                        <MdOutlineDeleteSweep />
+                      </button>
+                    </Tooltip>
                   </div>
                 </li>
               ))}

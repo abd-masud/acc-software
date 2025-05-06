@@ -1,6 +1,14 @@
 "use client";
 
-import { Table, TableColumnsType, Button, message, Input, Modal } from "antd";
+import {
+  Table,
+  TableColumnsType,
+  Button,
+  message,
+  Input,
+  Modal,
+  Tooltip,
+} from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { QuoteData, QuoteItem, QuotesTableProps } from "@/types/quotes";
 import Link from "next/link";
@@ -164,20 +172,22 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
       title: "Action",
       render: (_, record) => (
         <div className="flex justify-center items-center gap-2">
-          <Link
-            className="text-white hover:text-white text-[16px] bg-yellow-500 hover:bg-yellow-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-            href={`/quotes/${record.id}`}
-            title="Quote"
-          >
-            <MdOutlinePictureAsPdf />
-          </Link>
-          <button
-            className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-            onClick={() => showDeleteModal(record)}
-            title="Delete"
-          >
-            <MdOutlineDeleteSweep />
-          </button>
+          <Tooltip title="Quote">
+            <Link
+              className="text-white hover:text-white text-[16px] bg-yellow-500 hover:bg-yellow-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+              href={`/quotes/${record.id}`}
+            >
+              <MdOutlinePictureAsPdf />
+            </Link>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <button
+              className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+              onClick={() => showDeleteModal(record)}
+            >
+              <MdOutlineDeleteSweep />
+            </button>
+          </Tooltip>
         </div>
       ),
     },

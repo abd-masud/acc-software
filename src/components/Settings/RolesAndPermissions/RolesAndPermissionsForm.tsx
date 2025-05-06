@@ -194,18 +194,7 @@ export const RolesAndPermissionsForm = () => {
   };
 
   if (!initialLoadComplete) {
-    return (
-      <div className="bg-gray-100 min-h-screen mt-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg shadow-md w-full h-[313px]"></div>
-          <div className="bg-white rounded-lg shadow-md w-full h-[313px]"></div>
-          <div className="bg-white rounded-lg shadow-md w-full h-[313px]"></div>
-          <div className="bg-white rounded-lg shadow-md w-full h-[313px]"></div>
-          <div className="bg-white rounded-lg shadow-md w-full h-[313px]"></div>
-          <div className="bg-white rounded-lg shadow-md w-full h-[313px]"></div>
-        </div>
-      </div>
-    );
+    return <p>Loading...</p>;
   }
 
   const filteredRoles =
@@ -290,23 +279,7 @@ export const RolesAndPermissionsForm = () => {
         </div>
       </div>
 
-      {selectedRoleFilter !== "all" && (
-        <div className="mb-4 p-4 bg-white rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">
-            Employees with {selectedRoleFilter} role
-          </h3>
-          <Table
-            scroll={{ x: "max-content" }}
-            columns={employeeColumns}
-            dataSource={getEmployeesByRole(selectedRoleFilter)}
-            rowKey="id"
-            pagination={false}
-            bordered
-          />
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-4 mb-4">
         {filteredRoles.map((role) => {
           const allChecked = roleModules[role.name]?.every(
             (mod) => mod.canView
@@ -367,6 +340,22 @@ export const RolesAndPermissionsForm = () => {
           );
         })}
       </div>
+
+      {selectedRoleFilter !== "all" && (
+        <div className="mb-4 p-4 bg-white rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-4">
+            Employees with {selectedRoleFilter} role
+          </h3>
+          <Table
+            scroll={{ x: "max-content" }}
+            columns={employeeColumns}
+            dataSource={getEmployeesByRole(selectedRoleFilter)}
+            rowKey="id"
+            pagination={false}
+            bordered
+          />
+        </div>
+      )}
 
       {roles.length > 0 && (
         <div className="mt-8 text-center">

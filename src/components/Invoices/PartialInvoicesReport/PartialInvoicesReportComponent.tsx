@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import { Breadcrumb } from "./Breadcrumb";
 import { QRCodeSVG } from "qrcode.react";
+import { useAccUserRedirect } from "@/hooks/useAccUser";
 
 export const PartialInvoicesReportComponent = ({
   InvoiceId,
@@ -17,6 +18,8 @@ export const PartialInvoicesReportComponent = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
+  useAccUserRedirect();
+  if (!user) return null;
 
   useEffect(() => {
     if (!InvoiceId || !user?.id) return;

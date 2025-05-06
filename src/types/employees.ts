@@ -1,13 +1,14 @@
 export interface Employees {
-    key: string;
+    key?: string;
     id: number;
+    employee_id: string;
     name: string;
     email: string;
     contact: string;
     department: string;
     role: string;
     status: string;
-    password: string;
+    password?: string;
 }
 
 export type EmployeeApiResponse = {

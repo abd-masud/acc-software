@@ -5,11 +5,14 @@ import { Breadcrumb } from "./Breadcrumb";
 import { QuoteApiResponse, QuoteData } from "@/types/quotes";
 import { useAuth } from "@/contexts/AuthContext";
 import { QuotesListTable } from "./QuotesListTable";
+import { useAccUserRedirect } from "@/hooks/useAccUser";
 
 export const QuotesListComponent = () => {
   const { user } = useAuth();
   const [quotesData, setQuoteData] = useState<QuoteData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  useAccUserRedirect();
+  if (!user) return null;
 
   const fetchQuotes = useCallback(async () => {
     setLoading(true);

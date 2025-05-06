@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Table,
-  TableColumnsType,
-  Button,
-  Input,
-  DatePicker,
-  Alert,
-  Card,
-} from "antd";
+import { Table, TableColumnsType, Button, Input, DatePicker } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { InvoiceData, InvoiceItem, InvoicesTableProps } from "@/types/invoices";
 import dayjs, { Dayjs } from "dayjs";
@@ -24,7 +16,7 @@ export const AllSalesReportTable: React.FC<InvoicesTableProps> = ({
   const [fromDate, setFromDate] = useState<Dayjs | null>(null);
   const [toDate, setToDate] = useState<Dayjs | null>(null);
   const [currencyCode, setCurrencyCode] = useState("USD");
-  const [dateRangeSelected, setDateRangeSelected] = useState(false);
+  const [, setDateRangeSelected] = useState(false);
 
   useEffect(() => {
     const fetchCurrencies = async () => {

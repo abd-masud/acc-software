@@ -8,12 +8,17 @@ import {
   PartialInvoicesItemProps,
 } from "@/types/invoices";
 import { PartialInvoicesListTable } from "./PartialInvoicesListTable";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAccUserRedirect } from "@/hooks/useAccUser";
 
 export const PartialInvoicesListComponent = ({
   InvoiceId,
 }: PartialInvoicesItemProps) => {
   const [invoicesData, setInvoicesData] = useState<InvoiceData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const { user } = useAuth();
+  useAccUserRedirect();
+  if (!user) return null;
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);

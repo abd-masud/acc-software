@@ -1,11 +1,25 @@
 "use client";
 
-import { Table, TableColumnsType, Button, message, Input, Modal } from "antd";
+import {
+  Table,
+  TableColumnsType,
+  Button,
+  message,
+  Input,
+  Modal,
+  Tooltip,
+  DatePicker,
+} from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { QuoteData, QuoteItem, QuotesTableProps } from "@/types/quotes";
 import Link from "next/link";
-import { MdOutlineDeleteSweep, MdOutlinePictureAsPdf } from "react-icons/md";
+import {
+  MdMoveUp,
+  MdOutlineDeleteSweep,
+  MdOutlinePictureAsPdf,
+} from "react-icons/md";
 import { useAuth } from "@/contexts/AuthContext";
+import dayjs from "dayjs";
 
 export const QuotesListTable: React.FC<QuotesTableProps> = ({
   quotes,
@@ -18,11 +32,37 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [searchText, setSearchText] = useState("");
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState<QuoteData | null>(null);
+  const [payNow, setPayNow] = useState(0);
+  const [dueDate, setDueDate] = useState(dayjs().add(7, "days"));
+  const [paymentType, setPaymentType] = useState("cash");
+
+  const dateFormat = "DD MMMM YYYY";
 
   const showDeleteModal = (quote: QuoteData) => {
     setQuoteToDelete(quote);
     setDeleteConfirmationText("");
     setIsDeleteModalOpen(true);
+  };
+
+  const onClose = () => {
+    setIsOpen(false);
+    setSelectedQuote(null);
+  };
+
+  const handleInvoiceClick = (quote: QuoteData) => {
+    setSelectedQuote(quote);
+    setIsOpen(true);
+  };
+
+  const handlePayNowChange = (value: string) => {
+    const newPayNow = Number(value) || 0;
+    setPayNow(newPayNow);
+  };
+
+  const handleDateChange = (date: dayjs.Dayjs | null) => {
+    if (date) setDueDate(date);
   };
 
   const filteredQuotes = useMemo(() => {
@@ -70,6 +110,68 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
 
     fetchCurrencies();
   }, [user?.id]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedQuote) return;
+
+    if (payNow > selectedQuote.total) return;
+
+    const due_amount = selectedQuote.total - payNow;
+
+    const sub_invoice = [
+      {
+        paid_amount: payNow,
+        due_amount: due_amount,
+        date: dayjs(),
+      },
+    ];
+
+    const invoiceData = {
+      customer: selectedQuote.customer,
+      items: selectedQuote.items,
+      invoice_id: selectedQuote.quote_id,
+      date: dayjs().format("YYYY-MM-DD"),
+      due_date: dueDate.format("YYYY-MM-DD"),
+      subtotal: selectedQuote.subtotal,
+      tax: selectedQuote.tax,
+      discount: selectedQuote.discount,
+      total: selectedQuote.total,
+      paid_amount: payNow,
+      due_amount,
+      pay_type: paymentType,
+      notes: selectedQuote.notes,
+      sub_invoice,
+      user_id: user?.id as number,
+    };
+
+    try {
+      const res = await fetch("/api/invoices", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(invoiceData),
+      });
+
+      if (res.ok) {
+        await fetch("/api/quotes", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id: selectedQuote.id }),
+        });
+
+        onClose();
+        fetchQuotes();
+      } else {
+        console.error("Failed to create invoice");
+      }
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+    }
+  };
 
   const handleDelete = async () => {
     if (!quoteToDelete) return;
@@ -203,20 +305,30 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
       title: "Action",
       render: (_, record) => (
         <div className="flex justify-center items-center gap-2">
-          <Link
-            className="text-white hover:text-white text-[16px] bg-yellow-500 hover:bg-yellow-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-            href={`/quotes/${record.id}`}
-            title="Quote"
-          >
-            <MdOutlinePictureAsPdf />
-          </Link>
-          <button
-            className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-            onClick={() => showDeleteModal(record)}
-            title="Delete"
-          >
-            <MdOutlineDeleteSweep />
-          </button>
+          <Tooltip title="Invoice It">
+            <button
+              onClick={() => handleInvoiceClick(record)}
+              className="text-white hover:text-white text-[16px] bg-green-600 hover:bg-green-700 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+            >
+              <MdMoveUp />
+            </button>
+          </Tooltip>
+          <Tooltip title="Quote">
+            <Link
+              className="text-white hover:text-white text-[16px] bg-yellow-500 hover:bg-yellow-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+              href={`/quotes/${record.id}`}
+            >
+              <MdOutlinePictureAsPdf />
+            </Link>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <button
+              className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+              onClick={() => showDeleteModal(record)}
+            >
+              <MdOutlineDeleteSweep />
+            </button>
+          </Tooltip>
         </div>
       ),
     },
@@ -247,6 +359,208 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
         bordered
         rowKey="id"
       />
+      <Modal
+        open={isOpen}
+        onOk={() =>
+          handleSubmit({
+            preventDefault: () => {},
+          } as React.FormEvent<HTMLFormElement>)
+        }
+        onCancel={onClose}
+        okText="Add to Invoice"
+      >
+        <form id="invoiceForm" onSubmit={handleSubmit}>
+          <div className="flex items-center pb-3">
+            <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
+            <h2 className="text-[13px] font-[500]">Invoice</h2>
+          </div>
+          <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="invoiceId">
+                Invoice ID
+              </label>
+              <input
+                placeholder="Enter Invoice ID"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                type="text"
+                id="invoiceId"
+                value={selectedQuote?.quote_id || ""}
+                readOnly
+              />
+            </div>
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="name">
+                Customer
+              </label>
+              <input
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                type="text"
+                id="name"
+                value={`${selectedQuote?.customer?.name || ""}  (${
+                  selectedQuote?.customer?.customer_id || ""
+                })`}
+                readOnly
+              />
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="email">
+                Email Address
+              </label>
+              <input
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                type="text"
+                id="email"
+                value={selectedQuote?.customer?.email}
+                readOnly
+              />
+            </div>
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="contact">
+                Phone Number
+              </label>
+              <input
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                type="text"
+                id="contact"
+                value={selectedQuote?.customer?.contact}
+                readOnly
+              />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-4 grid-cols-1 gap-3">
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="total">
+                Subtotal
+              </label>
+              <input
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                id="total"
+                value={selectedQuote?.subtotal.toFixed(2)}
+                readOnly
+              />
+            </div>
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="total">
+                Tax
+              </label>
+              <input
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                id="total"
+                value={selectedQuote?.tax.toFixed(2)}
+                readOnly
+              />
+            </div>
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="total">
+                Discount
+              </label>
+              <input
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                id="total"
+                value={selectedQuote?.discount.toFixed(2)}
+                readOnly
+              />
+            </div>
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="total">
+                Total Amount
+              </label>
+              <input
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                id="total"
+                value={selectedQuote?.total.toFixed(2)}
+                readOnly
+              />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="paid">
+                Pay Now
+              </label>
+              <input
+                type="number"
+                placeholder="0.00"
+                className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                min={0}
+                max={Number(selectedQuote?.total)}
+                id="paid"
+                value={payNow}
+                onChange={(e) => handlePayNowChange(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="text-[14px]" htmlFor="date">
+                Due Date
+              </label>
+              <DatePicker
+                className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                type="date"
+                id="date"
+                format={dateFormat}
+                value={dueDate}
+                onChange={handleDateChange}
+                required
+              />
+            </div>
+          </div>
+          <div className="mb-4">
+            <label className="text-[14px]">Payment Method</label>
+            <div className="flex sm:flex-row flex-col sm:gap-5 gap-1">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  className="text-blue-500 focus:ring-blue-500"
+                  name="paymentType"
+                  value="cash"
+                  checked={paymentType == "cash"}
+                  onChange={() => setPaymentType("cash")}
+                />
+                <span className="text-[14px]">Cash</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  className="text-blue-500 focus:ring-blue-500"
+                  name="paymentType"
+                  value="wallet"
+                  checked={paymentType == "wallet"}
+                  onChange={() => setPaymentType("wallet")}
+                />
+                <span className="text-[14px]">Wallet</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  className="text-blue-500 focus:ring-blue-500"
+                  name="paymentType"
+                  value="bank"
+                  checked={paymentType == "bank"}
+                  onChange={() => setPaymentType("bank")}
+                />
+                <span className="text-[14px]">Bank</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  className="text-blue-500 focus:ring-blue-500"
+                  name="paymentType"
+                  value="others"
+                  checked={paymentType == "others"}
+                  onChange={() => setPaymentType("others")}
+                />
+                <span className="text-[14px]">Others</span>
+              </label>
+            </div>
+          </div>
+        </form>
+      </Modal>
       <Modal
         title="Confirm Delete Quote"
         open={isDeleteModalOpen}

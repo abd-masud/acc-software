@@ -2,11 +2,11 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Employees } from "@/types/employees";
+import { SMTPSettings } from "@/types/smtp";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useId, useState } from "react";
 import { StylesConfig } from "react-select";
-// import Select from "react-select";
 
 const Select = dynamic(() => import("react-select"), {
   ssr: false,
@@ -18,9 +18,11 @@ export const AddEmployeesForm = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [employee_id, setEmployeeId] = useState("");
 
   const [formValues, setFormValues] = useState<Omit<Employees, "id">>({
     key: "",
+    employee_id: "",
     name: "",
     email: "",
     contact: "",
@@ -29,6 +31,28 @@ export const AddEmployeesForm = () => {
     status: "",
     password: "",
   });
+  const [formData, setFormData] = useState<SMTPSettings>({
+    host: "",
+    port: 587,
+    username: "",
+    password: "",
+    encryption: "none",
+    email: "",
+    company: "",
+  });
+
+  useEffect(() => {
+    const generateEmployeeId = () => {
+      const compPrefix = user?.company
+        ? user.company.slice(0, 2).toUpperCase()
+        : "CO";
+      const random = Math.floor(10000 + Math.random() * 90000);
+      return `E${compPrefix}${random}`;
+    };
+
+    setEmployeeId(generateEmployeeId());
+  }, [user]);
+
   const [generalOptions, setGeneralOptions] = useState<{
     department: string[];
     role: string[];
@@ -74,6 +98,46 @@ export const AddEmployeesForm = () => {
     fetchGenerals();
   }, [fetchGenerals]);
 
+  const fetchSMTPSettings = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch("/api/smtp", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          user_id: user.id.toString(),
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success && result.data.length > 0) {
+        const smtp = result.data[0];
+        setFormData({
+          host: smtp.host || "",
+          port: smtp.port || 587,
+          username: smtp.username || "",
+          password: smtp.password || "",
+          encryption: smtp.encryption || "none",
+          email: smtp.email || "",
+          company: smtp.company || "",
+        });
+      } else {
+        console.log(result.message || "No SMTP settings found");
+      }
+    } catch (error) {
+      console.error("Failed to fetch SMTP settings:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchSMTPSettings();
+  }, [fetchSMTPSettings]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -96,6 +160,74 @@ export const AddEmployeesForm = () => {
       }));
     };
 
+  const sendEmployeeCredentials = async (
+    employeeData: Omit<Employees, "id">
+  ) => {
+    try {
+      const emailContent = `
+      <html>
+        <body>
+          <h2>Welcome to ${formData?.company || user?.company}</h2>
+          <p>Your account has been created successfully. Here are your login credentials:</p>
+          <table cellpadding="1" cellspacing="0">
+            <tr>
+              <td>Name</td>
+              <td>:</td>
+              <td>${employeeData.name} (${employee_id})</td>
+            </tr>
+            <tr>
+              <td>Email</td>
+              <td>:</td>
+              <td>${employeeData.email}</td>
+            </tr>
+            <tr>
+              <td>Password</td>
+              <td>:</td>
+              <td>${employeeData.password}</td>
+            </tr>
+            <tr>
+              <td>Role</td>
+              <td>:</td>
+              <td>${employeeData.role}</td>
+            </tr>
+            <tr>
+              <td>Department</td>
+              <td>:</td>
+              <td>${employeeData.department}</td>
+            </tr>
+          </table>
+          <p>Please keep your credentials secure and change your password after first login.</p>
+        </body>
+      </html>
+    `;
+
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          smtpSettings: formData,
+          emailData: {
+            to: employeeData.email,
+            subject: `Your ${
+              formData.company || "Company"
+            } Account Credentials`,
+            html: emailContent,
+          },
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to send email");
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -103,6 +235,7 @@ export const AddEmployeesForm = () => {
     const payload = {
       ...formValues,
       user_id: user?.id,
+      employee_id: employee_id,
     };
 
     try {
@@ -115,8 +248,11 @@ export const AddEmployeesForm = () => {
       });
 
       if (res.ok) {
+        await sendEmployeeCredentials(formValues);
+
         setFormValues({
           key: "",
+          employee_id: "",
           name: "",
           email: "",
           contact: "",
@@ -176,6 +312,19 @@ export const AddEmployeesForm = () => {
       <form onSubmit={handleSubmit}>
         <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
           <div className="mb-4">
+            <label className="text-[14px]" htmlFor="employee_id">
+              Employee ID
+            </label>
+            <input
+              placeholder="Enter employee id"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              type="text"
+              id="employee_id"
+              value={employee_id}
+              readOnly
+            />
+          </div>
+          <div className="mb-4">
             <label className="text-[14px]" htmlFor="name">
               Name
             </label>
@@ -189,7 +338,9 @@ export const AddEmployeesForm = () => {
               required
             />
           </div>
+        </div>
 
+        <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="email">
               Email Address
@@ -204,9 +355,6 @@ export const AddEmployeesForm = () => {
               required
             />
           </div>
-        </div>
-
-        <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="contact">
               Contact Number
@@ -214,13 +362,32 @@ export const AddEmployeesForm = () => {
             <input
               placeholder="Enter contact number"
               className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-              type="tel"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              onKeyDown={(e) => {
+                if (
+                  !/[0-9]/.test(e.key) &&
+                  e.key !== "Backspace" &&
+                  e.key !== "Delete" &&
+                  e.key !== "Tab" &&
+                  e.key !== "ArrowLeft" &&
+                  e.key !== "ArrowRight"
+                ) {
+                  e.preventDefault();
+                }
+              }}
               id="contact"
+              minLength={11}
+              maxLength={11}
               value={formValues.contact}
               onChange={handleChange}
               required
             />
           </div>
+        </div>
+
+        <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="department">
               Department
@@ -239,9 +406,6 @@ export const AddEmployeesForm = () => {
               isClearable
             />
           </div>
-        </div>
-
-        <div className="grid sm:grid-cols-3 grid-cols-1 gap-4">
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="role">
               Role
@@ -260,7 +424,9 @@ export const AddEmployeesForm = () => {
               isClearable
             />
           </div>
+        </div>
 
+        <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="status">
               Status

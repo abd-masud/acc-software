@@ -25,7 +25,7 @@ const COLORS = [
 
 export const ProductOverview = () => {
   const { user } = useAuth();
-  const [invoicesData, setInvoicesData] = useState<InvoiceData[]>([]);
+  const [, setInvoicesData] = useState<InvoiceData[]>([]);
   const [productData, setProductData] = useState<ProductData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 

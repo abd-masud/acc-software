@@ -6,12 +6,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AllSalesReportTable } from "./AllSalesReportTable";
 import { InvoiceApiResponse, InvoiceData } from "@/types/invoices";
 import { CustomerApiResponse, Customers } from "@/types/customers";
+import { useAccUserRedirect } from "@/hooks/useAccUser";
 
 export const AllSalesReportComponent = () => {
   const { user } = useAuth();
   const [invoicesData, setInvoicesData] = useState<InvoiceData[]>([]);
   const [customersData, setCustomersData] = useState<Customers[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  useAccUserRedirect();
+  if (!user) return null;
 
   const fetchData = useCallback(async () => {
     setLoading(true);

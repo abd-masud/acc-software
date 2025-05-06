@@ -8,12 +8,17 @@ import {
   InvoiceData,
 } from "@/types/invoices";
 import { InvoicesListTable } from "./CustomerInvoicesListTable";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAccUserRedirect } from "@/hooks/useAccUser";
 
 export const CustomerInvoicesListComponent = ({
   CustomerId,
 }: CustomerInvoicesListProps) => {
   const [invoicesData, setInvoicesData] = useState<InvoiceData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const { user } = useAuth();
+  useAccUserRedirect();
+  if (!user) return null;
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);

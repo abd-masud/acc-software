@@ -1,7 +1,14 @@
+"use client";
+
+import { useAuth } from "@/contexts/AuthContext";
 import { AddProductsForm } from "./AddProductsForm";
 import { Breadcrumb } from "./Breadcrumb";
+import { useAccUserRedirect } from "@/hooks/useAccUser";
 
 export const AddProductsComponent = () => {
+  const { user } = useAuth();
+  useAccUserRedirect();
+  if (!user) return null;
   return (
     <main className="bg-[#F2F4F7] min-h-[calc(100vh-70px)] p-5">
       <Breadcrumb />

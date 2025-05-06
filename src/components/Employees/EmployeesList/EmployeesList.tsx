@@ -5,11 +5,15 @@ import { Breadcrumb } from "./Breadcrumb";
 import { EmployeesListTable } from "./EmployeesListTable";
 import { Employees, EmployeeApiResponse } from "@/types/employees";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAccUserRedirect } from "@/hooks/useAccUser";
 
 export const EmployeesListComponent = () => {
   const { user } = useAuth();
   const [employeesData, setEmployeesData] = useState<Employees[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  useAccUserRedirect();
+  if (!user) return null;
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true);

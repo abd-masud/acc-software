@@ -6,6 +6,7 @@ import dummy from "../../../public/images/dummy.jpg";
 import { useAuth } from "@/contexts/AuthContext";
 import { FaEdit, FaSave, FaTimes, FaUpload } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
+import { useAccUserRedirect } from "@/hooks/useAccUser";
 
 export const ProfileCompound = () => {
   const { user } = useAuth();
@@ -26,6 +27,8 @@ export const ProfileCompound = () => {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  useAccUserRedirect();
+  if (!user) return null;
 
   useEffect(() => {
     if (user) {

@@ -5,11 +5,14 @@ import { Breadcrumb } from "./Breadcrumb";
 import { ProductsListTable } from "./ProductsListTable";
 import { Products, ProductApiResponse } from "@/types/products";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAccUserRedirect } from "@/hooks/useAccUser";
 
 export const ProductsListComponent = () => {
   const { user } = useAuth();
   const [productsData, setProductsData] = useState<Products[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  useAccUserRedirect();
+  if (!user) return null;
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);

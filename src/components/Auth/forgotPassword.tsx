@@ -69,7 +69,7 @@ export const ForgotPasswordComponent = () => {
                 width={40}
                 alt={"Logo"}
               />
-              <p className="text-black font-[600] sm:text-[24px] text-[22px]">
+              <p className="text-black font-bold sm:text-[24px] text-[22px]">
                 Copa Business
               </p>
             </div>

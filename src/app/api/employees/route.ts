@@ -6,10 +6,10 @@ import { hash } from 'bcryptjs';
 // POST - Create a new employee
 export async function POST(request: NextRequest) {
     try {
-        const { user_id, name, email, contact, department, role, status, password } = await request.json();
+        const { user_id, employee_id, name, email, contact, department, role, status, password } = await request.json();
 
         // Basic validation
-        if (!user_id || !name || !email || !contact || !department || !role || !status || !password) {
+        if (!user_id || !employee_id || !name || !email || !contact || !department || !role || !status || !password) {
             return NextResponse.json(
                 { success: false, error: 'Missing required fields' },
                 { status: 400 }
@@ -23,9 +23,9 @@ export async function POST(request: NextRequest) {
 
         // Insert new employee
         const [result] = await db.query<ResultSetHeader>(
-            `INSERT INTO employees (user_id, name, email, contact, department, role, status, password)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [user_id, name, email, contact, department, role, status, hashedPassword]
+            `INSERT INTO employees (user_id, employee_id, name, email, contact, department, role, status, password)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [user_id, employee_id, name, email, contact, department, role, status, hashedPassword]
         );
 
         if (result.affectedRows == 1) {
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
 // PUT - Update a employee
 export async function PUT(request: NextRequest) {
     try {
-        const { id, name, email, contact, department, role, status, password } = await request.json();
+        const { id, employee_id, name, email, contact, department, role, status } = await request.json();
 
         const db = await connectionToDatabase();
 
@@ -119,31 +119,12 @@ export async function PUT(request: NextRequest) {
             );
         }
 
-        // Check if email is being used by another employee
-        const [emailCheck] = await db.query<RowDataPacket[]>(
-            `SELECT COUNT(*) AS count FROM employees WHERE email = ? AND id != ?`,
-            [email, id]
-        );
-
-        if (emailCheck[0]?.count > 0) {
-            return NextResponse.json(
-                { success: false, message: "Email already in use by another employee" },
-                { status: 400 }
-            );
-        }
-
-        // Hash the new password if it's provided
-        let hashedPassword = existingCustomer[0].password;
-        if (password) {
-            hashedPassword = await hash(password, 10);
-        }
-
         // Update employee
         const [result] = await db.query<ResultSetHeader>(
             `UPDATE employees 
-             SET name = ?, email = ?, contact = ?, department = ?, role =?, status =?, password =?
+             SET employee_id = ?, name = ?, email = ?, contact = ?, department = ?, role =?, status =?
              WHERE id = ?`,
-            [name, email, contact, department, role, status, hashedPassword, id]
+            [employee_id, name, email, contact, department, role, status, id]
         );
 
         if (result.affectedRows == 1) {

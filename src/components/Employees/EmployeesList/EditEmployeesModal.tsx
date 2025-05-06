@@ -1,12 +1,12 @@
 "use client";
 
 import { Modal, message } from "antd";
-import { EditEmployeeModalProps } from "@/types/employees";
+import { EditEmployeeModalProps, Employees } from "@/types/employees";
 import { useCallback, useEffect, useId, useState } from "react";
-import { hash } from "bcryptjs";
 import { useAuth } from "@/contexts/AuthContext";
 import { StylesConfig } from "react-select";
 import dynamic from "next/dynamic";
+import { SMTPSettings } from "@/types/smtp";
 
 const Select = dynamic(() => import("react-select"), {
   ssr: false,
@@ -32,19 +32,68 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
 }) => {
   const instanceId = useId();
   const { user } = useAuth();
+  const [employeeId, setEmployeeId] = useState("");
   const [employeeName, setEmployeeName] = useState("");
   const [email, setEmail] = useState("");
   const [contact, setContact] = useState("");
   const [department, setDepartment] = useState("");
   const [role, setRole] = useState("");
   const [status, setStatus] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [generalOptions, setGeneralOptions] = useState<GeneralOptions>({
     department: [],
     role: [],
     status: [],
   });
+  const [formData, setFormData] = useState<SMTPSettings>({
+    host: "",
+    port: 587,
+    username: "",
+    password: "",
+    encryption: "none",
+    email: "",
+    company: "",
+  });
+
+  const fetchSMTPSettings = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch("/api/smtp", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          user_id: user.id.toString(),
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success && result.data.length > 0) {
+        const smtp = result.data[0];
+        setFormData({
+          host: smtp.host || "",
+          port: smtp.port || 587,
+          username: smtp.username || "",
+          password: smtp.password || "",
+          encryption: smtp.encryption || "none",
+          email: smtp.email || "",
+          company: smtp.company || "",
+        });
+      } else {
+        console.log(result.message || "No SMTP settings found");
+      }
+    } catch (error) {
+      console.error("Failed to fetch SMTP settings:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchSMTPSettings();
+  }, [fetchSMTPSettings]);
 
   const fetchGenerals = useCallback(async () => {
     setLoading(true);
@@ -91,40 +140,103 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
 
   useEffect(() => {
     if (currentEmployee) {
+      setEmployeeId(currentEmployee.employee_id);
       setEmployeeName(currentEmployee.name);
       setEmail(currentEmployee.email);
       setContact(currentEmployee.contact);
       setDepartment(currentEmployee.department);
       setRole(currentEmployee.role);
       setStatus(currentEmployee.status);
-      // Don't pre-fill password field for security
-      setPassword("");
     }
   }, [currentEmployee]);
+
+  const sendEmployeeCredentials = async (
+    employeeData: Omit<Employees, "id">
+  ) => {
+    try {
+      const emailContent = `
+      <html>
+        <body>
+          <h2>Welcome to ${user?.company || "Our Company"}</h2>
+          <p>Your account has been created successfully. Here are your login credentials:</p>
+          <table cellpadding="1" cellspacing="0">
+            <tr>
+              <td>Name</td>
+              <td>:</td>
+              <td>${employeeData.name} (${employeeData.employee_id})</td>
+            </tr>
+            <tr>
+              <td>Email</td>
+              <td>:</td>
+              <td>${employeeData.email}</td>
+            </tr>
+            <tr>
+              <td>Password</td>
+              <td>:</td>
+              <td>Unchanged</td>
+            </tr>
+            <tr>
+              <td>Role</td>
+              <td>:</td>
+              <td>${employeeData.role}</td>
+            </tr>
+            <tr>
+              <td>Department</td>
+              <td>:</td>
+              <td>${employeeData.department}</td>
+            </tr>
+          </table>
+          <p>Please keep your credentials secure and change your password after first login.</p>
+        </body>
+      </html>
+    `;
+
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          smtpSettings: formData,
+          emailData: {
+            to: employeeData.email,
+            subject: `Your ${
+              formData.company || "Company"
+            } Account Credentials`,
+            html: emailContent,
+          },
+        }),
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to send email");
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      throw error;
+    }
+  };
 
   const handleSubmit = async () => {
     if (!currentEmployee) return;
 
     try {
       setLoading(true);
-
-      // Only hash password if it's a new one (not empty)
-      const hashedPassword = password
-        ? await hash(password, 10)
-        : currentEmployee.password;
-
       const updatedEmployee = {
-        ...currentEmployee,
+        id: currentEmployee.id,
+        employee_id: employeeId,
         name: employeeName,
         email,
         contact,
         department,
         role,
         status,
-        password: hashedPassword,
       };
 
+      console.log(updatedEmployee);
       await onSave(updatedEmployee);
+      await sendEmployeeCredentials(updatedEmployee);
       message.success("Employee updated successfully");
       onClose();
     } catch (err) {
@@ -177,6 +289,18 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
       </div>
 
       <div className="mb-4">
+        <label className="text-[14px]" htmlFor="employeeId">
+          Employee ID
+        </label>
+        <input
+          id="employeeId"
+          placeholder="Enter employee name"
+          className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+          value={employeeId}
+          readOnly
+        />
+      </div>
+      <div className="mb-4">
         <label className="text-[14px]" htmlFor="employeeName">
           Name
         </label>
@@ -210,9 +334,25 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
           </label>
           <input
             id="contact"
-            type="tel"
             placeholder="Enter contact number"
             className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            onKeyDown={(e) => {
+              if (
+                !/[0-9]/.test(e.key) &&
+                e.key !== "Backspace" &&
+                e.key !== "Delete" &&
+                e.key !== "Tab" &&
+                e.key !== "ArrowLeft" &&
+                e.key !== "ArrowRight"
+              ) {
+                e.preventDefault();
+              }
+            }}
+            minLength={11}
+            maxLength={11}
             value={contact}
             onChange={(e) => setContact(e.target.value)}
           />
@@ -282,20 +422,6 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
             isClearable
           />
         </div>
-      </div>
-
-      <div className="mb-4">
-        <label className="text-[14px]" htmlFor="password">
-          New Password (leave blank to keep current)
-        </label>
-        <input
-          id="password"
-          type="password"
-          placeholder="Enter new password"
-          className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
       </div>
     </Modal>
   );

@@ -8,12 +8,17 @@ import {
   QuoteData,
 } from "@/types/quotes";
 import { QuotesListTable } from "./CustomerQuotesListTable";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAccUserRedirect } from "@/hooks/useAccUser";
 
 export const CustomerQuotesListComponent = ({
   CustomerId,
 }: CustomerQuotesListProps) => {
   const [quotesData, setQuotesData] = useState<QuoteData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const { user } = useAuth();
+  useAccUserRedirect();
+  if (!user) return null;
 
   const fetchQuotes = useCallback(async () => {
     setLoading(true);

@@ -1,6 +1,6 @@
 "use client";
 
-import { Table, TableColumnsType } from "antd";
+import { Table, TableColumnsType, Tooltip } from "antd";
 import React, { useEffect, useState } from "react";
 import { FlattenedInvoice, PartialInvoicesTableProps } from "@/types/invoices";
 import { useAuth } from "@/contexts/AuthContext";
@@ -144,13 +144,14 @@ export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
       render: (record: FlattenedInvoice) => {
         return (
           <div className="flex justify-center">
-            <Link
-              className="text-white hover:text-white text-[16px] bg-yellow-500 hover:bg-yellow-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-              href={`/invoices/partial-invoices-report/${record.id}`}
-              title="Invoice"
-            >
-              <MdOutlinePictureAsPdf />
-            </Link>
+            <Tooltip title="Invoice">
+              <Link
+                className="text-white hover:text-white text-[16px] bg-yellow-500 hover:bg-yellow-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+                href={`/invoices/partial-invoices-report/${record.id}`}
+              >
+                <MdOutlinePictureAsPdf />
+              </Link>
+            </Tooltip>
           </div>
         );
       },

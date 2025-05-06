@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import { Breadcrumb } from "./Breadcrumb";
 import { QRCodeSVG } from "qrcode.react";
+import { useAccUserRedirect } from "@/hooks/useAccUser";
 
 export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
   const { user } = useAuth();
@@ -15,6 +16,8 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const quoteRef = useRef<HTMLDivElement>(null);
+  useAccUserRedirect();
+  if (!user) return null;
 
   useEffect(() => {
     if (!QuoteId || !user?.id) return;

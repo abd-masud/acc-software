@@ -14,6 +14,9 @@ import {
 } from "react-icons/fa6";
 import { FaChevronDown, FaUserTie } from "react-icons/fa";
 import { GiNotebook } from "react-icons/gi";
+import { TbBlockquote } from "react-icons/tb";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAccUserRedirect } from "@/hooks/useAccUser";
 
 interface SideBarProps {
   closeSidebar?: () => void;
@@ -22,6 +25,9 @@ interface SideBarProps {
 export const SideBar = ({ closeSidebar }: SideBarProps) => {
   const pathname = usePathname();
   const [openSection, setOpenSection] = useState<string | null>(null);
+  const { user } = useAuth();
+  useAccUserRedirect();
+  if (!user) return null;
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection == section ? null : section);
@@ -182,7 +188,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
               pathname.includes("/quotes") ? "bg-[#307DF1]" : "bg-transparent"
             }`}
           ></div>
-          <FaMoneyBillTrendUp className="ml-[21px] text-[16px] mr-3 w-5" />
+          <TbBlockquote className="ml-[21px] text-[16px] mr-3 w-5" />
           Quotes
         </div>
         <FaChevronDown />

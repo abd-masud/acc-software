@@ -10,7 +10,7 @@ import { FaXmark } from "react-icons/fa6";
 import { useAuth } from "@/contexts/AuthContext";
 import { signIn, useSession } from "next-auth/react";
 
-export const LoginComponent = () => {
+export const EmployeeLoginComponent = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);

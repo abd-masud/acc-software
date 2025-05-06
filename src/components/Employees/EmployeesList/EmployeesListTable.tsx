@@ -1,6 +1,14 @@
 "use client";
 
-import { Table, TableColumnsType, Button, message, Input, Modal } from "antd";
+import {
+  Table,
+  TableColumnsType,
+  Button,
+  message,
+  Input,
+  Modal,
+  Tooltip,
+} from "antd";
 import React, { useMemo, useState } from "react";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 import { Employees, EmployeesTableProps } from "@/types/employees";
@@ -105,6 +113,10 @@ export const EmployeesListTable: React.FC<EmployeesTableProps> = ({
       render: (_, __, index) => index + 1,
     },
     {
+      title: "Employee ID",
+      dataIndex: "employee_id",
+    },
+    {
       title: "Name",
       dataIndex: "name",
     },
@@ -132,20 +144,22 @@ export const EmployeesListTable: React.FC<EmployeesTableProps> = ({
       title: "Action",
       render: (_, record) => (
         <div className="flex justify-center items-center gap-2">
-          <button
-            className="text-white text-[14px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-            onClick={() => showEditModal(record)}
-            title="Edit"
-          >
-            <FaEdit />
-          </button>
-          <button
-            className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-            onClick={() => showDeleteModal(record)}
-            title="Delete"
-          >
-            <MdOutlineDeleteSweep />
-          </button>
+          <Tooltip title="Edit">
+            <button
+              className="text-white text-[14px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+              onClick={() => showEditModal(record)}
+            >
+              <FaEdit />
+            </button>
+          </Tooltip>
+          <Tooltip title="Delete">
+            <button
+              className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+              onClick={() => showDeleteModal(record)}
+            >
+              <MdOutlineDeleteSweep />
+            </button>
+          </Tooltip>
         </div>
       ),
     },

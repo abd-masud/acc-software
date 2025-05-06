@@ -1,4 +1,4 @@
-import { NewPasswordComponent } from "@/components/Auth/newPassword";
+import { NewPasswordComponent } from "@/components/Auth/NewPassword";
 
 export default function NewPassword() {
   return <NewPasswordComponent />;
