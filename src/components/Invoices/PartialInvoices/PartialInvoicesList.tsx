@@ -18,9 +18,9 @@ export const PartialInvoicesListComponent = ({
   const [loading, setLoading] = useState<boolean>(true);
   const { user } = useAuth();
   useAccUserRedirect();
-  if (!user) return null;
 
   const fetchInvoices = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
 
     try {
@@ -53,7 +53,7 @@ export const PartialInvoicesListComponent = ({
     } finally {
       setLoading(false);
     }
-  }, [InvoiceId]);
+  }, [InvoiceId, user?.id]);
 
   useEffect(() => {
     fetchInvoices();

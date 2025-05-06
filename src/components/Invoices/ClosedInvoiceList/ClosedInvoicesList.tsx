@@ -13,9 +13,9 @@ export const ClosedInvoicesListComponent = () => {
   const [loading, setLoading] = useState<boolean>(true);
 
   useAccUserRedirect();
-  if (!user) return null;
 
   const fetchInvoices = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
 
     try {

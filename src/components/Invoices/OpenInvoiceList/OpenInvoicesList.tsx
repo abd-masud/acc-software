@@ -12,9 +12,9 @@ export const OpenInvoicesListComponent = () => {
   const [invoicesData, setInvoicesData] = useState<InvoiceData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   useAccUserRedirect();
-  if (!user) return null;
 
   const fetchInvoices = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
 
     try {

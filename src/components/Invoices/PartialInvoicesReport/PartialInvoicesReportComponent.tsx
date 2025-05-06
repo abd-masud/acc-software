@@ -19,7 +19,6 @@ export const PartialInvoicesReportComponent = ({
   const [error, setError] = useState<string | null>(null);
   const invoiceRef = useRef<HTMLDivElement>(null);
   useAccUserRedirect();
-  if (!user) return null;
 
   useEffect(() => {
     if (!InvoiceId || !user?.id) return;

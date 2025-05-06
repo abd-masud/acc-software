@@ -18,9 +18,9 @@ export const CustomerInvoicesListComponent = ({
   const [loading, setLoading] = useState<boolean>(true);
   const { user } = useAuth();
   useAccUserRedirect();
-  if (!user) return null;
 
   const fetchInvoices = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
 
     try {
@@ -49,7 +49,7 @@ export const CustomerInvoicesListComponent = ({
     } finally {
       setLoading(false);
     }
-  }, [CustomerId]);
+  }, [CustomerId, user?.id]);
 
   useEffect(() => {
     fetchInvoices();

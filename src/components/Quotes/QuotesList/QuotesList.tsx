@@ -12,9 +12,9 @@ export const QuotesListComponent = () => {
   const [quotesData, setQuoteData] = useState<QuoteData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   useAccUserRedirect();
-  if (!user) return null;
 
   const fetchQuotes = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
 
     try {

@@ -12,9 +12,9 @@ export const ProductsListComponent = () => {
   const [productsData, setProductsData] = useState<Products[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   useAccUserRedirect();
-  if (!user) return null;
 
   const fetchProducts = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
 
     try {

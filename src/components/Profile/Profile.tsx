@@ -28,7 +28,6 @@ export const ProfileCompound = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   useAccUserRedirect();
-  if (!user) return null;
 
   useEffect(() => {
     if (user) {

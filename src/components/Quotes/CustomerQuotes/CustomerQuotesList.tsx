@@ -18,9 +18,9 @@ export const CustomerQuotesListComponent = ({
   const [loading, setLoading] = useState<boolean>(true);
   const { user } = useAuth();
   useAccUserRedirect();
-  if (!user) return null;
 
   const fetchQuotes = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
 
     try {
@@ -49,7 +49,7 @@ export const CustomerQuotesListComponent = ({
     } finally {
       setLoading(false);
     }
-  }, [CustomerId]);
+  }, [CustomerId, user?.id]);
 
   useEffect(() => {
     fetchQuotes();

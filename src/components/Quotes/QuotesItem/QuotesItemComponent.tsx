@@ -17,7 +17,6 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
   const [error, setError] = useState<string | null>(null);
   const quoteRef = useRef<HTMLDivElement>(null);
   useAccUserRedirect();
-  if (!user) return null;
 
   useEffect(() => {
     if (!QuoteId || !user?.id) return;

@@ -14,9 +14,9 @@ export const AllSalesReportComponent = () => {
   const [customersData, setCustomersData] = useState<Customers[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   useAccUserRedirect();
-  if (!user) return null;
 
   const fetchData = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
 
     try {
