@@ -19,17 +19,11 @@ export const ClosedInvoicesListComponent = () => {
     setLoading(true);
 
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-
-      if (user?.id) {
-        headers["user_id"] = user.id.toString();
-      }
-
-      const response = await fetch("/api/invoices", {
+      const response = await fetch(`/api/invoices?user_id=${user.id}`, {
         method: "GET",
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       const json: InvoiceApiResponse = await response.json();

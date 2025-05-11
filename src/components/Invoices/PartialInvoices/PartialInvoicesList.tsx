@@ -24,18 +24,15 @@ export const PartialInvoicesListComponent = ({
     setLoading(true);
 
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-
-      if (InvoiceId) {
-        headers["id"] = InvoiceId.toString();
-      }
-
-      const response = await fetch("/api/invoices/single-invoice", {
-        method: "GET",
-        headers,
-      });
+      const response = await fetch(
+        `/api/invoices/single-invoice?id=${InvoiceId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const json: InvoiceApiResponse = await response.json();
 

@@ -24,18 +24,15 @@ export const CustomerInvoicesListComponent = ({
     setLoading(true);
 
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-
-      if (CustomerId) {
-        headers["id"] = CustomerId.toString();
-      }
-
-      const response = await fetch("/api/invoices/customer-invoices", {
-        method: "GET",
-        headers,
-      });
+      const response = await fetch(
+        `/api/invoices/customer-invoices?id=${CustomerId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const json: InvoiceApiResponse = await response.json();
 

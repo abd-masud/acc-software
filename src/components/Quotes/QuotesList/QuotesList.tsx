@@ -18,17 +18,11 @@ export const QuotesListComponent = () => {
     setLoading(true);
 
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-
-      if (user?.id) {
-        headers["user_id"] = user.id.toString();
-      }
-
-      const response = await fetch("/api/quotes", {
+      const response = await fetch(`/api/quotes?user_id=${user.id}`, {
         method: "GET",
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       const json: QuoteApiResponse = await response.json();

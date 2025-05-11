@@ -29,11 +29,7 @@ export const CurrencySettingsTable = () => {
           })
         );
 
-        const dbRes = await fetch("/api/currencies", {
-          headers: {
-            user_id: user.id.toString(),
-          },
-        });
+        const dbRes = await fetch(`/api/currencies?user_id=${user.id}`, {});
         const dbJson = await dbRes.json();
         const activeCurrency = dbJson?.data?.[0]?.currency;
 

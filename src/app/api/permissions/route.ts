@@ -5,8 +5,9 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET - Retrieve permissions
 export async function GET(request: NextRequest) {
     try {
+        const { searchParams } = new URL(request.url);
+        const user_id = searchParams.get('user_id');
         const db = await connectionToDatabase();
-        const user_id = request.headers.get('user_id');
 
         const [permissions] = await db.query<RowDataPacket[]>(
             `SELECT * FROM permissions WHERE user_id = ?`,

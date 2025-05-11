@@ -3,12 +3,18 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import success from "../../../../public/images/success.png";
+import { Modal } from "antd";
+import { FaXmark } from "react-icons/fa6";
 
 export const AddCustomersForm = () => {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [customer_id, setCustomerId] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [userMessage, setUserMessage] = useState<string | null>(null);
 
   const [formValues, setFormValues] = useState({
     customer_id: "",
@@ -40,6 +46,7 @@ export const AddCustomersForm = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+    setUserMessage(null);
 
     const payload = {
       ...formValues,
@@ -57,28 +64,65 @@ export const AddCustomersForm = () => {
         body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        setFormValues({
-          customer_id: "",
-          name: "",
-          delivery: "",
-          email: "",
-          contact: "",
-          status: "",
-        });
-        router.push("/customers/customers-list");
-      } else {
-        // Handle error
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to add customer");
       }
-    } catch {
-      // Handle error
+      setShowSuccessModal(true);
+    } catch (error: any) {
+      setUserMessage(error || "An unexpected error occurred");
     } finally {
+      setTimeout(() => setUserMessage(null), 5000);
       setLoading(false);
     }
   };
 
+  const handleAddMore = () => {
+    setFormValues({
+      customer_id: "",
+      name: "",
+      delivery: "",
+      email: "",
+      contact: "",
+      status: "",
+    });
+
+    const compPrefix = user?.company
+      ? user.company.slice(0, 2).toUpperCase()
+      : "CO";
+    const random = Math.floor(10000 + Math.random() * 90000);
+    setCustomerId(`C${compPrefix}${random}`);
+
+    setShowSuccessModal(false);
+  };
+
+  const handleOkay = () => {
+    setShowSuccessModal(false);
+    router.push("/customers/customers-list");
+  };
+
+  const handleCloseMessage = () => {
+    setUserMessage(null);
+  };
+
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
+      {userMessage && (
+        <div className="left-1/2 top-10 transform -translate-x-1/2 fixed z-50">
+          <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 text-red-400 border-2 border-red-400 mx-auto">
+            <div className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+              {userMessage}
+            </div>
+            <button
+              onClick={handleCloseMessage}
+              className="ml-3 focus:outline-none hover:text-red-300"
+            >
+              <FaXmark className="text-[14px]" />
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex items-center pb-5">
         <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
         <h2 className="text-[13px] font-[500]">Add Customer Form</h2>
@@ -181,6 +225,37 @@ export const AddCustomersForm = () => {
           />
         </div>
       </form>
+
+      <Modal
+        open={showSuccessModal}
+        onCancel={handleOkay}
+        footer={[
+          <button
+            key="addMore"
+            onClick={handleAddMore}
+            className="text-[14px] font-[500] py-2 w-28 rounded cursor-pointer transition-all duration-300 mt-2 mr-2 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3]"
+          >
+            Add More
+          </button>,
+          <button
+            key="okay"
+            onClick={handleOkay}
+            className="text-[14px] font-[500] py-2 w-20 rounded cursor-pointer transition-all duration-300 mt-2 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3]"
+          >
+            Okay
+          </button>,
+        ]}
+        centered
+        width={400}
+      >
+        <div className="flex flex-col items-center pt-5">
+          <Image src={success} alt="Success" width={80} height={80} />
+          <h3 className="text-xl font-semibold mt-2">Success!</h3>
+          <p className="text-gray-600 text-center">
+            Customer has been added successfully.
+          </p>
+        </div>
+      </Modal>
     </main>
   );
 };

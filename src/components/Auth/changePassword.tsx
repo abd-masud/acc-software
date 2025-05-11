@@ -1,9 +1,5 @@
 "use client";
 
-import Image from "next/image";
-import logo from "../../../public/images/logo.png";
-import Link from "next/link";
-import { FaAngleLeft } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FaXmark } from "react-icons/fa6";
@@ -139,21 +135,6 @@ export const ChangePasswordComponent = () => {
         </div>
       )}
       <div className="bg-white rounded-md border shadow-lg sm:p-10 p-5 w-[450px] mx-5">
-        <Link href={"/"}>
-          <div className="flex items-center mb-5 justify-center">
-            <Image
-              className="mr-3"
-              priority
-              src={logo}
-              height={40}
-              width={40}
-              alt={"Logo"}
-            />
-            <p className="text-black font-bold sm:text-[24px] text-[22px]">
-              Copa Business
-            </p>
-          </div>
-        </Link>
         <h2 className="text-[18px] font-[600] text-[#363636]">
           Create new password
         </h2>
@@ -220,13 +201,6 @@ export const ChangePasswordComponent = () => {
           >
             {!isSubmitting ? "Change Password" : "Changing..."}
           </button>
-          <Link
-            className="text-[#307EF3] text-[14px] tracking-wide flex items-center"
-            href={"/auth/login"}
-          >
-            <FaAngleLeft className="h-3 mr-1 mt-[2px]" />
-            Back
-          </Link>
         </form>
       </div>
     </main>

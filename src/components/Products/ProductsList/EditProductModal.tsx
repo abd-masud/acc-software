@@ -23,17 +23,13 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
 
   useEffect(() => {
     const fetchCurrencies = async () => {
+      if (!user?.id) return;
       try {
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-
-        if (user?.id) {
-          headers["user_id"] = user.id.toString();
-        }
-        const currencyRes = await fetch("/api/currencies", {
+        const currencyRes = await fetch(`/api/currencies?user_id=${user.id}`, {
           method: "GET",
-          headers: headers,
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
         const currencyJson = await currencyRes.json();
@@ -57,9 +53,9 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
       setProductId(currentProduct.product_id);
       setProductName(currentProduct.name);
       setDescription(currentProduct.description);
-      setPrice(currentProduct.price);
+      setPrice(Number(currentProduct.price));
       setCategory(currentProduct.category);
-      setStock(currentProduct.stock);
+      setStock(Number(currentProduct.stock));
       setUnit(currentProduct.unit);
     }
   }, [currentProduct]);
@@ -72,9 +68,9 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
         ...currentProduct,
         name: productName,
         description,
-        price,
+        price: String(price),
         category,
-        stock,
+        stock: String(stock),
         unit,
       };
 

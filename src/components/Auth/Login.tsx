@@ -195,6 +195,11 @@ export const LoginComponent = () => {
               Create account
             </Link>
           </p>
+          <p className="text-[14px] text-[#9B9B9B] tracking-wide">
+            <Link className="text-[#307EF3]" href={"/auth/employee-login"}>
+              Continue as Employee
+            </Link>
+          </p>
         </form>
       </div>
     </main>

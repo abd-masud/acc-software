@@ -35,8 +35,9 @@ export async function POST(request: NextRequest) {
 // GET - Retrieve product(s)
 export async function GET(request: NextRequest) {
     try {
+        const { searchParams } = new URL(request.url);
+        const user_id = searchParams.get('user_id');
         const db = await connectionToDatabase();
-        const user_id = request.headers.get('user_id');
 
         if (user_id) {
             const [product] = await db.query<RowDataPacket[]>(

@@ -5,8 +5,9 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET - Retrieve invoices
 export async function GET(request: NextRequest) {
     try {
+        const { searchParams } = new URL(request.url);
+        const customer_id = searchParams.get('id');
         const db = await connectionToDatabase();
-        const customer_id = request.headers.get('id');
 
         // If customer ID is provided, fetch invoices for that customer
         if (customer_id) {

@@ -77,8 +77,8 @@ export const QuickActions = () => {
 
   return (
     <section className="mb-5">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Quick Actions</h2>
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-sm font-semibold text-gray-800">Quick Actions</h2>
         <p className="text-sm text-gray-500 md:block hidden">
           Shortcuts to key functions
         </p>

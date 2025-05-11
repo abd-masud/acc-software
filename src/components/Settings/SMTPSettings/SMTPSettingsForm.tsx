@@ -32,11 +32,10 @@ export const SMTPSettingsForm = () => {
 
     try {
       setLoading(true);
-      const response = await fetch("/api/smtp", {
+      const response = await fetch(`/api/smtp?user_id=${user.id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          user_id: user.id.toString(),
         },
       });
 

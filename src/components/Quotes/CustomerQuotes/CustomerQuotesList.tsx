@@ -24,18 +24,15 @@ export const CustomerQuotesListComponent = ({
     setLoading(true);
 
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-
-      if (CustomerId) {
-        headers["id"] = CustomerId.toString();
-      }
-
-      const response = await fetch("/api/quotes/customer-quotes", {
-        method: "GET",
-        headers,
-      });
+      const response = await fetch(
+        `/api/quotes/customer-quotes?id=${CustomerId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const json: QuoteApiResponse = await response.json();
 

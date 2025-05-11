@@ -20,17 +20,11 @@ export const CustomerLedgerComponent = () => {
     setLoading(true);
 
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-
-      if (user?.id) {
-        headers["user_id"] = user.id.toString();
-      }
-
-      const invoicesResponse = await fetch("/api/invoices", {
+      const invoicesResponse = await fetch(`/api/invoices?user_id=${user.id}`, {
         method: "GET",
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       const invoicesJson: InvoiceApiResponse = await invoicesResponse.json();
@@ -39,10 +33,15 @@ export const CustomerLedgerComponent = () => {
         throw new Error(invoicesJson.message || "Failed to fetch invoices");
       }
 
-      const customersResponse = await fetch("/api/customers", {
-        method: "GET",
-        headers,
-      });
+      const customersResponse = await fetch(
+        `/api/customers?user_id=${user.id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const customersJson: CustomerApiResponse = await customersResponse.json();
 

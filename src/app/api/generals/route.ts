@@ -5,8 +5,9 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET - Retrieve generals
 export async function GET(request: NextRequest) {
     try {
+        const { searchParams } = new URL(request.url);
+        const user_id = searchParams.get('user_id');
         const db = await connectionToDatabase();
-        const user_id = request.headers.get('user_id');
 
         // If user ID is provided, fetch user's generals
         if (user_id) {

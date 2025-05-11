@@ -26,6 +26,7 @@ const HIDDEN_PAGES = [
   "/auth/forgot-password",
   "/auth/verify-otp",
   "/auth/new-password",
+  "/auth/employee-login",
 ] as const;
 
 export default function RootLayout({

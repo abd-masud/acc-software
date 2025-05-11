@@ -25,13 +25,15 @@ export const PartialInvoicesReportComponent = ({
 
     const fetchInvoiceData = async () => {
       try {
-        const response = await fetch("/api/invoices/single-invoice", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            id: InvoiceId.toString(),
-          },
-        });
+        const response = await fetch(
+          `/api/invoices/single-invoice?id=${InvoiceId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch invoice data");
@@ -47,11 +49,10 @@ export const PartialInvoicesReportComponent = ({
 
     const fetchPolicyTerms = async () => {
       try {
-        const response = await fetch("/api/policy", {
+        const response = await fetch(`/api/policy?user_id=${user.id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            user_id: user.id.toString(),
           },
         });
 
@@ -80,18 +81,14 @@ export const PartialInvoicesReportComponent = ({
   }, [InvoiceId, user?.id]);
 
   useEffect(() => {
+    if (!user?.id) return;
     const fetchCurrencies = async () => {
       try {
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-
-        if (user?.id) {
-          headers["user_id"] = user.id.toString();
-        }
-        const currencyRes = await fetch("/api/currencies", {
+        const currencyRes = await fetch(`/api/currencies?user_id=${user.id}`, {
           method: "GET",
-          headers: headers,
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
         const currencyJson = await currencyRes.json();
@@ -351,7 +348,8 @@ export const PartialInvoicesReportComponent = ({
                           {currencyCode}
                         </td>
                         <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                          {item.due_amount == 0 || invoiceData.due_amount
+                          {Number(item.due_amount) == 0 ||
+                          invoiceData.due_amount
                             ? "Paid"
                             : "Due"}
                         </td>
@@ -382,37 +380,37 @@ export const PartialInvoicesReportComponent = ({
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Subtotal:</span>
                   <span>
-                    {invoiceData.subtotal?.toFixed(2)} {currencyCode}
+                    {Number(invoiceData.subtotal)?.toFixed(2)} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Discount:</span>
                   <span>
-                    {invoiceData.discount?.toFixed(2)} {currencyCode}
+                    {Number(invoiceData.discount)?.toFixed(2)} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Tax:</span>
                   <span>
-                    {invoiceData.tax?.toFixed(2)} {currencyCode}
+                    {Number(invoiceData.tax)?.toFixed(2)} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2 border-t pt-2">
                   <span className="font-bold">Total:</span>
                   <span className="font-medium">
-                    {invoiceData.total?.toFixed(2)} {currencyCode}
+                    {Number(invoiceData.total)?.toFixed(2)} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Paid Amount:</span>
                   <span>
-                    {invoiceData.paid_amount?.toFixed(2)} {currencyCode}
+                    {Number(invoiceData.paid_amount)?.toFixed(2)} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between border-t pt-2">
                   <span className="font-medium text-red-500">Due Amount:</span>
                   <span className="text-red-500">
-                    {invoiceData.due_amount?.toFixed(2)} {currencyCode}
+                    {Number(invoiceData.due_amount)?.toFixed(2)} {currencyCode}
                   </span>
                 </div>
               </div>

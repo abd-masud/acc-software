@@ -73,19 +73,14 @@ export const CreateQuotesForm = () => {
 
   // Fetch customers
   useEffect(() => {
+    if (!user?.id) return;
     const fetchCustomers = async () => {
       try {
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-
-        if (user?.id) {
-          headers["user_id"] = user.id.toString();
-        }
-
-        const customersRes = await fetch("/api/customers", {
+        const customersRes = await fetch(`/api/customers?user_id=${user.id}`, {
           method: "GET",
-          headers: headers,
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
         if (customersRes.ok) {
@@ -104,19 +99,14 @@ export const CreateQuotesForm = () => {
 
   // Fetch products
   useEffect(() => {
+    if (!user?.id) return;
     const fetchProducts = async () => {
       try {
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-
-        if (user?.id) {
-          headers["user_id"] = user.id.toString();
-        }
-
-        const productsRes = await fetch("/api/products", {
+        const productsRes = await fetch(`/api/products?user_id=${user.id}`, {
           method: "GET",
-          headers: headers,
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
         if (productsRes.ok) {
@@ -134,18 +124,14 @@ export const CreateQuotesForm = () => {
   }, [user?.id]);
 
   useEffect(() => {
+    if (!user?.id) return;
     const fetchCurrencies = async () => {
       try {
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-
-        if (user?.id) {
-          headers["user_id"] = user.id.toString();
-        }
-        const currencyRes = await fetch("/api/currencies", {
+        const currencyRes = await fetch(`/api/currencies?user_id=${user.id}`, {
           method: "GET",
-          headers: headers,
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
         const currencyJson = await currencyRes.json();
@@ -290,7 +276,7 @@ export const CreateQuotesForm = () => {
     }
   };
 
-  const customerSelectStyles: StylesConfig<CustomerOption, false> = {
+  const customerSelectStyles: StylesConfig<CustomerOption, boolean> = {
     control: (base) => ({
       ...base,
       borderColor: "#E5E7EB",
@@ -317,7 +303,7 @@ export const CreateQuotesForm = () => {
     }),
   };
 
-  const productSelectStyles: StylesConfig<ProductOption, false> = {
+  const productSelectStyles: StylesConfig<ProductOption, boolean> = {
     control: (base) => ({
       ...base,
       borderColor: "#E5E7EB",
@@ -540,8 +526,9 @@ export const CreateQuotesForm = () => {
                                       product_id: product.product_id,
                                       product: product.name,
                                       unit: product.unit,
-                                      unit_price: product.price,
-                                      amount: i.quantity * product.price,
+                                      unit_price: Number(product.price),
+                                      amount:
+                                        i.quantity * Number(product.price),
                                     }
                                   : i
                               )

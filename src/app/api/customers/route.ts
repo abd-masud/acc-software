@@ -50,8 +50,9 @@ export async function POST(request: NextRequest) {
 // GET - Retrieve customers
 export async function GET(request: NextRequest) {
     try {
+        const { searchParams } = new URL(request.url);
+        const user_id = searchParams.get('user_id');
         const db = await connectionToDatabase();
-        const user_id = request.headers.get('user_id');
 
         // If customer ID is provided
         if (user_id) {
@@ -112,19 +113,6 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json(
                 { success: false, message: "Customer not found" },
                 { status: 404 }
-            );
-        }
-
-        // Check if email is being used by another customer
-        const [emailCheck] = await db.query<RowDataPacket[]>(
-            `SELECT COUNT(*) AS count FROM customers WHERE email = ? AND id != ?`,
-            [email, id]
-        );
-
-        if (emailCheck[0]?.count > 0) {
-            return NextResponse.json(
-                { success: false, message: "Email already in use by another customer" },
-                { status: 400 }
             );
         }
 

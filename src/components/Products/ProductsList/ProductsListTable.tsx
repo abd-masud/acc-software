@@ -1,21 +1,13 @@
 "use client";
 
-import {
-  Table,
-  TableColumnsType,
-  Button,
-  message,
-  Input,
-  Modal,
-  Tooltip,
-} from "antd";
+import { Table, TableColumnsType, Button, Input, Modal, Tooltip } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { Products, ProductsTableProps } from "@/types/products";
 import { EditProductModal } from "./EditProductModal";
-// import { ProductsReportButton } from "./ProductsReport";
 import { FaEdit } from "react-icons/fa";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 import { useAuth } from "@/contexts/AuthContext";
+import { FaXmark } from "react-icons/fa6";
 
 export const ProductsListTable: React.FC<ProductsTableProps> = ({
   products,
@@ -30,6 +22,7 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [searchText, setSearchText] = useState("");
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [userMessage, setUserMessage] = useState<string | null>(null);
 
   const showEditModal = (product: Products) => {
     setCurrentProduct(product);
@@ -58,18 +51,14 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
   }, [products, searchText]);
 
   useEffect(() => {
+    if (!user?.id) return;
     const fetchCurrencies = async () => {
       try {
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-
-        if (user?.id) {
-          headers["user_id"] = user.id.toString();
-        }
-        const currencyRes = await fetch("/api/currencies", {
+        const currencyRes = await fetch(`/api/currencies?user_id=${user.id}`, {
           method: "GET",
-          headers: headers,
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
         const currencyJson = await currencyRes.json();
@@ -102,12 +91,14 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
         throw new Error("Failed to update product");
       }
 
-      message.success("Product updated successfully");
+      setUserMessage("Product updated");
       setIsEditModalOpen(false);
       fetchProducts();
     } catch (err) {
       console.error(err);
-      message.error("Update failed");
+      throw err;
+    } finally {
+      setTimeout(() => setUserMessage(null), 5000);
     }
   };
 
@@ -127,12 +118,14 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
         throw new Error("Failed to delete product");
       }
 
-      message.success("Customer deleted successfully");
+      setUserMessage("Product deleted");
       setIsDeleteModalOpen(false);
       setDeleteConfirmationText("");
       fetchProducts();
     } catch {
-      message.error("Delete failed");
+      setUserMessage("Delete failed");
+    } finally {
+      setTimeout(() => setUserMessage(null), 5000);
     }
   };
 
@@ -196,8 +189,27 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
     },
   ];
 
+  const handleCloseMessage = () => {
+    setUserMessage(null);
+  };
+
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
+      {userMessage && (
+        <div className="left-1/2 top-10 transform -translate-x-1/2 fixed z-50">
+          <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 text-green-600 border-2 border-green-600 mx-auto">
+            <div className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+              {userMessage}
+            </div>
+            <button
+              onClick={handleCloseMessage}
+              className="ml-3 focus:outline-none hover:text-green-600"
+            >
+              <FaXmark className="text-[14px]" />
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex sm:justify-between justify-end items-center mb-5">
         <div className="sm:flex items-center hidden">
           <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
@@ -211,7 +223,6 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-          {/* <ProductsReportButton products={filteredProducts} /> */}
         </div>
       </div>
       <Table

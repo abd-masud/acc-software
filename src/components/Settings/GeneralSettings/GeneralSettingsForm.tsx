@@ -1,9 +1,10 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { Tooltip } from "antd";
+import { Modal, Tooltip } from "antd";
 import { useState, useEffect, useCallback } from "react";
 import { FaEdit } from "react-icons/fa";
+import { FaXmark } from "react-icons/fa6";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 
 type GeneralType = "department" | "role" | "status" | "category";
@@ -31,17 +32,22 @@ export const GeneralSettingsForm = () => {
   });
   const [newItemName, setNewItemName] = useState("");
   const [editingItem, setEditingItem] = useState<GeneralItem | null>(null);
+  const [userMessage, setUserMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<GeneralItem | null>(null);
+
+  const showDeleteModal = (item: GeneralItem) => {
+    setItemToDelete(item);
+    setIsDeleteModalOpen(true);
+  };
 
   const fetchGenerals = useCallback(async () => {
+    if (!user?.id) return;
     setIsLoading(true);
-    try {
-      const response = await fetch("/api/generals", {
-        headers: {
-          user_id: user?.id.toString() || "",
-        },
-      });
 
+    try {
+      const response = await fetch(`/api/generals?user_id=${user.id}`);
       if (response.ok) {
         const result = await response.json();
         const apiData = result.data?.[0] || {};
@@ -67,48 +73,8 @@ export const GeneralSettingsForm = () => {
     }
   }, [user?.id, fetchGenerals]);
 
-  const handleAddItem = () => {
-    if (!newItemName.trim()) return;
-
-    const newItem = { name: newItemName.trim() };
-
-    setData((prev: GeneralGeneralsData) => ({
-      ...prev,
-      [activeTab]: [...prev[activeTab], newItem],
-    }));
-
-    setNewItemName("");
-  };
-
-  const handleEditItem = (item: GeneralItem) => {
-    setEditingItem(item);
-    setNewItemName(item.name);
-  };
-
-  const handleUpdateItem = () => {
-    if (!editingItem || !newItemName.trim()) return;
-
-    setData((prev) => ({
-      ...prev,
-      [activeTab]: prev[activeTab].map((i) =>
-        i == editingItem ? { ...i, name: newItemName.trim() } : i
-      ),
-    }));
-
-    setEditingItem(null);
-    setNewItemName("");
-  };
-
-  const handleDeleteItem = (item: GeneralItem) => {
-    setData((prev) => ({
-      ...prev,
-      [activeTab]: prev[activeTab].filter((i) => i !== item),
-    }));
-  };
-
-  const handleSave = async () => {
+  const handleSave = async (updatedData: GeneralGeneralsData) => {
     if (!user?.id) return;
-
     setIsLoading(true);
     try {
       const response = await fetch("/api/generals", {
@@ -119,30 +85,104 @@ export const GeneralSettingsForm = () => {
         },
         body: JSON.stringify({
           user_id: user.id,
-          department: data.department.map((item) => item.name),
-          role: data.role.map((item) => item.name),
-          status: data.status.map((item) => item.name),
-          category: data.category.map((item) => item.name),
+          department: updatedData.department.map((item) => item.name),
+          role: updatedData.role.map((item) => item.name),
+          status: updatedData.status.map((item) => item.name),
+          category: updatedData.category.map((item) => item.name),
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
+      if (!response.ok) throw new Error(await response.text());
 
       await fetchGenerals();
     } catch (error) {
       console.error("Error saving generals:", error);
-      alert("Failed to save. Please check console for details.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAddItem = async () => {
+    if (!newItemName.trim()) return;
+
+    const newItem = { name: newItemName.trim() };
+    const updatedData = {
+      ...data,
+      [activeTab]: [...data[activeTab], newItem],
+    };
+
+    setData(updatedData);
+    setNewItemName("");
+    await handleSave(updatedData);
+    setUserMessage(
+      `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Added`
+    );
+    setTimeout(() => setUserMessage(null), 5000);
+  };
+
+  const handleEditItem = (item: GeneralItem) => {
+    setEditingItem(item);
+    setNewItemName(item.name);
+  };
+
+  const handleUpdateItem = async () => {
+    if (!editingItem || !newItemName.trim()) return;
+
+    const updatedData = {
+      ...data,
+      [activeTab]: data[activeTab].map((i) =>
+        i.name === editingItem.name ? { ...i, name: newItemName.trim() } : i
+      ),
+    };
+
+    setData(updatedData);
+    setEditingItem(null);
+    setNewItemName("");
+    await handleSave(updatedData);
+    setUserMessage(
+      `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Updated`
+    );
+    setTimeout(() => setUserMessage(null), 5000);
+  };
+
+  const handleDeleteItem = async () => {
+    if (!itemToDelete) return;
+
+    const updatedData = {
+      ...data,
+      [activeTab]: data[activeTab].filter((i) => i.name !== itemToDelete.name),
+    };
+
+    setData(updatedData);
+    await handleSave(updatedData);
+    setIsDeleteModalOpen(false);
+    setItemToDelete(null);
+    setUserMessage(
+      `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Deleted`
+    );
+    setTimeout(() => setUserMessage(null), 5000);
   };
 
   const currentItems = data[activeTab] || [];
 
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
+      {userMessage && (
+        <div className="left-1/2 top-10 transform -translate-x-1/2 fixed z-50">
+          <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 text-green-600 border-2 border-green-600 mx-auto">
+            <div className="text-sm font-medium">{userMessage}</div>
+            <button onClick={() => setUserMessage(null)} className="ml-3">
+              <FaXmark className="text-[14px]" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center pb-5">
+        <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
+        <h2 className="text-[13px] font-[500]">General Settings</h2>
+      </div>
+
       <div className="flex space-x-4 mb-3 overflow-x-auto">
         <button
           onClick={() => setActiveTab("department")}
@@ -172,7 +212,7 @@ export const GeneralSettingsForm = () => {
               : "bg-gray-200 hover:bg-gray-300"
           }`}
         >
-          Statuses
+          Status
         </button>
         <button
           onClick={() => setActiveTab("category")}
@@ -187,19 +227,21 @@ export const GeneralSettingsForm = () => {
       </div>
 
       <div className="mb-4">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-4 mt-2">
           <input
             type="text"
+            id="category"
             value={newItemName}
             onChange={(e) => setNewItemName(e.target.value)}
             placeholder={`Add new ${activeTab}`}
-            className="border text-[14px] py-2 px-4 w-full flex-1 bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300"
+            className="border text-[14px] py-2 px-4 w-full flex-1 bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md"
           />
           {editingItem ? (
             <>
               <button
                 onClick={handleUpdateItem}
                 className="bg-[#307EF3] hover:bg-[#478cf3] text-white px-4 py-[9px] rounded text-sm"
+                disabled={isLoading}
               >
                 Update
               </button>
@@ -209,6 +251,7 @@ export const GeneralSettingsForm = () => {
                   setNewItemName("");
                 }}
                 className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-[9px] rounded text-sm"
+                disabled={isLoading}
               >
                 Cancel
               </button>
@@ -217,6 +260,7 @@ export const GeneralSettingsForm = () => {
             <button
               onClick={handleAddItem}
               className="bg-[#307EF3] hover:bg-[#478cf3] text-white px-4 py-[9px] rounded text-sm"
+              disabled={isLoading}
             >
               Add
             </button>
@@ -240,15 +284,17 @@ export const GeneralSettingsForm = () => {
                     <Tooltip title="Edit">
                       <button
                         onClick={() => handleEditItem(item)}
-                        className="text-white text-[14px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+                        className="text-white text-[14px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded flex justify-center items-center"
+                        disabled={isLoading}
                       >
                         <FaEdit />
                       </button>
                     </Tooltip>
                     <Tooltip title="Delete">
                       <button
-                        onClick={() => handleDeleteItem(item)}
-                        className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+                        onClick={() => showDeleteModal(item)}
+                        className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded flex justify-center items-center"
+                        disabled={isLoading}
                       >
                         <MdOutlineDeleteSweep />
                       </button>
@@ -261,15 +307,23 @@ export const GeneralSettingsForm = () => {
         </div>
       </div>
 
-      <div className="mt-2 flex justify-end">
-        <button
-          onClick={handleSave}
-          disabled={isLoading}
-          className="text-[14px] bg-[#307EF3] hover:bg-[#478cf3] w-40 py-2 rounded text-white cursor-pointer focus:bg-[#307EF3] transition-all duration-300"
-        >
-          {isLoading ? "Saving..." : "Save Changes"}
-        </button>
-      </div>
+      <Modal
+        title={`Confirm Delete ${
+          activeTab.charAt(0).toUpperCase() + activeTab.slice(1)
+        }`}
+        open={isDeleteModalOpen}
+        onCancel={() => {
+          setIsDeleteModalOpen(false);
+          setItemToDelete(null);
+        }}
+        onOk={handleDeleteItem}
+        okText="Delete"
+        okButtonProps={{ danger: true }}
+      >
+        <p>
+          Are you sure you want to delete <strong>{itemToDelete?.name}</strong>?
+        </p>
+      </Modal>
     </main>
   );
 };

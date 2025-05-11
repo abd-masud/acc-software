@@ -30,19 +30,14 @@ export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
   }, [invoices]);
 
   useEffect(() => {
+    if (!user?.id) return;
     const fetchCurrencies = async () => {
       try {
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-
-        if (user?.id) {
-          headers["user_id"] = user.id.toString();
-        }
-
-        const currencyRes = await fetch("/api/currencies", {
+        const currencyRes = await fetch(`/api/currencies?user_id=${user.id}`, {
           method: "GET",
-          headers,
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
         const currencyJson = await currencyRes.json();
@@ -110,23 +105,25 @@ export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
     },
     {
       title: "Paid Amount",
-      render: (record: FlattenedInvoice) =>
-        record.sub_item?.paid_amount && record.sub_item.paid_amount > 0
-          ? `${record.sub_item.paid_amount.toFixed(2)} ${currencyCode}`
-          : "-",
+      render: (record: FlattenedInvoice) => {
+        const paidAmount = Number(record.sub_item?.paid_amount);
+        return paidAmount > 0
+          ? `${paidAmount.toFixed(2)} ${currencyCode}`
+          : "-";
+      },
     },
     {
       title: "Due Amount",
-      render: (record: FlattenedInvoice) =>
-        record.sub_item?.due_amount && record.sub_item.due_amount > 0
-          ? `${record.sub_item.due_amount.toFixed(2)} ${currencyCode}`
-          : "-",
+      render: (record: FlattenedInvoice) => {
+        const dueAmount = Number(record.sub_item?.due_amount);
+        return dueAmount > 0 ? `${dueAmount.toFixed(2)} ${currencyCode}` : "-";
+      },
     },
     {
       title: "Status",
       render: (record: FlattenedInvoice) => {
         const dueAmount = record.sub_item?.due_amount || 0;
-        const status = dueAmount > 0 ? "Due" : "Paid";
+        const status = Number(dueAmount) > 0 ? "Due" : "Paid";
 
         return (
           <span

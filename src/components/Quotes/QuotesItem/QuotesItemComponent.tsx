@@ -23,11 +23,10 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
 
     const fetchQuoteData = async () => {
       try {
-        const response = await fetch("/api/quotes/single-quote", {
+        const response = await fetch(`/api/quotes/single-quote?id=${QuoteId}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            id: QuoteId.toString(),
           },
         });
 
@@ -45,11 +44,10 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
 
     const fetchPolicyTerms = async () => {
       try {
-        const response = await fetch("/api/policy", {
+        const response = await fetch(`/api/policy?user_id=${user.id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            user_id: user.id.toString(),
           },
         });
 
@@ -78,18 +76,14 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
   }, [QuoteId, user?.id]);
 
   useEffect(() => {
+    if (!user?.id) return;
     const fetchCurrencies = async () => {
       try {
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-
-        if (user?.id) {
-          headers["user_id"] = user.id.toString();
-        }
-        const currencyRes = await fetch("/api/currencies", {
+        const currencyRes = await fetch(`/api/currencies?user_id=${user.id}`, {
           method: "GET",
-          headers: headers,
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
         const currencyJson = await currencyRes.json();

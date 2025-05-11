@@ -5,8 +5,9 @@ import { NextRequest, NextResponse } from 'next/server';
 // GET - Retrieve policy record(s)
 export async function GET(request: Request) {
     try {
+        const { searchParams } = new URL(request.url);
+        const user_id = searchParams.get('user_id');
         const db = await connectionToDatabase();
-        const user_id = request.headers.get('user_id');
 
         if (!user_id) {
             return NextResponse.json({

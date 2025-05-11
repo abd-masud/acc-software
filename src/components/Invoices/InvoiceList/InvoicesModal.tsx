@@ -18,7 +18,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
   const [customerPhone, setCustomerPhone] = useState("");
   const [total, setTotal] = useState("");
   const [paid, setPaid] = useState("");
-  const [payNow, setPayNow] = useState(0);
+  const [payNow, setPayNow] = useState("");
   const [due, setDue] = useState("");
 
   useEffect(() => {
@@ -28,11 +28,11 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
       setCustomerId(currentInvoice.customer.customer_id);
       setCustomerEmail(currentInvoice.customer.email);
       setCustomerPhone(currentInvoice.customer.contact);
-      setTotal(currentInvoice.total.toFixed(2));
-      setPaid(currentInvoice.paid_amount.toFixed(2));
-      setPayNow(0);
+      setTotal(Number(currentInvoice.total).toFixed(2));
+      setPaid(Number(currentInvoice.paid_amount).toFixed(2));
+      setPayNow("");
       const calculatedDue = (
-        currentInvoice.total - currentInvoice.paid_amount
+        Number(currentInvoice.total) - Number(currentInvoice.paid_amount)
       ).toFixed(2);
       setDue(calculatedDue);
     }
@@ -40,7 +40,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
 
   const handlePayNowChange = (value: string) => {
     const newPayNow = Number(value) || 0;
-    setPayNow(newPayNow);
+    setPayNow(String(newPayNow));
     const newDue = (
       Number(total) -
       (Number(paid) + Number(value || 0))
@@ -67,8 +67,8 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
     try {
       if (!currentInvoice) return;
 
-      const updatedPaidAmount = Number(paid) + payNow;
-      const updatedDueAmount = Number(total) - updatedPaidAmount;
+      const updatedPaidAmount = Number(paid) + Number(payNow);
+      const updatedDueAmount = Number(total) - Number(updatedPaidAmount);
 
       let existingSubInvoice = [];
       if (currentInvoice.sub_invoice) {
@@ -96,8 +96,8 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
 
       const updatedInvoice = {
         ...currentInvoice,
-        paid_amount: updatedPaidAmount,
-        due_amount: updatedDueAmount,
+        paid_amount: String(updatedPaidAmount),
+        due_amount: String(updatedDueAmount),
         sub_invoice: updatedSubInvoice,
       };
 
@@ -219,7 +219,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
           </label>
           <input
             type="number"
-            placeholder="0.00"
+            placeholder="Enter amount"
             className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
             min={0}
             max={Number(total) - Number(paid)}

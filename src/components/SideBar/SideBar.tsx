@@ -239,7 +239,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
       <div
         className={`overflow-hidden transition-all duration-500 transform ${
           openSection == "products"
-            ? "max-h-[90px] opacity-100"
+            ? "max-h-[135px] opacity-100"
             : "max-h-0 opacity-0"
         }`}
       >
@@ -258,6 +258,14 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
             onClick={handleLinkClick}
           >
             Products List
+          </Link>
+
+          <Link
+            className={subLinkClass("/products/product-settings")}
+            href="/products/product-settings"
+            onClick={handleLinkClick}
+          >
+            Product Settings
           </Link>
         </div>
       </div>
@@ -284,7 +292,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
       <div
         className={`overflow-hidden transition-all duration-500 transform ${
           openSection == "employees"
-            ? "max-h-[90px] opacity-100"
+            ? "max-h-[135px] opacity-100"
             : "max-h-0 opacity-0"
         }`}
       >
@@ -303,6 +311,14 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
             onClick={handleLinkClick}
           >
             Employees List
+          </Link>
+
+          <Link
+            className={subLinkClass("/employees/employee-settings")}
+            href="/employees/employee-settings"
+            onClick={handleLinkClick}
+          >
+            Employee Settings
           </Link>
         </div>
       </div>

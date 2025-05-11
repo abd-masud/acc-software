@@ -15,23 +15,15 @@ export const MetricsCards = () => {
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [loading, setLoading] = useState<boolean>(true);
 
-  const getHeaders = useCallback(() => {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-
-    if (user?.id) {
-      headers["user_id"] = user.id.toString();
-    }
-
-    return headers;
-  }, [user?.id]);
-
   const fetchInvoices = useCallback(async () => {
+    if (!user?.id) return;
+
     try {
-      const response = await fetch("/api/invoices", {
+      const response = await fetch(`/api/invoices?user_id=${user.id}`, {
         method: "GET",
-        headers: getHeaders(),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
       const json: InvoiceApiResponse = await response.json();
       if (!response.ok || !json.success) {
@@ -41,13 +33,17 @@ export const MetricsCards = () => {
     } catch (error) {
       console.error("Error fetching invoices:", error);
     }
-  }, [getHeaders]);
+  }, [user?.id]);
 
   const fetchProducts = useCallback(async () => {
+    if (!user?.id) return;
+
     try {
-      const response = await fetch("/api/products", {
+      const response = await fetch(`/api/products?user_id=${user.id}`, {
         method: "GET",
-        headers: getHeaders(),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
       const json: ProductApiResponse = await response.json();
       if (!response.ok || !json.success) {
@@ -57,13 +53,17 @@ export const MetricsCards = () => {
     } catch (error) {
       console.error("Error fetching products:", error);
     }
-  }, [getHeaders]);
+  }, [user?.id]);
 
   const fetchCustomers = useCallback(async () => {
+    if (!user?.id) return;
+
     try {
-      const response = await fetch("/api/customers", {
+      const response = await fetch(`/api/customers?user_id=${user.id}`, {
         method: "GET",
-        headers: getHeaders(),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
       const json: CustomerApiResponse = await response.json();
       if (!response.ok || !json.success) {
@@ -73,13 +73,17 @@ export const MetricsCards = () => {
     } catch (error) {
       console.error("Error fetching customers:", error);
     }
-  }, [getHeaders]);
+  }, [user?.id]);
 
   const fetchCurrency = useCallback(async () => {
+    if (!user?.id) return;
+
     try {
-      const response = await fetch("/api/currencies", {
+      const response = await fetch(`/api/currencies?user_id=${user.id}`, {
         method: "GET",
-        headers: getHeaders(),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       const json = await response.json();
@@ -98,7 +102,7 @@ export const MetricsCards = () => {
       console.error("Error fetching currency:", error);
       setCurrencyCode("USD");
     }
-  }, [getHeaders]);
+  }, [user?.id]);
 
   const fetchAllData = useCallback(async () => {
     setLoading(true);
@@ -124,11 +128,11 @@ export const MetricsCards = () => {
 
   const calculateMetrics = () => {
     const totalRevenue = invoicesData.reduce((sum, invoice) => {
-      return sum + invoice.paid_amount;
+      return sum + Number(invoice.paid_amount);
     }, 0);
 
     const totalDue = invoicesData.reduce((sum, invoice) => {
-      return sum + invoice.due_amount;
+      return sum + Number(invoice.due_amount);
     }, 0);
 
     const totalProducts = productsData.length;

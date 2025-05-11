@@ -3,10 +3,9 @@
 import { HomeHeader } from "./Header";
 import { MetricsCards } from "./MetricsCards";
 import { QuickActions } from "./QuickActions";
-import { ProductOverview } from "./ProductOverview";
-import { FinancialOverview } from "./FinancialOverview";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAccUserRedirect } from "@/hooks/useAccUser";
+import { Overviews } from "./Overviews";
 
 export const HomeComponent = () => {
   const { user } = useAuth();
@@ -19,10 +18,7 @@ export const HomeComponent = () => {
       <HomeHeader />
       <MetricsCards />
       <QuickActions />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ProductOverview />
-        <FinancialOverview />
-      </div>
+      <Overviews />
     </main>
   );
 };

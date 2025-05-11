@@ -13,14 +13,10 @@ export const PolicySettingsForm = () => {
 
   const fetchTerms = useCallback(async () => {
     if (!user?.id) return;
-
     setIsLoading(true);
+
     try {
-      const response = await fetch("/api/policy", {
-        headers: {
-          user_id: user.id.toString(),
-        },
-      });
+      const response = await fetch(`/api/policy?user_id=${user.id}`, {});
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

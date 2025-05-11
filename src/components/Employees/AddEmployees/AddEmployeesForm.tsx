@@ -60,20 +60,15 @@ export const AddEmployeesForm = () => {
   }>({ department: [], role: [], status: [] });
 
   const fetchGenerals = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
 
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-
-      if (user?.id) {
-        headers["user_id"] = user.id.toString();
-      }
-
-      const response = await fetch("/api/generals", {
+      const response = await fetch(`/api/generals?user_id=${user.id}`, {
         method: "GET",
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
       const json: any = await response.json();
 
@@ -103,11 +98,10 @@ export const AddEmployeesForm = () => {
 
     try {
       setLoading(true);
-      const response = await fetch("/api/smtp", {
+      const response = await fetch(`/api/smtp?user_id=${user.id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          user_id: user.id.toString(),
         },
       });
 
@@ -272,7 +266,7 @@ export const AddEmployeesForm = () => {
     }
   };
 
-  const generalSelectStyles: StylesConfig<any, false> = {
+  const generalSelectStyles: StylesConfig<any, boolean> = {
     control: (base) => ({
       ...base,
       borderColor: "#E5E7EB",

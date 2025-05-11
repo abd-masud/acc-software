@@ -4,9 +4,9 @@ export type Products = {
     product_id: string;
     name: string;
     description: string;
-    price: number;
+    price: string;
     category: string;
-    stock: number;
+    stock: string;
     unit: string;
 };
 

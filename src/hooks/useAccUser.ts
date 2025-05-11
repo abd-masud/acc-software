@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export const useAccUserRedirect = () => {
     const router = useRouter();
-
+    const pathname = usePathname();
     useEffect(() => {
         const accUser = localStorage.getItem("acc_user");
-        if (!accUser) {
+        if (!accUser && pathname !== "/auth/employee-login") {
             router.push("/auth/login");
         }
-    }, [router]);
+    }, [router, pathname]);
 };

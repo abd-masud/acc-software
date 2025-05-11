@@ -54,8 +54,9 @@ export async function POST(request: NextRequest) {
 // GET - Retrieve employees
 export async function GET(request: NextRequest) {
     try {
+        const { searchParams } = new URL(request.url);
+        const user_id = searchParams.get('user_id');
         const db = await connectionToDatabase();
-        const user_id = request.headers.get('user_id');
 
         // If employee ID is provided
         if (user_id) {

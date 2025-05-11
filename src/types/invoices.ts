@@ -5,16 +5,16 @@ export type InvoiceItem = {
     id: number;
     product_id: string;
     product: string;
-    quantity: number;
-    unit_price: number;
+    quantity: string;
+    unit_price: string;
     unit: string;
-    amount: number;
+    amount: string;
 };
 
 export type PaymentEntry = {
     id?: number;
-    paid_amount: number;
-    due_amount: number;
+    paid_amount: string;
+    due_amount: string;
     date: string;
 };
 
@@ -25,12 +25,12 @@ export type InvoiceData = {
     invoice_id: string;
     date: string;
     due_date: string;
-    subtotal: number;
-    tax: number;
-    discount: number;
-    total: number;
-    paid_amount: number;
-    due_amount: number;
+    subtotal: string;
+    tax: string;
+    discount: string;
+    total: string;
+    paid_amount: string;
+    due_amount: string;
     pay_type: string;
     notes: string;
     sub_invoice?: PaymentEntry[];
@@ -87,8 +87,8 @@ export interface PartialInvoicesItemProps {
 export interface SubInvoice {
     id?: number;
     date: string;
-    paid_amount: number;
-    due_amount: number;
+    paid_amount: string;
+    due_amount: string;
 }
 
 export interface FlattenedInvoice {

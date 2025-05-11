@@ -149,12 +149,12 @@ export const CustomerLedgerReportButton: React.FC<
     };
 
     invoices.forEach((invoice) => {
-      totals.subtotal += invoice.subtotal || 0;
-      totals.tax += invoice.tax || 0;
-      totals.discount += invoice.discount || 0;
-      totals.total += invoice.total || 0;
-      totals.payment += invoice.paid_amount || 0;
-      totals.due += invoice.due_amount || 0;
+      totals.subtotal += Number(invoice.subtotal) || 0;
+      totals.tax += Number(invoice.tax) || 0;
+      totals.discount += Number(invoice.discount) || 0;
+      totals.total += Number(invoice.total) || 0;
+      totals.payment += Number(invoice.paid_amount) || 0;
+      totals.due += Number(invoice.due_amount) || 0;
     });
 
     const tableData = invoices.map((invoice, index) => [
@@ -173,7 +173,7 @@ export const CustomerLedgerReportButton: React.FC<
       invoice.total,
       invoice.paid_amount,
       invoice.due_amount,
-      invoice.due_amount == 0 ? "Paid" : "Due",
+      Number(invoice.due_amount) == 0 ? "Paid" : "Due",
       invoice.notes,
     ]);
 

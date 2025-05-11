@@ -4,8 +4,9 @@ import { RowDataPacket } from 'mysql2';
 
 export async function GET(request: NextRequest) {
     try {
+        const { searchParams } = new URL(request.url);
+        const quoteId = searchParams.get('id');
         const db = await connectionToDatabase();
-        const quoteId = request.headers.get('id');
 
         if (!quoteId) {
             return NextResponse.json(

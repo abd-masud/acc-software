@@ -13,6 +13,7 @@ import { signOut } from "next-auth/react";
 import { VscThreeBars } from "react-icons/vsc";
 import { useState } from "react";
 import { MdFullscreen, MdOutlineFullscreenExit } from "react-icons/md";
+import { useAccUserRedirect } from "@/hooks/useAccUser";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -22,6 +23,8 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
+  useAccUserRedirect();
+  if (!user?.id) return;
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {

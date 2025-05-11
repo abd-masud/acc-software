@@ -2,13 +2,11 @@
 
 import Image from "next/image";
 import logo from "../../../public/images/logo.png";
-import google from "../../../public/images/google.svg";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FaXmark } from "react-icons/fa6";
 import { useAuth } from "@/contexts/AuthContext";
-import { signIn, useSession } from "next-auth/react";
 
 export const EmployeeLoginComponent = () => {
   const [email, setEmail] = useState("");
@@ -16,37 +14,7 @@ export const EmployeeLoginComponent = () => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { setUser } = useAuth();
-  const { data: session, status } = useSession();
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [signLoading, setSignLoading] = useState(false);
-
-  const handleSignIn = async () => {
-    if (googleLoading) return;
-    setGoogleLoading(true);
-    try {
-      const result = await signIn("google", {
-        redirect: false,
-        callbackUrl: "/auth/login",
-      });
-
-      if (result?.error) {
-        setError(result.error || "Failed to sign in with Google");
-      } else if (result?.url) {
-        router.push(result.url || "/auth/login");
-      }
-    } catch {
-      setError("Failed to sign in with Google");
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (status == "authenticated" && session?.user?.accessToken) {
-      localStorage.setItem("acc_user", session.user.accessToken);
-      window.location.href = "/";
-    }
-  }, [session, status, router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -58,7 +26,7 @@ export const EmployeeLoginComponent = () => {
     };
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch("/api/auth/employee-login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -119,27 +87,6 @@ export const EmployeeLoginComponent = () => {
           Sign in to account
         </h2>
 
-        <button
-          className="flex items-center justify-center w-full py-2 text-[14px] font-[500] border bg-gray-100 hover:bg-gray-200 text-black rounded transition-all duration-300"
-          onClick={handleSignIn}
-          disabled={googleLoading}
-        >
-          {!googleLoading ? (
-            <>
-              <Image src={google} alt="Google icon" className="w-5 h-5 mr-2" />
-              Sign in with Google
-            </>
-          ) : (
-            "Signing in..."
-          )}
-        </button>
-
-        <div>
-          <p className="text-[#131226] text-[14px] font-[600] my-2 text-center">
-            Or continue with email
-          </p>
-        </div>
-
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="email">
@@ -169,19 +116,11 @@ export const EmployeeLoginComponent = () => {
               required
             />
           </div>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <input className="mr-3" type="checkbox" id="remember" />
-              <label className="text-[14px]" htmlFor="remember">
-                Remember Me
-              </label>
-            </div>
-            <Link
-              className="text-[14px] text-[#307EF3] tracking-wide"
-              href={"/auth/forgot-password"}
-            >
-              Forgot password?
-            </Link>
+          <div className="flex items-center mb-4">
+            <input className="mr-3" type="checkbox" id="remember" />
+            <label className="text-[14px]" htmlFor="remember">
+              Remember Me
+            </label>
           </div>
           <button
             className="text-[14px] bg-[#307EF3] hover:bg-[#478cf3] w-full py-2 rounded text-white cursor-pointer focus:bg-[#307EF3] transition-all duration-300 "
@@ -190,9 +129,8 @@ export const EmployeeLoginComponent = () => {
             {!signLoading ? "Sign in" : "Signing in..."}
           </button>
           <p className="text-[14px] text-[#9B9B9B] mt-4 tracking-wide">
-            Don&apos;t have account?{" "}
-            <Link className="text-[#307EF3]" href={"/auth/sign-up"}>
-              Create account
+            <Link className="text-[#307EF3]" href={"/auth/login"}>
+              Continue as Admin
             </Link>
           </p>
         </form>

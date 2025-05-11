@@ -1,22 +1,13 @@
 "use client";
 
-import {
-  Table,
-  TableColumnsType,
-  Button,
-  message,
-  Input,
-  Modal,
-  Tooltip,
-} from "antd";
+import { Table, TableColumnsType, Button, Input, Modal, Tooltip } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { InvoiceData, InvoiceItem, InvoicesTableProps } from "@/types/invoices";
-import { ClosedInvoicesModal } from "./ClosedInvoicesModal";
 import Link from "next/link";
 import { MdOutlineDeleteSweep, MdOutlinePictureAsPdf } from "react-icons/md";
 import { useAuth } from "@/contexts/AuthContext";
 import { FaInfo } from "react-icons/fa";
-import { FaMoneyBills } from "react-icons/fa6";
+import { FaXmark } from "react-icons/fa6";
 
 export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
   invoices,
@@ -24,22 +15,14 @@ export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
   loading,
 }) => {
   const { user } = useAuth();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [currentInvoice, setCurrentInvoice] = useState<InvoiceData | null>(
-    null
-  );
   const [invoiceToDelete, setInvoiceToDelete] = useState<InvoiceData | null>(
     null
   );
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [searchText, setSearchText] = useState("");
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
-
-  const showInvoiceModal = (invoice: InvoiceData) => {
-    setCurrentInvoice(invoice);
-    setIsEditModalOpen(true);
-  };
+  const [userMessage, setUserMessage] = useState<string | null>(null);
 
   const showDeleteModal = (invoice: InvoiceData) => {
     setInvoiceToDelete(invoice);
@@ -49,7 +32,7 @@ export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
 
   const filteredInvoices = useMemo(() => {
     const sortedInvoices = [...invoices]
-      .filter((invoice) => invoice.due_amount == 0)
+      .filter((invoice) => Number(invoice.due_amount) == 0)
       .sort((a, b) => b.id - a.id);
 
     if (!searchText) return sortedInvoices;
@@ -64,18 +47,14 @@ export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
   }, [invoices, searchText]);
 
   useEffect(() => {
+    if (!user?.id) return;
     const fetchCurrencies = async () => {
       try {
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-
-        if (user?.id) {
-          headers["user_id"] = user.id.toString();
-        }
-        const currencyRes = await fetch("/api/currencies", {
+        const currencyRes = await fetch(`/api/currencies?user_id=${user.id}`, {
           method: "GET",
-          headers: headers,
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
         const currencyJson = await currencyRes.json();
@@ -94,29 +73,6 @@ export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
     fetchCurrencies();
   }, [user?.id]);
 
-  const handleEditSubmit = async (updatedInvoice: InvoiceData) => {
-    try {
-      const response = await fetch("/api/invoices", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedInvoice),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update invoice");
-      }
-
-      message.success("Invoice updated successfully");
-      setIsEditModalOpen(false);
-      fetchInvoices();
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
-  };
-
   const handleDelete = async () => {
     if (!invoiceToDelete) return;
 
@@ -133,12 +89,14 @@ export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
         throw new Error("Failed to delete customer");
       }
 
-      message.success("Customer deleted successfully");
+      setUserMessage("Invoice deleted");
       setIsDeleteModalOpen(false);
       setDeleteConfirmationText("");
       fetchInvoices();
     } catch {
-      message.error("Delete failed");
+      setUserMessage("Delete failed");
+    } finally {
+      setTimeout(() => setUserMessage(null), 5000);
     }
   };
 
@@ -283,7 +241,7 @@ export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
     {
       title: "Status",
       render: (record: InvoiceData) => {
-        const status = record.due_amount > 0 ? "Due" : "Paid";
+        const status = Number(record.due_amount) > 0 ? "Due" : "Paid";
         return (
           <span
             className={`font-semibold ${
@@ -299,15 +257,6 @@ export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
       title: "Action",
       render: (_, record) => (
         <div className="flex justify-center items-center gap-2">
-          <Tooltip title="Pay">
-            <button
-              className="text-white text-[14px] bg-green-600 hover:bg-green-700 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center disabled:bg-gray-400"
-              onClick={() => showInvoiceModal(record)}
-              disabled={record.due_amount == 0}
-            >
-              <FaMoneyBills />
-            </button>
-          </Tooltip>
           <Tooltip title="Partial">
             <Link
               className="text-white hover:text-white text-[12px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
@@ -337,8 +286,27 @@ export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
     },
   ];
 
+  const handleCloseMessage = () => {
+    setUserMessage(null);
+  };
+
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
+      {userMessage && (
+        <div className="left-1/2 top-10 transform -translate-x-1/2 fixed z-50">
+          <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 text-green-600 border-2 border-green-600 mx-auto">
+            <div className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+              {userMessage}
+            </div>
+            <button
+              onClick={handleCloseMessage}
+              className="ml-3 focus:outline-none hover:text-green-600"
+            >
+              <FaXmark className="text-[14px]" />
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex sm:justify-between justify-end items-center mb-5">
         <div className="sm:flex items-center hidden">
           <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
@@ -361,13 +329,6 @@ export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
         loading={loading}
         bordered
         rowKey="id"
-      />
-
-      <ClosedInvoicesModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        currentInvoice={currentInvoice}
-        onSave={handleEditSubmit}
       />
 
       <Modal

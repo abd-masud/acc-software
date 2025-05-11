@@ -19,17 +19,11 @@ export const EmployeesListComponent = () => {
     setLoading(true);
 
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-
-      if (user?.id) {
-        headers["user_id"] = user.id.toString();
-      }
-
-      const response = await fetch("/api/employees", {
+      const response = await fetch(`/api/employees?user_id=${user.id}`, {
         method: "GET",
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       const json: EmployeeApiResponse = await response.json();

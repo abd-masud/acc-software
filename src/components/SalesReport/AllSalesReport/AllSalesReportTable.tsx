@@ -19,18 +19,14 @@ export const AllSalesReportTable: React.FC<InvoicesTableProps> = ({
   const [, setDateRangeSelected] = useState(false);
 
   useEffect(() => {
+    if (!user?.id) return;
     const fetchCurrencies = async () => {
       try {
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-
-        if (user?.id) {
-          headers["user_id"] = user.id.toString();
-        }
-        const currencyRes = await fetch("/api/currencies", {
+        const currencyRes = await fetch(`/api/currencies?user_id=${user.id}`, {
           method: "GET",
-          headers: headers,
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
         const currencyJson = await currencyRes.json();
@@ -245,7 +241,7 @@ export const AllSalesReportTable: React.FC<InvoicesTableProps> = ({
     {
       title: "Status",
       render: (record: InvoiceData) => {
-        const status = record.due_amount > 0 ? "Due" : "Paid";
+        const status = Number(record.due_amount) > 0 ? "Due" : "Paid";
         return (
           <span
             className={`font-semibold ${

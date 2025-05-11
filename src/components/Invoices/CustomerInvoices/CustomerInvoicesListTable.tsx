@@ -1,21 +1,13 @@
 "use client";
 
-import {
-  Table,
-  TableColumnsType,
-  Button,
-  message,
-  Input,
-  Modal,
-  Tooltip,
-} from "antd";
+import { Table, TableColumnsType, Button, Input, Modal, Tooltip } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { InvoiceData, InvoiceItem, InvoicesTableProps } from "@/types/invoices";
 import { InvoicesModal } from "./CustomerInvoicesModal";
 import Link from "next/link";
 import { MdOutlineDeleteSweep, MdOutlinePictureAsPdf } from "react-icons/md";
 import { useAuth } from "@/contexts/AuthContext";
-import { FaMoneyBills } from "react-icons/fa6";
+import { FaMoneyBills, FaXmark } from "react-icons/fa6";
 import { FaInfo } from "react-icons/fa";
 
 export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
@@ -35,6 +27,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [searchText, setSearchText] = useState("");
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [userMessage, setUserMessage] = useState<string | null>(null);
 
   const showInvoiceModal = (invoice: InvoiceData) => {
     setCurrentInvoice(invoice);
@@ -60,18 +53,14 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
   }, [invoices, searchText]);
 
   useEffect(() => {
+    if (!user?.id) return;
     const fetchCurrencies = async () => {
       try {
-        const headers: HeadersInit = {
-          "Content-Type": "application/json",
-        };
-
-        if (user?.id) {
-          headers["user_id"] = user.id.toString();
-        }
-        const currencyRes = await fetch("/api/currencies", {
+        const currencyRes = await fetch(`/api/currencies?user_id=${user.id}`, {
           method: "GET",
-          headers: headers,
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
         const currencyJson = await currencyRes.json();
@@ -104,12 +93,14 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
         throw new Error("Failed to update invoice");
       }
 
-      message.success("Invoice updated successfully");
+      setUserMessage("Invoice Updated");
       setIsEditModalOpen(false);
       fetchInvoices();
     } catch (err) {
       console.error(err);
       throw err;
+    } finally {
+      setTimeout(() => setUserMessage(null), 5000);
     }
   };
 
@@ -129,12 +120,14 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
         throw new Error("Failed to delete customer");
       }
 
-      message.success("Customer deleted successfully");
-      fetchInvoices();
+      setUserMessage("Invoice deleted");
       setIsDeleteModalOpen(false);
       setDeleteConfirmationText("");
+      fetchInvoices();
     } catch {
-      message.error("Delete failed");
+      setUserMessage("Delete failed");
+    } finally {
+      setTimeout(() => setUserMessage(null), 5000);
     }
   };
 
@@ -255,7 +248,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
     {
       title: "Status",
       render: (record: InvoiceData) => {
-        const status = record.due_amount > 0 ? "Due" : "Paid";
+        const status = Number(record.due_amount) > 0 ? "Due" : "Paid";
         return (
           <span
             className={`font-semibold ${
@@ -275,7 +268,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
             <button
               className="text-white text-[14px] bg-green-600 hover:bg-green-700 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center disabled:bg-gray-400"
               onClick={() => showInvoiceModal(record)}
-              disabled={record.due_amount == 0}
+              disabled={Number(record.due_amount) == 0}
             >
               <FaMoneyBills />
             </button>
@@ -309,8 +302,27 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
     },
   ];
 
+  const handleCloseMessage = () => {
+    setUserMessage(null);
+  };
+
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
+      {userMessage && (
+        <div className="left-1/2 top-10 transform -translate-x-1/2 fixed z-50">
+          <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 text-green-600 border-2 border-green-600 mx-auto">
+            <div className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+              {userMessage}
+            </div>
+            <button
+              onClick={handleCloseMessage}
+              className="ml-3 focus:outline-none hover:text-green-600"
+            >
+              <FaXmark className="text-[14px]" />
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex sm:justify-between justify-end items-center mb-5">
         <div className="sm:flex items-center hidden">
           <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>

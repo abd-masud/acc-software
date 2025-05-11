@@ -46,21 +46,16 @@ export const RolesAndPermissionsForm = () => {
   useEffect(() => {
     const fetchRolesAndModules = async () => {
       if (!user?.id) return;
+      setLoading(true);
 
       try {
-        setLoading(true);
-
-        const rolesRes = await fetch("/api/generals", {
-          headers: {
-            user_id: user.id.toString(),
-          },
-        });
+        const rolesRes = await fetch(`/api/generals?user_id=${user.id}`);
         const rolesData = await rolesRes.json();
         const allRoles: string[] = rolesData.data[0].role || [];
 
-        const permissionsRes = await fetch("/api/permissions", {
-          headers: { user_id: user.id.toString() },
-        });
+        const permissionsRes = await fetch(
+          `/api/permissions?user_id=${user.id}`
+        );
         const permissionsData = await permissionsRes.json();
 
         const permissionsList = Array.isArray(permissionsData.data)
@@ -104,20 +99,15 @@ export const RolesAndPermissionsForm = () => {
   }, [user?.id]);
 
   const fetchEmployees = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
 
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-
-      if (user?.id) {
-        headers["user_id"] = user.id.toString();
-      }
-
-      const response = await fetch("/api/employees", {
+      const response = await fetch(`/api/employees?user_id=${user.id}`, {
         method: "GET",
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       const json: EmployeeApiResponse = await response.json();
