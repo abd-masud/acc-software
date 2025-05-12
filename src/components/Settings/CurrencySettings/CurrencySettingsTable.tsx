@@ -35,7 +35,7 @@ export const CurrencySettingsTable = () => {
 
         const updated = currencyList.map((item) => ({
           ...item,
-          isDefault: item.code === activeCurrency,
+          isDefault: item.code == activeCurrency,
         }));
 
         setData(updated);
@@ -59,7 +59,7 @@ export const CurrencySettingsTable = () => {
   const handleDefaultChange = async (key: string) => {
     if (!user?.id) return;
 
-    const selectedCurrency = data.find((item) => item.key === key);
+    const selectedCurrency = data.find((item) => item.key == key);
     if (!selectedCurrency) return;
 
     const payload = {
@@ -81,7 +81,7 @@ export const CurrencySettingsTable = () => {
       if (result.success) {
         const updatedData = data.map((item) => ({
           ...item,
-          isDefault: item.key === key,
+          isDefault: item.key == key,
         }));
         setData(updatedData);
       }

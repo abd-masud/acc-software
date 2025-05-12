@@ -249,6 +249,7 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
                         {" "}
                         {formatDate(quoteData.date)}
                       </p>
+                      <p className="text-gray-800 text-[12px]">N/A</p>
                     </div>
                   </div>
                 </div>
@@ -293,10 +294,10 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
                         {item.quantity} {item.unit}
                       </td>
                       <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                        {item.unit_price?.toFixed(2)} {currencyCode}
+                        {item.unit_price} {currencyCode}
                       </td>
                       <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                        {item.amount?.toFixed(2)} {currencyCode}
+                        {item.amount} {currencyCode}
                       </td>
                     </tr>
                   ))}
@@ -324,25 +325,25 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Subtotal:</span>
                   <span>
-                    {quoteData.subtotal?.toFixed(2)} {currencyCode}
+                    {quoteData.subtotal} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Tax:</span>
                   <span>
-                    {quoteData.tax?.toFixed(2)} {currencyCode}
+                    {quoteData.tax} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Discount:</span>
                   <span>
-                    {quoteData.discount?.toFixed(2)} {currencyCode}
+                    {quoteData.discount} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2 border-t pt-2">
                   <span className="font-bold">Total:</span>
                   <span className="font-medium">
-                    {quoteData.total?.toFixed(2)} {currencyCode}
+                    {quoteData.total} {currencyCode}
                   </span>
                 </div>
               </div>

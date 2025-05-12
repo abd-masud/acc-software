@@ -107,16 +107,14 @@ export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
       title: "Paid Amount",
       render: (record: FlattenedInvoice) => {
         const paidAmount = Number(record.sub_item?.paid_amount);
-        return paidAmount > 0
-          ? `${paidAmount.toFixed(2)} ${currencyCode}`
-          : "-";
+        return paidAmount > 0 ? `${paidAmount} ${currencyCode}` : "-";
       },
     },
     {
       title: "Due Amount",
       render: (record: FlattenedInvoice) => {
         const dueAmount = Number(record.sub_item?.due_amount);
-        return dueAmount > 0 ? `${dueAmount.toFixed(2)} ${currencyCode}` : "-";
+        return dueAmount > 0 ? `${dueAmount} ${currencyCode}` : "-";
       },
     },
     {

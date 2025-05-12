@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
             [employee.user_id]
         );
 
-        if (userRows.length === 0) {
+        if (userRows.length == 0) {
             return new Response(JSON.stringify({ error: 'User data not found' }), {
                 status: 404,
                 headers: { 'Content-Type': 'application/json' },

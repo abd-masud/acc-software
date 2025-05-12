@@ -129,8 +129,8 @@ export const Overviews = () => {
       const amount = invoicesData.reduce((sum, invoice) => {
         if (!invoice.date || !invoice.paid_amount) return sum;
         const invoiceDate = new Date(invoice.date);
-        return invoiceDate.getFullYear() === year &&
-          invoiceDate.getMonth() + 1 === month
+        return invoiceDate.getFullYear() == year &&
+          invoiceDate.getMonth() + 1 == month
           ? sum + Number(invoice.paid_amount)
           : sum;
       }, 0);
@@ -155,7 +155,7 @@ export const Overviews = () => {
           <div className="flex justify-center items-center h-64">
             <p>Loading...</p>
           </div>
-        ) : productData.length === 0 ? (
+        ) : productData.length == 0 ? (
           <div className="flex justify-center items-center h-64">
             <p>No product data available</p>
           </div>

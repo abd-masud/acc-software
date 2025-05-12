@@ -255,8 +255,9 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
                         {formatDate(invoiceData.date)}
                       </p>
                       <p className="text-gray-800 text-[12px]">
-                        {" "}
-                        {formatDate(invoiceData.due_date)}
+                        {invoiceData.due_date && invoiceData.due_date !== "N/A"
+                          ? formatDate(invoiceData.due_date)
+                          : "N/A"}
                       </p>
                     </div>
                   </div>
@@ -302,10 +303,10 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
                         {item.quantity} {item.unit}
                       </td>
                       <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                        {Number(item.unit_price)?.toFixed(2)} {currencyCode}
+                        {item.unit_price} {currencyCode}
                       </td>
                       <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                        {Number(item.amount)?.toFixed(2)} {currencyCode}
+                        {item.amount} {currencyCode}
                       </td>
                     </tr>
                   ))}
@@ -333,37 +334,37 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Subtotal:</span>
                   <span>
-                    {Number(invoiceData.subtotal)?.toFixed(2)} {currencyCode}
+                    {invoiceData.subtotal} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Discount:</span>
                   <span>
-                    {Number(invoiceData.discount)?.toFixed(2)} {currencyCode}
+                    {invoiceData.discount} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Tax:</span>
                   <span>
-                    {Number(invoiceData.tax)?.toFixed(2)} {currencyCode}
+                    {invoiceData.tax} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2 border-t pt-2">
                   <span className="font-bold">Total:</span>
                   <span className="font-medium">
-                    {Number(invoiceData.total)?.toFixed(2)} {currencyCode}
+                    {invoiceData.total} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Paid Amount:</span>
                   <span>
-                    {Number(invoiceData.paid_amount)?.toFixed(2)} {currencyCode}
+                    {invoiceData.paid_amount} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between border-t pt-2">
                   <span className="font-medium text-red-500">Due Amount:</span>
                   <span className="text-red-500">
-                    {Number(invoiceData.due_amount)?.toFixed(2)} {currencyCode}
+                    {invoiceData.due_amount} {currencyCode}
                   </span>
                 </div>
               </div>

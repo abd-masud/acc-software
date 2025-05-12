@@ -19,7 +19,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
   const [total, setTotal] = useState("");
   const [paid, setPaid] = useState("");
   const [payNow, setPayNow] = useState("");
-  const [due, setDue] = useState("");
+  const [due, setDue] = useState(0);
 
   useEffect(() => {
     if (currentInvoice) {
@@ -28,23 +28,22 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
       setCustomerId(currentInvoice.customer.customer_id);
       setCustomerEmail(currentInvoice.customer.email);
       setCustomerPhone(currentInvoice.customer.contact);
-      setTotal(Number(currentInvoice.total).toFixed(2));
-      setPaid(Number(currentInvoice.paid_amount).toFixed(2));
+      setTotal(currentInvoice.total);
+      setPaid(currentInvoice.paid_amount);
       setPayNow("");
-      const calculatedDue = (
-        Number(currentInvoice.total) - Number(currentInvoice.paid_amount)
-      ).toFixed(2);
+      const calculatedDue =
+        Number(currentInvoice.total) - Number(currentInvoice.paid_amount);
       setDue(calculatedDue);
     }
   }, [currentInvoice]);
 
   const handlePayNowChange = (value: string) => {
-    const newPayNow = Number(value) || 0;
-    setPayNow(String(newPayNow));
-    const newDue = (
-      Number(total) -
-      (Number(paid) + Number(value || 0))
-    ).toFixed(2);
+    const newPayNow = value == "" ? "" : String(Number(value));
+    setPayNow(newPayNow);
+    const newDue =
+      value === ""
+        ? Number(total) - Number(paid)
+        : Number(total) - (Number(paid) + Number(value));
     setDue(newDue);
   };
 
@@ -66,6 +65,19 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
   const handleSubmit = async () => {
     try {
       if (!currentInvoice) return;
+
+      const payNowAmount = Number(payNow);
+      const remainingDue = Number(total) - Number(paid);
+
+      if (payNowAmount <= 0) {
+        message.error("Payment amount must be greater than 0");
+        return;
+      }
+
+      if (payNowAmount > remainingDue) {
+        message.error("Payment amount cannot exceed the due amount");
+        return;
+      }
 
       const updatedPaidAmount = Number(paid) + Number(payNow);
       const updatedDueAmount = Number(total) - Number(updatedPaidAmount);
@@ -112,7 +124,16 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
   };
 
   return (
-    <Modal open={isOpen} onOk={handleSubmit} onCancel={onClose} okText="Pay">
+    <Modal
+      open={isOpen}
+      onOk={handleSubmit}
+      onCancel={onClose}
+      okText="Pay"
+      okButtonProps={{
+        disabled:
+          Number(payNow) <= 0 || Number(payNow) > Number(total) - Number(paid),
+      }}
+    >
       <div className="flex items-center pb-3">
         <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
         <h2 className="text-[13px] font-[500]">Invoice</h2>
@@ -124,7 +145,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
           </label>
           <input
             placeholder="Enter Invoice ID"
-            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
             type="text"
             id="invoiceId"
             value={invoiceId}
@@ -136,7 +157,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
             Customer
           </label>
           <input
-            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
             type="text"
             id="name"
             value={`${customerName}  (${customerId})`}
@@ -150,7 +171,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
             Email Address
           </label>
           <input
-            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
             type="text"
             id="email"
             value={customerEmail}
@@ -162,7 +183,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
             Phone Number
           </label>
           <input
-            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
             type="text"
             id="contact"
             value={customerPhone}
@@ -177,7 +198,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
             Total Amount
           </label>
           <input
-            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
             id="total"
             value={total}
             readOnly
@@ -190,7 +211,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
           <input
             type="number"
             placeholder="Enter paid amount"
-            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
             id="paid"
             value={paid}
             readOnly
@@ -203,7 +224,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
           <input
             type="number"
             placeholder="Enter due amount"
-            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
             min={0}
             id="due"
             value={due}
@@ -219,13 +240,36 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
           </label>
           <input
             type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
             placeholder="Enter amount"
             className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
             min={0}
             max={Number(total) - Number(paid)}
             id="paid"
             value={payNow}
-            onChange={(e) => handlePayNowChange(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              const maxAmount = Number(total) - Number(paid);
+              if (value !== "" && Number(value) > maxAmount) {
+                setPayNow(maxAmount.toString());
+                setDue(0);
+              } else {
+                handlePayNowChange(value);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (
+                !/[0-9]/.test(e.key) &&
+                e.key !== "Backspace" &&
+                e.key !== "Delete" &&
+                e.key !== "Tab" &&
+                e.key !== "ArrowLeft" &&
+                e.key !== "ArrowRight"
+              ) {
+                e.preventDefault();
+              }
+            }}
             required
           />
         </div>

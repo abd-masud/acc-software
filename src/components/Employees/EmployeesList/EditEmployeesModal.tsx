@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { StylesConfig } from "react-select";
 import dynamic from "next/dynamic";
 import { SMTPSettings } from "@/types/smtp";
+import { FaXmark } from "react-icons/fa6";
 
 const Select = dynamic(() => import("react-select"), {
   ssr: false,
@@ -40,6 +41,7 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
   const [role, setRole] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const [userMessage, setUserMessage] = useState<string | null>(null);
   const [generalOptions, setGeneralOptions] = useState<GeneralOptions>({
     department: [],
     role: [],
@@ -215,6 +217,25 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
   const handleSubmit = async () => {
     if (!currentEmployee) return;
 
+    if (
+      !employeeName.trim() ||
+      !email.trim() ||
+      !contact.trim() ||
+      !department.trim() ||
+      !role.trim() ||
+      !status.trim()
+    ) {
+      setUserMessage("Fill in all fields");
+      setTimeout(() => setUserMessage(null), 5000);
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setUserMessage("Invalid email address");
+      setTimeout(() => setUserMessage(null), 5000);
+      return;
+    }
+
     try {
       setLoading(true);
       const updatedEmployee = {
@@ -268,6 +289,10 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
     }),
   };
 
+  const handleCloseMessage = () => {
+    setUserMessage(null);
+  };
+
   return (
     <Modal
       open={isOpen}
@@ -277,6 +302,21 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
       okButtonProps={{ loading }}
       cancelButtonProps={{ disabled: loading }}
     >
+      {userMessage && (
+        <div className="left-1/2 top-10 transform -translate-x-1/2 fixed z-50">
+          <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 text-red-400 border-2 border-red-400 mx-auto">
+            <div className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+              {userMessage}
+            </div>
+            <button
+              onClick={handleCloseMessage}
+              className="ml-3 focus:outline-none hover:text-red-300"
+            >
+              <FaXmark className="text-[14px]" />
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex items-center pb-3">
         <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
         <h2 className="text-[13px] font-[500]">Edit Employee</h2>
@@ -289,7 +329,7 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
         <input
           id="employeeId"
           placeholder="Enter employee name"
-          className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+          className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
           value={employeeId}
           readOnly
         />
@@ -362,7 +402,7 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
             className="mt-2"
             options={toSelectOptions(generalOptions.department)}
             value={toSelectOptions(generalOptions.department).find(
-              (opt) => opt.value === department
+              (opt) => opt.value == department
             )}
             onChange={(selected) =>
               setDepartment((selected as SelectOption)?.value || "")
@@ -385,7 +425,7 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
             className="mt-2"
             options={toSelectOptions(generalOptions.role)}
             value={toSelectOptions(generalOptions.role).find(
-              (opt) => opt.value === role
+              (opt) => opt.value == role
             )}
             onChange={(selected) =>
               setRole((selected as SelectOption)?.value || "")
@@ -406,7 +446,7 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
             className="mt-2"
             options={toSelectOptions(generalOptions.status)}
             value={toSelectOptions(generalOptions.status).find(
-              (opt) => opt.value === status
+              (opt) => opt.value == status
             )}
             onChange={(selected) =>
               setStatus((selected as SelectOption)?.value || "")

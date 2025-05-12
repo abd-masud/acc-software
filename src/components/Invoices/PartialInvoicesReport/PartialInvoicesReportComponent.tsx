@@ -316,7 +316,7 @@ export const PartialInvoicesReportComponent = ({
 
                     // Generate invoice ID suffix (A, B, C, etc.)
                     const invoiceIdSuffix =
-                      index === 0 ? "" : String.fromCharCode(64 + index);
+                      index == 0 ? "" : String.fromCharCode(64 + index);
                     const displayInvoiceId = `${invoiceData.invoice_id}${invoiceIdSuffix}`;
 
                     return (
@@ -380,37 +380,37 @@ export const PartialInvoicesReportComponent = ({
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Subtotal:</span>
                   <span>
-                    {Number(invoiceData.subtotal)?.toFixed(2)} {currencyCode}
+                    {invoiceData.subtotal} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Discount:</span>
                   <span>
-                    {Number(invoiceData.discount)?.toFixed(2)} {currencyCode}
+                    {invoiceData.discount} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Tax:</span>
                   <span>
-                    {Number(invoiceData.tax)?.toFixed(2)} {currencyCode}
+                    {invoiceData.tax} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2 border-t pt-2">
                   <span className="font-bold">Total:</span>
                   <span className="font-medium">
-                    {Number(invoiceData.total)?.toFixed(2)} {currencyCode}
+                    {invoiceData.total} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between mb-2">
                   <span className="font-medium">Paid Amount:</span>
                   <span>
-                    {Number(invoiceData.paid_amount)?.toFixed(2)} {currencyCode}
+                    {invoiceData.paid_amount} {currencyCode}
                   </span>
                 </div>
                 <div className="text-[12px] flex justify-between border-t pt-2">
                   <span className="font-medium text-red-500">Due Amount:</span>
                   <span className="text-red-500">
-                    {Number(invoiceData.due_amount)?.toFixed(2)} {currencyCode}
+                    {invoiceData.due_amount} {currencyCode}
                   </span>
                 </div>
               </div>

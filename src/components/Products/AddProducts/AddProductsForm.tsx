@@ -17,6 +17,25 @@ const Select = dynamic(() => import("react-select"), {
   loading: () => <div className="h-[38px] w-full rounded border" />,
 });
 
+const UNITS = [
+  "Pieces",
+  "Kilograms",
+  "Grams",
+  "Liters",
+  "Meters",
+  "Box",
+  "Set",
+  "Pack",
+  "Pair",
+  "Dozen",
+  "Bottle",
+  "Can",
+  "Carton",
+  "Bag",
+  "Roll",
+  "Sheet",
+];
+
 export const AddProductsForm = () => {
   const instanceId = useId();
   const { user } = useAuth();
@@ -134,7 +153,9 @@ export const AddProductsForm = () => {
       ...formValues,
       [id]:
         id == "price" || id == "tax_rate" || id == "stock"
-          ? Number(value)
+          ? value === ""
+            ? ""
+            : Number(value)
           : value,
     });
   };
@@ -199,27 +220,6 @@ export const AddProductsForm = () => {
     }),
   };
 
-  const handleAddMore = () => {
-    setFormValues({
-      key: "",
-      product_id: "",
-      name: "",
-      description: "",
-      price: "",
-      category: "",
-      stock: "",
-      unit: "",
-    });
-
-    const compPrefix = user?.company
-      ? user.company.slice(0, 2).toUpperCase()
-      : "CO";
-    const random = Math.floor(10000 + Math.random() * 90000);
-    setProductId(`C${compPrefix}${random}`);
-
-    setShowSuccessModal(false);
-  };
-
   const handleOkay = () => {
     setShowSuccessModal(false);
     router.push("/products/products-list");
@@ -262,7 +262,7 @@ export const AddProductsForm = () => {
             </label>
             <input
               placeholder="Enter product id"
-              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="product_id"
               value={product_id}
@@ -278,6 +278,7 @@ export const AddProductsForm = () => {
               className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="name"
+              maxLength={100}
               value={formValues.name}
               onChange={handleChange}
               required
@@ -293,6 +294,7 @@ export const AddProductsForm = () => {
             placeholder="Enter product description"
             className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
             id="description"
+            maxLength={250}
             value={formValues.description}
             onChange={handleChange}
             rows={3}
@@ -308,10 +310,28 @@ export const AddProductsForm = () => {
               placeholder="Enter price"
               className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               id="price"
               min="0"
+              step="0.01"
               value={formValues.price}
               onChange={handleChange}
+              onKeyDown={(e) => {
+                if (
+                  !/[0-9.]/.test(e.key) &&
+                  e.key !== "Backspace" &&
+                  e.key !== "Delete" &&
+                  e.key !== "Tab" &&
+                  e.key !== "ArrowLeft" &&
+                  e.key !== "ArrowRight"
+                ) {
+                  e.preventDefault();
+                }
+                if (e.key === "." && formValues.price.includes(".")) {
+                  e.preventDefault();
+                }
+              }}
               required
             />
           </div>
@@ -319,20 +339,20 @@ export const AddProductsForm = () => {
             <label className="text-[14px]" htmlFor="unit">
               Unit
             </label>
-            <select
-              className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-              id="unit"
-              value={formValues.unit}
-              onChange={handleChange}
-            >
-              <option value="Pieces">Pieces</option>
-              <option value="Kilograms">Kilograms</option>
-              <option value="Grams">Grams</option>
-              <option value="Liters">Liters</option>
-              <option value="Meters">Meters</option>
-              <option value="Box">Box</option>
-              <option value="Set">Set</option>
-            </select>
+            <Select
+              instanceId={`${instanceId}-unit`}
+              inputId="unit"
+              className="mt-2"
+              options={toSelectOptions(UNITS)}
+              value={toSelectOptions(UNITS).find(
+                (opt) => opt.value === formValues.unit
+              )}
+              onChange={handleSelectChange("unit")}
+              placeholder="Select Unit"
+              styles={generalSelectStyles}
+              isClearable
+              required
+            />
           </div>
         </div>
 
@@ -344,7 +364,7 @@ export const AddProductsForm = () => {
               </label>
               <Link
                 className="text-[12px] text-blue-600"
-                href={"/product/product-settings"}
+                href={"/products/product-settings"}
               >
                 Add Category
               </Link>
@@ -358,7 +378,7 @@ export const AddProductsForm = () => {
                 (opt) => opt.value == formValues.category
               )}
               onChange={handleSelectChange("category")}
-              placeholder="Select Department"
+              placeholder="Select Category"
               styles={generalSelectStyles}
               isClearable
               required
@@ -373,10 +393,24 @@ export const AddProductsForm = () => {
               placeholder="Enter Stock Quantity"
               className="border text-[14px] py-[13px] px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               id="stock"
               min="0"
               value={formValues.stock}
               onChange={handleChange}
+              onKeyDown={(e) => {
+                if (
+                  !/[0-9]/.test(e.key) &&
+                  e.key !== "Backspace" &&
+                  e.key !== "Delete" &&
+                  e.key !== "Tab" &&
+                  e.key !== "ArrowLeft" &&
+                  e.key !== "ArrowRight"
+                ) {
+                  e.preventDefault();
+                }
+              }}
               required
             />
           </div>
@@ -395,13 +429,6 @@ export const AddProductsForm = () => {
         open={showSuccessModal}
         onCancel={handleOkay}
         footer={[
-          <button
-            key="addMore"
-            onClick={handleAddMore}
-            className="text-[14px] font-[500] py-2 w-28 rounded cursor-pointer transition-all duration-300 mt-2 mr-2 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3]"
-          >
-            Add More
-          </button>,
           <button
             key="okay"
             onClick={handleOkay}

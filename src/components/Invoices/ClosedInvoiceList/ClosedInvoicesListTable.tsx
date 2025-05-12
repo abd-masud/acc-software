@@ -198,37 +198,37 @@ export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
           title: "Subtotal",
           dataIndex: "subtotal",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Tax",
           dataIndex: "tax",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Discount",
           dataIndex: "discount",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Total",
           dataIndex: "total",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Paid",
           dataIndex: "paid_amount",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Due",
           dataIndex: "due_amount",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
       ],
     },

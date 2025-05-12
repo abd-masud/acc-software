@@ -205,37 +205,37 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
           title: "Subtotal",
           dataIndex: "subtotal",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Tax",
           dataIndex: "tax",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Discount",
           dataIndex: "discount",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Total",
           dataIndex: "total",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Paid",
           dataIndex: "paid_amount",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Due",
           dataIndex: "due_amount",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
       ],
     },
@@ -268,7 +268,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
             <button
               className="text-white text-[14px] bg-green-600 hover:bg-green-700 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center disabled:bg-gray-400"
               onClick={() => showInvoiceModal(record)}
-              disabled={Number(record.due_amount) == 0}
+              disabled={Number(record.due_amount) <= 0}
             >
               <FaMoneyBills />
             </button>

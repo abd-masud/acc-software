@@ -3,10 +3,15 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Employees } from "@/types/employees";
 import { SMTPSettings } from "@/types/smtp";
+import { Modal } from "antd";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useId, useState } from "react";
+import { FaXmark } from "react-icons/fa6";
 import { StylesConfig } from "react-select";
+import success from "../../../../public/images/success.png";
+import Image from "next/image";
+import Link from "next/link";
 
 const Select = dynamic(() => import("react-select"), {
   ssr: false,
@@ -19,6 +24,8 @@ export const AddEmployeesForm = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [employee_id, setEmployeeId] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [userMessage, setUserMessage] = useState<string | null>(null);
 
   const [formValues, setFormValues] = useState<Omit<Employees, "id">>({
     key: "",
@@ -241,27 +248,26 @@ export const AddEmployeesForm = () => {
         body: JSON.stringify(payload),
       });
 
-      if (res.ok) {
-        await sendEmployeeCredentials(formValues);
-
-        setFormValues({
-          key: "",
-          employee_id: "",
-          name: "",
-          email: "",
-          contact: "",
-          department: "",
-          role: "",
-          status: "",
-          password: "",
-        });
-        router.push("/employees/employees-list");
-      } else {
-        console.error("Failed to create employee");
+      if (!res.ok) {
+        throw new Error("Failed to create employee");
       }
+      const hasSMTPSettings =
+        formData.host && formData.username && formData.password;
+      if (hasSMTPSettings && formValues.email) {
+        try {
+          await sendEmployeeCredentials(formValues);
+        } catch (emailError) {
+          console.error(
+            "Error sending email (but employee was created):",
+            emailError
+          );
+        }
+      }
+      setShowSuccessModal(true);
     } catch (error) {
       console.error("Error creating employee:", error);
     } finally {
+      setTimeout(() => setUserMessage(null), 5000);
       setLoading(false);
     }
   };
@@ -297,8 +303,32 @@ export const AddEmployeesForm = () => {
     return <div>Loading form...</div>;
   }
 
+  const handleOkay = () => {
+    setShowSuccessModal(false);
+    router.push("/employees/employees-list");
+  };
+
+  const handleCloseMessage = () => {
+    setUserMessage(null);
+  };
+
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
+      {userMessage && (
+        <div className="left-1/2 top-10 transform -translate-x-1/2 fixed z-50">
+          <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 text-red-400 border-2 border-red-400 mx-auto">
+            <div className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+              {userMessage}
+            </div>
+            <button
+              onClick={handleCloseMessage}
+              className="ml-3 focus:outline-none hover:text-red-300"
+            >
+              <FaXmark className="text-[14px]" />
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex items-center pb-5">
         <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
         <h2 className="text-[13px] font-[500]">Add Employee Form</h2>
@@ -311,7 +341,7 @@ export const AddEmployeesForm = () => {
             </label>
             <input
               placeholder="Enter employee id"
-              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="employee_id"
               value={employee_id}
@@ -383,9 +413,17 @@ export const AddEmployeesForm = () => {
 
         <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
           <div className="mb-4">
-            <label className="text-[14px]" htmlFor="department">
-              Department
-            </label>
+            <div className="flex justify-between items-center">
+              <label className="text-[14px]" htmlFor="department">
+                Department
+              </label>
+              <Link
+                className="text-[12px] text-blue-600"
+                href={"/employees/employee-settings"}
+              >
+                Add Department
+              </Link>
+            </div>
             <Select
               instanceId={`${instanceId}-department`}
               inputId="department"
@@ -398,12 +436,21 @@ export const AddEmployeesForm = () => {
               placeholder="Select Department"
               styles={generalSelectStyles}
               isClearable
+              required
             />
           </div>
           <div className="mb-4">
-            <label className="text-[14px]" htmlFor="role">
-              Role
-            </label>
+            <div className="flex justify-between items-center">
+              <label className="text-[14px]" htmlFor="role">
+                Role
+              </label>
+              <Link
+                className="text-[12px] text-blue-600"
+                href={"/employees/employee-settings"}
+              >
+                Add Role
+              </Link>
+            </div>
             <Select
               instanceId={`${instanceId}-role`}
               inputId="role"
@@ -416,15 +463,24 @@ export const AddEmployeesForm = () => {
               placeholder="Select Role"
               styles={generalSelectStyles}
               isClearable
+              required
             />
           </div>
         </div>
 
         <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
           <div className="mb-4">
-            <label className="text-[14px]" htmlFor="status">
-              Status
-            </label>
+            <div className="flex justify-between items-center">
+              <label className="text-[14px]" htmlFor="status">
+                Status
+              </label>
+              <Link
+                className="text-[12px] text-blue-600"
+                href={"/employees/employee-settings"}
+              >
+                Add Status
+              </Link>
+            </div>
             <Select
               instanceId={`${instanceId}-status`}
               inputId="status"
@@ -437,6 +493,7 @@ export const AddEmployeesForm = () => {
               placeholder="Select Status"
               styles={generalSelectStyles}
               isClearable
+              required
             />
           </div>
           <div className="mb-4">
@@ -465,6 +522,29 @@ export const AddEmployeesForm = () => {
           </button>
         </div>
       </form>
+      <Modal
+        open={showSuccessModal}
+        onCancel={handleOkay}
+        footer={[
+          <button
+            key="okay"
+            onClick={handleOkay}
+            className="text-[14px] font-[500] py-2 w-20 rounded cursor-pointer transition-all duration-300 mt-2 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3]"
+          >
+            Okay
+          </button>,
+        ]}
+        centered
+        width={400}
+      >
+        <div className="flex flex-col items-center pt-5">
+          <Image src={success} alt="Success" width={80} height={80} />
+          <h3 className="text-xl font-semibold mt-2">Success!</h3>
+          <p className="text-gray-600 text-center">
+            Employee has been added successfully.
+          </p>
+        </div>
+      </Modal>
     </main>
   );
 };

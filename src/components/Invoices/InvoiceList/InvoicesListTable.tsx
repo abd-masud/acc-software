@@ -214,14 +214,20 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
         {
           title: "Due Date",
           dataIndex: "due_date",
-          render: (dueDate: string) =>
-            dueDate
-              ? new Date(dueDate).toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "-",
+          render: (dueDate: string) => {
+            if (!dueDate || dueDate === "N/A") {
+              return "N/A";
+            }
+            try {
+              return new Date(dueDate).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              });
+            } catch {
+              return "-";
+            }
+          },
         },
       ],
     },
@@ -231,38 +237,62 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
         {
           title: "Subtotal",
           dataIndex: "subtotal",
-          render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+          render: (value: unknown) => {
+            const numValue = typeof value === "number" ? value : Number(value);
+            return !isNaN(numValue) && numValue > 0
+              ? `${numValue} ${currencyCode}`
+              : "-";
+          },
         },
         {
           title: "Tax",
           dataIndex: "tax",
-          render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+          render: (value: unknown) => {
+            const numValue = typeof value === "number" ? value : Number(value);
+            return !isNaN(numValue) && numValue > 0
+              ? `${numValue} ${currencyCode}`
+              : "-";
+          },
         },
         {
           title: "Discount",
           dataIndex: "discount",
-          render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+          render: (value: unknown) => {
+            const numValue = typeof value === "number" ? value : Number(value);
+            return !isNaN(numValue) && numValue > 0
+              ? `${numValue} ${currencyCode}`
+              : "-";
+          },
         },
         {
           title: "Total",
           dataIndex: "total",
-          render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+          render: (value: unknown) => {
+            const numValue = typeof value === "number" ? value : Number(value);
+            return !isNaN(numValue) && numValue > 0
+              ? `${numValue} ${currencyCode}`
+              : "-";
+          },
         },
         {
           title: "Paid",
           dataIndex: "paid_amount",
-          render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+          render: (value: unknown) => {
+            const numValue = typeof value === "number" ? value : Number(value);
+            return !isNaN(numValue) && numValue > 0
+              ? `${numValue} ${currencyCode}`
+              : "-";
+          },
         },
         {
           title: "Due",
           dataIndex: "due_amount",
-          render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+          render: (value: unknown) => {
+            const numValue = typeof value === "number" ? value : Number(value);
+            return !isNaN(numValue) && numValue > 0
+              ? `${numValue} ${currencyCode}`
+              : "-";
+          },
         },
       ],
     },

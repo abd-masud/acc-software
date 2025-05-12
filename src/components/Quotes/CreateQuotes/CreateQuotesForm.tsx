@@ -10,7 +10,10 @@ import { useState, useEffect } from "react";
 import { FaTrash } from "react-icons/fa";
 import Link from "next/link";
 import dayjs from "dayjs";
-import { DatePicker } from "antd";
+import { DatePicker, Modal } from "antd";
+import Image from "next/image";
+import success from "../../../../public/images/success.png";
+import { FaXmark } from "react-icons/fa6";
 
 export const CreateQuotesForm = () => {
   const { user } = useAuth();
@@ -21,12 +24,14 @@ export const CreateQuotesForm = () => {
   const [customers, setCustomers] = useState<Customers[]>([]);
   const [products, setProducts] = useState<Products[]>([]);
   const [currencyCode, setCurrencyCode] = useState("USD");
-  const [taxRate, setTaxRate] = useState(0);
+  const [taxRate, setTaxRate] = useState("");
   const [notes, setNotes] = useState("");
-  const [discountAmount, setDiscountAmount] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customers | null>(
     null
   );
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [userMessage, setUserMessage] = useState<string | null>(null);
   const [customerDetails, setCustomerDetails] = useState<Customers>({
     key: "",
     id: 0,
@@ -43,10 +48,10 @@ export const CreateQuotesForm = () => {
       id: 0,
       product_id: "",
       product: "",
-      quantity: 1,
+      quantity: "",
       unit: "",
-      unit_price: 0,
-      amount: 0,
+      unit_price: "",
+      amount: "",
     },
   ]);
 
@@ -153,18 +158,18 @@ export const CreateQuotesForm = () => {
   // Calculate quote totals
   const calculateTotals = () => {
     const subtotal = quoteItems.reduce(
-      (sum, item) => sum + (item.amount || 0),
+      (sum, item) => sum + (Number(item.amount) || 0),
       0
     );
 
-    const total_tax = subtotal * (taxRate / 100);
-    const total = subtotal + total_tax - discountAmount;
+    const total_tax = subtotal * (Number(taxRate) / 100);
+    const total = subtotal + total_tax - Number(discountAmount);
 
     return {
       subtotal,
-      tax: total_tax,
+      tax: total_tax || 0,
       total,
-      discount: discountAmount,
+      discount: discountAmount || 0,
     };
   };
 
@@ -193,11 +198,13 @@ export const CreateQuotesForm = () => {
         if (item.id == id) {
           const updatedItem = {
             ...item,
-            [field]: field == "product" ? value : Number(value),
+            [field]: field == "product" ? value : value,
           };
 
           if (field == "quantity" || field == "unit_price") {
-            updatedItem.amount = updatedItem.quantity * updatedItem.unit_price;
+            const quantity = Number(updatedItem.quantity);
+            const unit_price = Number(updatedItem.unit_price);
+            updatedItem.amount = String(quantity * unit_price); // Convert to string
           }
 
           return updatedItem;
@@ -214,10 +221,10 @@ export const CreateQuotesForm = () => {
         id: nextId,
         product_id: "",
         product: "",
-        quantity: 1,
-        unit_price: 0,
+        quantity: "",
+        unit_price: "",
         unit: "",
-        amount: 0,
+        amount: "",
       },
     ]);
     setNextId(nextId + 1);
@@ -264,14 +271,16 @@ export const CreateQuotesForm = () => {
         body: JSON.stringify(quoteData),
       });
 
-      if (res.ok) {
-        router.push("/quotes/quotes-list");
-      } else {
-        console.error("Failed to create quote");
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to create quote");
       }
-    } catch (error) {
-      console.error("Error creating quote:", error);
+      setShowSuccessModal(true);
+    } catch (error: any) {
+      setUserMessage(error || "An unexpected error occurred");
     } finally {
+      setTimeout(() => setUserMessage(null), 5000);
       setLoading(false);
     }
   };
@@ -331,8 +340,32 @@ export const CreateQuotesForm = () => {
     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
   };
 
+  const handleOkay = () => {
+    setShowSuccessModal(false);
+    router.push("/quotes/quotes-list");
+  };
+
+  const handleCloseMessage = () => {
+    setUserMessage(null);
+  };
+
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
+      {userMessage && (
+        <div className="left-1/2 top-10 transform -translate-x-1/2 fixed z-50">
+          <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 text-green-400 border-2 border-green-400 mx-auto">
+            <div className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+              {userMessage}
+            </div>
+            <button
+              onClick={handleCloseMessage}
+              className="ml-3 focus:outline-none hover:text-green-300"
+            >
+              <FaXmark className="text-[14px]" />
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex items-center pb-5">
         <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
         <h2 className="text-[13px] font-[500]">Create New Quote</h2>
@@ -346,7 +379,7 @@ export const CreateQuotesForm = () => {
               Quote ID
             </label>
             <input
-              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="quote_id"
               value={quote_id}
@@ -427,7 +460,7 @@ export const CreateQuotesForm = () => {
             </label>
             <input
               placeholder="Enter delivery address"
-              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="delivery"
               value={customerDetails.delivery}
@@ -441,7 +474,7 @@ export const CreateQuotesForm = () => {
               </label>
               <input
                 placeholder="Enter email address"
-                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="email"
                 id="email"
                 value={customerDetails.email}
@@ -454,7 +487,7 @@ export const CreateQuotesForm = () => {
               </label>
               <input
                 placeholder="Enter contact number"
-                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="text"
                 id="contact"
                 value={customerDetails.contact}
@@ -525,10 +558,12 @@ export const CreateQuotesForm = () => {
                                       ...i,
                                       product_id: product.product_id,
                                       product: product.name,
-                                      unit: product.unit,
-                                      unit_price: Number(product.price),
-                                      amount:
-                                        i.quantity * Number(product.price),
+                                      unit: String(product.unit),
+                                      unit_price: String(product.price),
+                                      amount: String(
+                                        Number(i.quantity) *
+                                          Number(product.price)
+                                      ),
                                     }
                                   : i
                               )
@@ -542,8 +577,8 @@ export const CreateQuotesForm = () => {
                                       product_id: "",
                                       product: "",
                                       unit: "",
-                                      unit_price: 0,
-                                      amount: 0,
+                                      unit_price: "",
+                                      amount: "",
                                     }
                                   : i
                               )
@@ -576,7 +611,7 @@ export const CreateQuotesForm = () => {
                         type="text"
                         min="1"
                         placeholder="Enter unit"
-                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                         value={item.unit}
                         readOnly
                       />
@@ -586,7 +621,7 @@ export const CreateQuotesForm = () => {
                         type="number"
                         min="0"
                         placeholder="Enter unit price"
-                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                         value={item.unit_price}
                         readOnly
                       />
@@ -595,8 +630,8 @@ export const CreateQuotesForm = () => {
                       <input
                         type="number"
                         placeholder="Enter amount"
-                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-                        value={item.amount.toFixed(2)}
+                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                        value={Number(item.amount)}
                         readOnly
                       />
                     </td>
@@ -639,7 +674,7 @@ export const CreateQuotesForm = () => {
             <div className="flex justify-between mb-2">
               <span className="text-[14px]">Subtotal:</span>
               <span className="text-[14px] font-medium">
-                {subtotal.toFixed(2)} {currencyCode}
+                {subtotal} {currencyCode}
               </span>
             </div>
             <div className="flex justify-between mb-2">
@@ -648,10 +683,10 @@ export const CreateQuotesForm = () => {
                 <input
                   type="number"
                   min="0"
-                  placeholder="0"
+                  placeholder="0.00"
                   className="border text-[14px] w-20 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
                   value={taxRate}
-                  onChange={(e) => setTaxRate(Number(e.target.value))}
+                  onChange={(e) => setTaxRate(e.target.value)}
                 />
                 <span className="text-[14px] font-medium">%</span>
               </div>
@@ -662,10 +697,10 @@ export const CreateQuotesForm = () => {
                 <input
                   type="number"
                   min="0"
-                  placeholder="0"
+                  placeholder="0.00"
                   className="border text-[14px] w-20 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
                   value={discountAmount}
-                  onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                  onChange={(e) => setDiscountAmount(e.target.value)}
                 />
                 <span className="text-[14px] font-medium">{currencyCode}</span>
               </div>
@@ -674,7 +709,7 @@ export const CreateQuotesForm = () => {
             <div className="flex justify-between font-semibold mb-2">
               <span className="text-[14px]">Total Amount:</span>
               <span className="text-[14px]">
-                {total.toFixed(2)} {currencyCode}
+                {total} {currencyCode}
               </span>
             </div>
           </div>
@@ -691,6 +726,29 @@ export const CreateQuotesForm = () => {
           </button>
         </div>
       </form>
+      <Modal
+        open={showSuccessModal}
+        onCancel={handleOkay}
+        footer={[
+          <button
+            key="okay"
+            onClick={handleOkay}
+            className="text-[14px] font-[500] py-2 w-20 rounded cursor-pointer transition-all duration-300 mt-2 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3]"
+          >
+            Okay
+          </button>,
+        ]}
+        centered
+        width={400}
+      >
+        <div className="flex flex-col items-center pt-5">
+          <Image src={success} alt="Success" width={80} height={80} />
+          <h3 className="text-xl font-semibold mt-2">Success!</h3>
+          <p className="text-gray-600 text-center">
+            Quote has been created successfully.
+          </p>
+        </div>
+      </Modal>
     </main>
   );
 };

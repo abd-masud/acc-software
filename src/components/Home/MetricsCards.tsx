@@ -187,10 +187,7 @@ export const MetricsCards = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
       {metrics.map((metric, index) => (
-        <div
-          key={index}
-          className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border"
-        >
+        <div key={index} className="bg-white p-6 rounded-xl shadow-sm border">
           <div className="flex justify-between items-start">
             <div>
               <p className="text-gray-500 text-sm font-medium">

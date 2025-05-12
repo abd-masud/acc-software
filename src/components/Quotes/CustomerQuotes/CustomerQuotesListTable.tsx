@@ -138,25 +138,25 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
           title: "Subtotal",
           dataIndex: "subtotal",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Tax",
           dataIndex: "tax",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Discount",
           dataIndex: "discount",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Total",
           dataIndex: "total",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
       ],
     },

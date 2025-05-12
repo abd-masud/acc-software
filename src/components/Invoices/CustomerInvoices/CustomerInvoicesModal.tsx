@@ -19,7 +19,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
   const [total, setTotal] = useState("");
   const [paid, setPaid] = useState("");
   const [payNow, setPayNow] = useState("");
-  const [due, setDue] = useState("");
+  const [due, setDue] = useState(0);
 
   useEffect(() => {
     if (currentInvoice) {
@@ -28,12 +28,11 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
       setCustomerId(currentInvoice.customer.customer_id);
       setCustomerEmail(currentInvoice.customer.email);
       setCustomerPhone(currentInvoice.customer.contact);
-      setTotal(Number(currentInvoice.total).toFixed(2));
-      setPaid(Number(currentInvoice.paid_amount).toFixed(2));
+      setTotal(currentInvoice.total);
+      setPaid(currentInvoice.paid_amount);
       setPayNow("");
-      const calculatedDue = (
-        Number(currentInvoice.total) - Number(currentInvoice.paid_amount)
-      ).toFixed(2);
+      const calculatedDue =
+        Number(currentInvoice.total) - Number(currentInvoice.paid_amount);
       setDue(calculatedDue);
     }
   }, [currentInvoice]);
@@ -41,10 +40,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
   const handlePayNowChange = (value: string) => {
     const newPayNow = Number(value) || 0;
     setPayNow(newPayNow.toString());
-    const newDue = (
-      Number(total) -
-      (Number(paid) + Number(value || 0))
-    ).toFixed(2);
+    const newDue = Number(total) - (Number(paid) + Number(value || 0));
     setDue(newDue);
   };
 
@@ -67,13 +63,26 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
     try {
       if (!currentInvoice) return;
 
+      const payNowAmount = Number(payNow);
+      const remainingDue = Number(total) - Number(paid);
+
+      if (payNowAmount <= 0) {
+        message.error("Payment amount must be greater than 0");
+        return;
+      }
+
+      if (payNowAmount > remainingDue) {
+        message.error("Payment amount cannot exceed the due amount");
+        return;
+      }
+
       const updatedPaidAmount = Number(paid) + Number(payNow);
       const updatedDueAmount = Number(total) - Number(updatedPaidAmount);
 
       let existingSubInvoice = [];
       if (currentInvoice.sub_invoice) {
         try {
-          if (typeof currentInvoice.sub_invoice === "string") {
+          if (typeof currentInvoice.sub_invoice == "string") {
             existingSubInvoice = JSON.parse(currentInvoice.sub_invoice);
           } else {
             existingSubInvoice = Array.isArray(currentInvoice.sub_invoice)
@@ -88,7 +97,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
 
       const newPaymentEntry = {
         paid_amount: payNow,
-        due_amount: updatedDueAmount.toFixed(2),
+        due_amount: updatedDueAmount,
         date: invoiceOptions.date,
       };
 
@@ -96,8 +105,8 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
 
       const updatedInvoice = {
         ...currentInvoice,
-        paid_amount: updatedPaidAmount.toFixed(2),
-        due_amount: updatedDueAmount.toFixed(2),
+        paid_amount: updatedPaidAmount.toString(),
+        due_amount: updatedDueAmount.toString(),
         sub_invoice: updatedSubInvoice,
       };
 
@@ -112,7 +121,16 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
   };
 
   return (
-    <Modal open={isOpen} onOk={handleSubmit} onCancel={onClose} okText="Pay">
+    <Modal
+      open={isOpen}
+      onOk={handleSubmit}
+      onCancel={onClose}
+      okText="Pay"
+      okButtonProps={{
+        disabled:
+          Number(payNow) <= 0 || Number(payNow) > Number(total) - Number(paid),
+      }}
+    >
       <div className="flex items-center pb-3">
         <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
         <h2 className="text-[13px] font-[500]">Invoice</h2>
@@ -225,7 +243,16 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
             max={Number(total) - Number(paid)}
             id="paid"
             value={payNow}
-            onChange={(e) => handlePayNowChange(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              const maxAmount = Number(total) - Number(paid);
+              if (Number(value) > maxAmount) {
+                setPayNow(maxAmount.toString());
+                setDue(0);
+              } else {
+                handlePayNowChange(value);
+              }
+            }}
             required
           />
         </div>

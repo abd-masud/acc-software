@@ -5,10 +5,10 @@ export type QuoteItem = {
     id: number;
     product_id: string;
     product: string;
-    quantity: number;
-    unit_price: number;
+    quantity: string;
+    unit_price: string;
     unit: string;
-    amount: number;
+    amount: string;
 };
 
 export type QuoteData = {
@@ -17,12 +17,12 @@ export type QuoteData = {
     items: QuoteItem[];
     quote_id: string;
     date: string;
-    subtotal: number;
-    tax: number;
-    discount: number;
-    total: number;
+    subtotal: string;
+    tax: string;
+    discount: string;
+    total: string;
     notes: string;
-    user_id?: number;
+    user_id?: string;
 };
 
 export interface QuoteApiResponse {

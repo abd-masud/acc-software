@@ -36,10 +36,17 @@ export const EmployeeSettingsForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<GeneralItem | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const showDeleteModal = (item: GeneralItem) => {
     setItemToDelete(item);
     setIsDeleteModalOpen(true);
+  };
+
+  const showEditModal = (item: GeneralItem) => {
+    setEditingItem(item);
+    setNewItemName(item.name);
+    setIsEditModalOpen(true);
   };
 
   const fetchGenerals = useCallback(async () => {
@@ -120,24 +127,20 @@ export const EmployeeSettingsForm = () => {
     setTimeout(() => setUserMessage(null), 5000);
   };
 
-  const handleEditItem = (item: GeneralItem) => {
-    setEditingItem(item);
-    setNewItemName(item.name);
-  };
-
   const handleUpdateItem = async () => {
     if (!editingItem || !newItemName.trim()) return;
 
     const updatedData = {
       ...data,
       [activeTab]: data[activeTab].map((i) =>
-        i.name === editingItem.name ? { ...i, name: newItemName.trim() } : i
+        i.name == editingItem.name ? { ...i, name: newItemName.trim() } : i
       ),
     };
 
     setData(updatedData);
     setEditingItem(null);
     setNewItemName("");
+    setIsEditModalOpen(false);
     await handleSave(updatedData);
     setUserMessage(
       `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Updated`
@@ -221,44 +224,21 @@ export const EmployeeSettingsForm = () => {
           <input
             type="text"
             id="category"
-            value={newItemName}
             onChange={(e) => setNewItemName(e.target.value)}
             placeholder={`Add new ${activeTab}`}
             className="border text-[14px] py-2 px-4 w-full flex-1 bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md"
           />
-          {editingItem ? (
-            <>
-              <button
-                onClick={handleUpdateItem}
-                className="bg-[#307EF3] hover:bg-[#478cf3] text-white px-4 py-[9px] rounded text-sm"
-                disabled={isLoading}
-              >
-                Update
-              </button>
-              <button
-                onClick={() => {
-                  setEditingItem(null);
-                  setNewItemName("");
-                }}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-[9px] rounded text-sm"
-                disabled={isLoading}
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={handleAddItem}
-              className="bg-[#307EF3] hover:bg-[#478cf3] text-white px-4 py-[9px] rounded text-sm"
-              disabled={isLoading}
-            >
-              Add
-            </button>
-          )}
+          <button
+            onClick={handleAddItem}
+            className="bg-[#307EF3] hover:bg-[#478cf3] text-white px-4 py-[9px] rounded text-sm"
+            disabled={isLoading}
+          >
+            Add
+          </button>
         </div>
 
         <div className="border rounded-md overflow-hidden">
-          {currentItems.length === 0 ? (
+          {currentItems.length == 0 ? (
             <div className="p-4 text-center text-gray-500">
               No {activeTab} added yet
             </div>
@@ -273,7 +253,7 @@ export const EmployeeSettingsForm = () => {
                   <div className="flex gap-2">
                     <Tooltip title="Edit">
                       <button
-                        onClick={() => handleEditItem(item)}
+                        onClick={() => showEditModal(item)}
                         className="text-white text-[14px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded flex justify-center items-center"
                         disabled={isLoading}
                       >
@@ -313,6 +293,31 @@ export const EmployeeSettingsForm = () => {
         <p>
           Are you sure you want to delete <strong>{itemToDelete?.name}</strong>?
         </p>
+      </Modal>
+
+      <Modal
+        title={`Edit ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`}
+        open={isEditModalOpen}
+        onCancel={() => {
+          setIsEditModalOpen(false);
+          setEditingItem(null);
+          setNewItemName("");
+        }}
+        onOk={handleUpdateItem}
+        okText="Update"
+        okButtonProps={{ className: "bg-blue-500 hover:bg-blue-600" }}
+      >
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            New Name
+          </label>
+          <input
+            type="text"
+            value={newItemName}
+            onChange={(e) => setNewItemName(e.target.value)}
+            className="border text-[14px] py-2 px-4 w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md"
+          />
+        </div>
       </Modal>
     </main>
   );

@@ -64,7 +64,6 @@ export const CreateInvoicesForm = () => {
 
   const dateFormat = "DD MMMM YYYY";
 
-  // Prepare customer options for react-select
   const customerOptions = customers.map((customer) => ({
     value: customer.id,
     label: `${customer.name} (${customer.customer_id})`,
@@ -77,7 +76,6 @@ export const CreateInvoicesForm = () => {
     product: product,
   }));
 
-  // Fetch customers
   useEffect(() => {
     if (!user?.id) return;
     const fetchCustomers = async () => {
@@ -103,7 +101,6 @@ export const CreateInvoicesForm = () => {
     fetchCustomers();
   }, [user?.id]);
 
-  // Fetch products
   useEffect(() => {
     if (!user?.id) return;
     const fetchProducts = async () => {
@@ -156,7 +153,6 @@ export const CreateInvoicesForm = () => {
     fetchCurrencies();
   }, [user?.id]);
 
-  // Calculate invoice totals
   const calculateTotals = () => {
     const subtotal = invoiceItems.reduce(
       (sum, item) => sum + (Number(item.amount) || 0),
@@ -200,13 +196,13 @@ export const CreateInvoicesForm = () => {
         if (item.id == id) {
           const updatedItem = {
             ...item,
-            [field]: field === "product" ? value : value, // keep value as string
+            [field]: field == "product" ? value : value,
           };
 
-          if (field === "quantity" || field === "unit_price") {
+          if (field == "quantity" || field == "unit_price") {
             const quantity = Number(updatedItem.quantity);
             const unit_price = Number(updatedItem.unit_price);
-            updatedItem.amount = String(quantity * unit_price); // Convert to string
+            updatedItem.amount = String(quantity * unit_price);
           }
 
           return updatedItem;
@@ -266,7 +262,7 @@ export const CreateInvoicesForm = () => {
       items: invoiceItems,
       invoice_id,
       date: invoiceOptions.date,
-      due_date: invoiceOptions.due_date,
+      due_date: due_amount == 0 ? "N/A" : invoiceOptions.due_date,
       subtotal,
       tax,
       discount,
@@ -291,7 +287,7 @@ export const CreateInvoicesForm = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Failed to add customer");
+        throw new Error(data.message || "Failed to create invoice");
       }
       setShowSuccessModal(true);
     } catch (error: any) {
@@ -389,14 +385,13 @@ export const CreateInvoicesForm = () => {
       </div>
 
       <form onSubmit={handleSubmit}>
-        {/* Invoice Header */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
             <label className="text-[14px] block mb-1" htmlFor="invoice_id">
               Invoice ID
             </label>
             <input
-              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="invoice_id"
               value={invoice_id}
@@ -435,7 +430,6 @@ export const CreateInvoicesForm = () => {
           </div>
         </div>
 
-        {/* Customer Details */}
         <div className="mb-6 p-4 border rounded-lg">
           <div className="flex items-center justify-between">
             <h3 className="text-[15px] font-semibold mb-3">Customer Details</h3>
@@ -443,7 +437,7 @@ export const CreateInvoicesForm = () => {
               className="text-[12px] py-1 px-3 rounded bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors duration-300"
               href={"/customers/add-customers"}
             >
-              Add Customers
+              Add Customer
             </Link>
           </div>
           <div className="mb-4">
@@ -492,7 +486,7 @@ export const CreateInvoicesForm = () => {
             </label>
             <input
               placeholder="Enter delivery address"
-              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="delivery"
               value={customerDetails.delivery}
@@ -506,7 +500,7 @@ export const CreateInvoicesForm = () => {
               </label>
               <input
                 placeholder="Enter email address"
-                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="email"
                 id="email"
                 value={customerDetails.email}
@@ -519,7 +513,7 @@ export const CreateInvoicesForm = () => {
               </label>
               <input
                 placeholder="Enter contact number"
-                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="text"
                 id="contact"
                 value={customerDetails.contact}
@@ -529,7 +523,6 @@ export const CreateInvoicesForm = () => {
           </div>
         </div>
 
-        {/* Invoice Items */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-[15px] font-semibold">Invoice Items</h3>
@@ -585,7 +578,7 @@ export const CreateInvoicesForm = () => {
                             const product = selectedOption.product;
                             setInvoiceItems(
                               invoiceItems.map((i) =>
-                                i.id === item.id
+                                i.id == item.id
                                   ? {
                                       ...i,
                                       product_id: product.product_id,
@@ -628,13 +621,31 @@ export const CreateInvoicesForm = () => {
                     <td className="px-4 py-2">
                       <input
                         type="number"
-                        min="1"
+                        inputMode="numeric"
+                        pattern="[0-9]"
+                        min={1}
+                        step="0.01"
                         placeholder="Enter quantity"
                         className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                         value={item.quantity}
                         onChange={(e) =>
                           handleItemChange(item.id, "quantity", e.target.value)
                         }
+                        onKeyDown={(e) => {
+                          if (
+                            !/[0-9.]/.test(e.key) &&
+                            e.key !== "Backspace" &&
+                            e.key !== "Delete" &&
+                            e.key !== "Tab" &&
+                            e.key !== "ArrowLeft" &&
+                            e.key !== "ArrowRight"
+                          ) {
+                            e.preventDefault();
+                          }
+                          if (e.key === "." && item.quantity.includes(".")) {
+                            e.preventDefault();
+                          }
+                        }}
                         required
                       />
                     </td>
@@ -643,7 +654,7 @@ export const CreateInvoicesForm = () => {
                         type="text"
                         min="1"
                         placeholder="Enter unit"
-                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                         value={item.unit}
                         readOnly
                       />
@@ -653,7 +664,7 @@ export const CreateInvoicesForm = () => {
                         type="number"
                         min="0"
                         placeholder="Enter unit price"
-                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                         value={item.unit_price}
                         readOnly
                       />
@@ -662,8 +673,8 @@ export const CreateInvoicesForm = () => {
                       <input
                         type="number"
                         placeholder="Enter amount"
-                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-                        value={Number(item.amount).toFixed(2)}
+                        className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                        value={Number(item.amount)}
                         readOnly
                       />
                     </td>
@@ -685,10 +696,8 @@ export const CreateInvoicesForm = () => {
           </div>
         </div>
 
-        {/* Invoice Summary */}
         <div className="flex md:flex-row flex-col md:items-start items-end md:gap-4 gap-0">
           <div className="w-full">
-            {/* Payment Method Section */}
             <div className="mb-4">
               <label className="text-[15px] font-semibold block mb-2">
                 Payment Method
@@ -746,6 +755,7 @@ export const CreateInvoicesForm = () => {
               </label>
               <textarea
                 placeholder="Enter notes..."
+                maxLength={250}
                 className="border text-[14px] py-2 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
                 id="notes"
                 value={notes}
@@ -758,7 +768,8 @@ export const CreateInvoicesForm = () => {
             <div className="flex justify-between mb-2">
               <span className="text-[14px]">Subtotal:</span>
               <span className="text-[14px] font-medium">
-                {subtotal.toFixed(2)} {currencyCode}
+                {subtotal.toFixed(2)}
+                {currencyCode}
               </span>
             </div>
             <div className="flex justify-between items-center">
@@ -766,11 +777,30 @@ export const CreateInvoicesForm = () => {
               <div className="space-x-1 mr-[17px]">
                 <input
                   type="number"
-                  min="0"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  min={0}
+                  max={100}
+                  step="0.01"
                   placeholder="0.00"
                   className="border text-[14px] w-20 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
                   value={taxRate}
                   onChange={(e) => setTaxRate(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (
+                      !/[0-9.]/.test(e.key) &&
+                      e.key !== "Backspace" &&
+                      e.key !== "Delete" &&
+                      e.key !== "Tab" &&
+                      e.key !== "ArrowLeft" &&
+                      e.key !== "ArrowRight"
+                    ) {
+                      e.preventDefault();
+                    }
+                    if (e.key === "." && taxRate.includes(".")) {
+                      e.preventDefault();
+                    }
+                  }}
                 />
                 <span className="text-[14px] font-medium">%</span>
               </div>
@@ -780,11 +810,30 @@ export const CreateInvoicesForm = () => {
               <div className="space-x-1">
                 <input
                   type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   min="0"
+                  max={subtotal}
+                  step="0.01"
                   placeholder="0.00"
                   className="border text-[14px] w-20 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
                   value={discountAmount}
                   onChange={(e) => setDiscountAmount(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (
+                      !/[0-9.]/.test(e.key) &&
+                      e.key !== "Backspace" &&
+                      e.key !== "Delete" &&
+                      e.key !== "Tab" &&
+                      e.key !== "ArrowLeft" &&
+                      e.key !== "ArrowRight"
+                    ) {
+                      e.preventDefault();
+                    }
+                    if (e.key === "." && discountAmount.includes(".")) {
+                      e.preventDefault();
+                    }
+                  }}
                 />
                 <span className="text-[14px] font-medium">{currencyCode}</span>
               </div>
@@ -793,7 +842,7 @@ export const CreateInvoicesForm = () => {
             <div className="flex justify-between font-semibold mb-2">
               <span className="text-[14px]">Total Amount:</span>
               <span className="text-[14px]">
-                {total.toFixed(2)} {currencyCode}
+                {total} {currencyCode}
               </span>
             </div>
             <div className="flex justify-between items-center mb-2">
@@ -801,8 +850,11 @@ export const CreateInvoicesForm = () => {
               <div className="space-x-1">
                 <input
                   type="number"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   min="0"
                   max={total}
+                  step="0.01"
                   placeholder="Pay"
                   className="border text-[14px] w-20 py-1 px-[10px] bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
                   value={invoiceOptions.paid_amount}
@@ -812,6 +864,24 @@ export const CreateInvoicesForm = () => {
                       paid_amount: e.target.value,
                     })
                   }
+                  onKeyDown={(e) => {
+                    if (
+                      !/[0-9.]/.test(e.key) &&
+                      e.key !== "Backspace" &&
+                      e.key !== "Delete" &&
+                      e.key !== "Tab" &&
+                      e.key !== "ArrowLeft" &&
+                      e.key !== "ArrowRight"
+                    ) {
+                      e.preventDefault();
+                    }
+                    if (
+                      e.key === "." &&
+                      invoiceOptions.paid_amount.includes(".")
+                    ) {
+                      e.preventDefault();
+                    }
+                  }}
                   required
                 />
                 <span className="text-[14px] font-semibold">
@@ -823,13 +893,12 @@ export const CreateInvoicesForm = () => {
             <div className="flex justify-between font-semibold text-blue-600">
               <span className="text-[14px]">Due Amount:</span>
               <span className="text-[14px]">
-                {due_amount.toFixed(2)} {currencyCode}
+                {due_amount} {currencyCode}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Form Actions */}
         <div className="flex justify-end">
           <button
             type="submit"

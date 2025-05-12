@@ -4,22 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { EmployeeApiResponse, Employees } from "@/types/employees";
 import { useCallback, useEffect, useState } from "react";
 import { Table, TableColumnsType } from "antd";
-
-type Permissions = {
-  id: string;
-  name: string;
-};
-
-type ModulePermission = {
-  id: string;
-  name: string;
-  canView: boolean;
-};
-
-type PermissionResponse = {
-  role: string;
-  allowedModules: string[];
-};
+import { FaXmark } from "react-icons/fa6";
+import {
+  ModulePermission,
+  PermissionResponse,
+  Permissions,
+} from "@/types/permission";
 
 const SIDEBAR_MODULES = [
   "customers",
@@ -42,6 +32,7 @@ export const RolesAndPermissionsForm = () => {
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>("all");
   const [employeesData, setEmployeesData] = useState<Employees[]>([]);
+  const [userMessage, setUserMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRolesAndModules = async () => {
@@ -176,10 +167,13 @@ export const RolesAndPermissionsForm = () => {
 
       const result = await res.json();
       if (result.success) {
+        setUserMessage("Permission settings saved");
       } else {
       }
     } catch (err) {
       console.error("Error saving permissions", err);
+    } finally {
+      setTimeout(() => setUserMessage(null), 5000);
     }
   };
 
@@ -188,12 +182,12 @@ export const RolesAndPermissionsForm = () => {
   }
 
   const filteredRoles =
-    selectedRoleFilter === "all"
+    selectedRoleFilter == "all"
       ? roles
-      : roles.filter((role) => role.name === selectedRoleFilter);
+      : roles.filter((role) => role.name == selectedRoleFilter);
 
   const getEmployeesByRole = (roleName: string) => {
-    return employeesData.filter((employee) => employee.role === roleName);
+    return employeesData.filter((employee) => employee.role == roleName);
   };
 
   const employeeColumns: TableColumnsType<Employees> = [
@@ -228,8 +222,27 @@ export const RolesAndPermissionsForm = () => {
     },
   ];
 
+  const handleCloseMessage = () => {
+    setUserMessage(null);
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen mt-4">
+      {userMessage && (
+        <div className="left-1/2 top-10 transform -translate-x-1/2 fixed z-50">
+          <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 text-green-600 border-2 border-green-600 mx-auto">
+            <div className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+              {userMessage}
+            </div>
+            <button
+              onClick={handleCloseMessage}
+              className="ml-3 focus:outline-none hover:text-green-600"
+            >
+              <FaXmark className="text-[14px]" />
+            </button>
+          </div>
+        </div>
+      )}
       <div className="mb-4 p-4 bg-white rounded-lg shadow-md">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center">
@@ -238,7 +251,7 @@ export const RolesAndPermissionsForm = () => {
               id="filter-all"
               name="role-filter"
               value="all"
-              checked={selectedRoleFilter === "all"}
+              checked={selectedRoleFilter == "all"}
               onChange={() => setSelectedRoleFilter("all")}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500"
             />
@@ -254,7 +267,7 @@ export const RolesAndPermissionsForm = () => {
                 id={`filter-${role.name}`}
                 name="role-filter"
                 value={role.name}
-                checked={selectedRoleFilter === role.name}
+                checked={selectedRoleFilter == role.name}
                 onChange={() => setSelectedRoleFilter(role.name)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500"
               />

@@ -3,9 +3,11 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { SMTPSettings } from "@/types/smtp";
 import React, { useState, useEffect, useCallback } from "react";
+import { FaXmark } from "react-icons/fa6";
 
 export const SMTPSettingsForm = () => {
   const { user } = useAuth();
+  const [userMessage, setUserMessage] = useState<string | null>(null);
   const [formData, setFormData] = useState<SMTPSettings>({
     host: "",
     port: 587,
@@ -79,16 +81,38 @@ export const SMTPSettingsForm = () => {
       const result = await response.json();
 
       if (response.ok) {
+        setUserMessage("SMTP settings Saved");
       } else {
         console.log(result.message || "Something went wrong!");
       }
     } catch (error) {
       console.error("Error saving SMTP settings:", error);
+    } finally {
+      setTimeout(() => setUserMessage(null), 5000);
     }
+  };
+
+  const handleCloseMessage = () => {
+    setUserMessage(null);
   };
 
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
+      {userMessage && (
+        <div className="left-1/2 top-10 transform -translate-x-1/2 fixed z-50">
+          <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 text-green-600 border-2 border-green-600 mx-auto">
+            <div className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+              {userMessage}
+            </div>
+            <button
+              onClick={handleCloseMessage}
+              className="ml-3 focus:outline-none hover:text-green-600"
+            >
+              <FaXmark className="text-[14px]" />
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex items-center mb-4">
         <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
         <h2 className="text-[13px] font-[500]">SMTP Settings</h2>

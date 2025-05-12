@@ -135,7 +135,7 @@ export const AddCustomersForm = () => {
             </label>
             <input
               placeholder="Enter customer id"
-              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="customer_id"
               value={customer_id}
@@ -148,6 +148,7 @@ export const AddCustomersForm = () => {
             </label>
             <input
               placeholder="Enter customer name"
+              maxLength={50}
               className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="name"
@@ -163,6 +164,7 @@ export const AddCustomersForm = () => {
           </label>
           <input
             placeholder="Enter delivery address"
+            maxLength={100}
             className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
             type="text"
             id="delivery"
@@ -178,6 +180,7 @@ export const AddCustomersForm = () => {
             </label>
             <input
               placeholder="Enter email address"
+              maxLength={50}
               className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="email"
               id="email"

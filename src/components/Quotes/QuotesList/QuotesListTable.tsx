@@ -4,7 +4,6 @@ import {
   Table,
   TableColumnsType,
   Button,
-  message,
   Input,
   Modal,
   Tooltip,
@@ -20,6 +19,7 @@ import {
 } from "react-icons/md";
 import { useAuth } from "@/contexts/AuthContext";
 import dayjs from "dayjs";
+import { FaXmark } from "react-icons/fa6";
 
 export const QuotesListTable: React.FC<QuotesTableProps> = ({
   quotes,
@@ -32,9 +32,10 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [searchText, setSearchText] = useState("");
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [userMessage, setUserMessage] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState<QuoteData | null>(null);
-  const [payNow, setPayNow] = useState(0);
+  const [payNow, setPayNow] = useState("");
   const [dueDate, setDueDate] = useState(dayjs().add(7, "days"));
   const [paymentType, setPaymentType] = useState("cash");
 
@@ -57,8 +58,7 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
   };
 
   const handlePayNowChange = (value: string) => {
-    const newPayNow = Number(value) || 0;
-    setPayNow(newPayNow);
+    setPayNow(value);
   };
 
   const handleDateChange = (date: dayjs.Dayjs | null) => {
@@ -113,11 +113,11 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
 
     if (payNow > selectedQuote.total) return;
 
-    const due_amount = selectedQuote.total - payNow;
+    const due_amount = Number(selectedQuote.total) - Number(payNow);
 
     const sub_invoice = [
       {
-        paid_amount: payNow,
+        paid_amount: payNow || 0,
         due_amount: due_amount,
         date: dayjs(),
       },
@@ -128,12 +128,12 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
       items: selectedQuote.items,
       invoice_id: selectedQuote.quote_id,
       date: dayjs().format("YYYY-MM-DD"),
-      due_date: dueDate.format("YYYY-MM-DD"),
+      due_date: due_amount == 0 ? "N/A" : dueDate.format("YYYY-MM-DD"),
       subtotal: selectedQuote.subtotal,
       tax: selectedQuote.tax,
       discount: selectedQuote.discount,
       total: selectedQuote.total,
-      paid_amount: payNow,
+      paid_amount: payNow || 0,
       due_amount,
       pay_type: paymentType,
       notes: selectedQuote.notes,
@@ -160,12 +160,16 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
         });
 
         onClose();
+        setUserMessage("Transferred quote to invoice");
         fetchQuotes();
       } else {
-        console.error("Failed to create invoice");
+        setUserMessage("Failed to transfer");
       }
-    } catch (error) {
-      console.error("Error creating invoice:", error);
+    } catch (err) {
+      console.error(err);
+      throw err;
+    } finally {
+      setTimeout(() => setUserMessage(null), 5000);
     }
   };
 
@@ -185,12 +189,14 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
         throw new Error("Failed to delete customer");
       }
 
-      message.success("Customer deleted successfully");
+      setUserMessage("Quote deleted");
       setIsDeleteModalOpen(false);
       setDeleteConfirmationText("");
       fetchQuotes();
     } catch {
-      message.error("Delete failed");
+      setUserMessage("Delete failed");
+    } finally {
+      setTimeout(() => setUserMessage(null), 5000);
     }
   };
 
@@ -275,25 +281,25 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
           title: "Subtotal",
           dataIndex: "subtotal",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Tax",
           dataIndex: "tax",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Discount",
           dataIndex: "discount",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
         {
           title: "Total",
           dataIndex: "total",
           render: (value: number) =>
-            value > 0 ? `${value.toFixed(2)} ${currencyCode}` : "-",
+            value > 0 ? `${value} ${currencyCode}` : "-",
         },
       ],
     },
@@ -330,8 +336,27 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
     },
   ];
 
+  const handleCloseMessage = () => {
+    setUserMessage(null);
+  };
+
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
+      {userMessage && (
+        <div className="left-1/2 top-10 transform -translate-x-1/2 fixed z-50">
+          <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 text-green-600 border-2 border-green-600 mx-auto">
+            <div className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+              {userMessage}
+            </div>
+            <button
+              onClick={handleCloseMessage}
+              className="ml-3 focus:outline-none hover:text-green-600"
+            >
+              <FaXmark className="text-[14px]" />
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex sm:justify-between justify-end items-center mb-5">
         <div className="sm:flex items-center hidden">
           <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
@@ -377,7 +402,7 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
               </label>
               <input
                 placeholder="Enter Invoice ID"
-                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="text"
                 id="invoiceId"
                 value={selectedQuote?.quote_id || ""}
@@ -389,7 +414,7 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
                 Customer
               </label>
               <input
-                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="text"
                 id="name"
                 value={`${selectedQuote?.customer?.name || ""}  (${
@@ -405,7 +430,7 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
                 Email Address
               </label>
               <input
-                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="text"
                 id="email"
                 value={selectedQuote?.customer?.email}
@@ -417,7 +442,7 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
                 Phone Number
               </label>
               <input
-                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="text"
                 id="contact"
                 value={selectedQuote?.customer?.contact}
@@ -432,9 +457,9 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
                 Subtotal
               </label>
               <input
-                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 id="total"
-                value={selectedQuote?.subtotal.toFixed(2)}
+                value={Number(selectedQuote?.subtotal)}
                 readOnly
               />
             </div>
@@ -443,9 +468,9 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
                 Tax
               </label>
               <input
-                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 id="total"
-                value={selectedQuote?.tax.toFixed(2)}
+                value={Number(selectedQuote?.tax)}
                 readOnly
               />
             </div>
@@ -454,9 +479,9 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
                 Discount
               </label>
               <input
-                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 id="total"
-                value={selectedQuote?.discount.toFixed(2)}
+                value={Number(selectedQuote?.discount)}
                 readOnly
               />
             </div>
@@ -465,9 +490,9 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
                 Total Amount
               </label>
               <input
-                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 id="total"
-                value={selectedQuote?.total.toFixed(2)}
+                value={Number(selectedQuote?.total)}
                 readOnly
               />
             </div>
@@ -487,6 +512,21 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
                 id="paid"
                 value={payNow}
                 onChange={(e) => handlePayNowChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (
+                    !/[0-9.]/.test(e.key) &&
+                    e.key !== "Backspace" &&
+                    e.key !== "Delete" &&
+                    e.key !== "Tab" &&
+                    e.key !== "ArrowLeft" &&
+                    e.key !== "ArrowRight"
+                  ) {
+                    e.preventDefault();
+                  }
+                  if (e.key === "." && payNow.includes(".")) {
+                    e.preventDefault();
+                  }
+                }}
                 required
               />
             </div>
