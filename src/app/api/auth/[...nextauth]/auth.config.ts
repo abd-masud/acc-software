@@ -80,7 +80,7 @@ export const authOptions: AuthOptions = {
                     if (rows.length == 0) {
                         await db.query(
                             "INSERT INTO user (name, email, role, image) VALUES (?, ?, ?, ?)",
-                            [user.name, user.email, "admin", user.image || null]
+                            [user.name, user.email, "Admin", user.image || null]
                         );
                         const [newUser] = await db.query<RowDataPacket[]>(
                             "SELECT * FROM user WHERE email = ?",

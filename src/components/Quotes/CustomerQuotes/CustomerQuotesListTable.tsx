@@ -112,8 +112,7 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
       title: "Items",
       dataIndex: "items",
       render: (items: QuoteItem[]) => (
-        <div
-          className="cursor-default"
+        <Tooltip
           title={
             Array.isArray(items)
               ? items
@@ -125,10 +124,12 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
               : "N/A"
           }
         >
-          {Array.isArray(items)
-            ? `${items.length} ${items.length == 1 ? "item" : "items"}`
-            : "N/A"}
-        </div>
+          <div className="cursor-default border px-1 rounded">
+            {Array.isArray(items)
+              ? `${items.length} ${items.length == 1 ? "item" : "items"}`
+              : "N/A"}
+          </div>
+        </Tooltip>
       ),
     },
     {

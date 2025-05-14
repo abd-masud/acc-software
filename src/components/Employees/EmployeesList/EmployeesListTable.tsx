@@ -4,7 +4,6 @@ import { Table, TableColumnsType, Button, Input, Modal, Tooltip } from "antd";
 import React, { useMemo, useState } from "react";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 import { Employees, EmployeesTableProps } from "@/types/employees";
-// import { EmployeesReportButton } from "./EmployeesReport";
 import { EditEmployeesModal } from "./EditEmployeesModal";
 import { FaEdit } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
@@ -197,7 +196,6 @@ export const EmployeesListTable: React.FC<EmployeesTableProps> = ({
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
           />
-          {/* <EmployeesReportButton employees={filteredEmployees} /> */}
         </div>
       </div>
       <Table

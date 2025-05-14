@@ -177,8 +177,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       title: "Items",
       dataIndex: "items",
       render: (items: InvoiceItem[]) => (
-        <div
-          className="cursor-default"
+        <Tooltip
           title={
             Array.isArray(items)
               ? items
@@ -190,10 +189,12 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
               : "N/A"
           }
         >
-          {Array.isArray(items)
-            ? `${items.length} ${items.length == 1 ? "item" : "items"}`
-            : "N/A"}
-        </div>
+          <div className="cursor-default border px-1 rounded">
+            {Array.isArray(items)
+              ? `${items.length} ${items.length == 1 ? "item" : "items"}`
+              : "N/A"}
+          </div>
+        </Tooltip>
       ),
     },
     {
@@ -215,7 +216,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
           title: "Due Date",
           dataIndex: "due_date",
           render: (dueDate: string) => {
-            if (!dueDate || dueDate === "N/A") {
+            if (!dueDate || dueDate == "N/A") {
               return "N/A";
             }
             try {
@@ -238,7 +239,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
           title: "Subtotal",
           dataIndex: "subtotal",
           render: (value: unknown) => {
-            const numValue = typeof value === "number" ? value : Number(value);
+            const numValue = typeof value == "number" ? value : Number(value);
             return !isNaN(numValue) && numValue > 0
               ? `${numValue} ${currencyCode}`
               : "-";
@@ -248,7 +249,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
           title: "Tax",
           dataIndex: "tax",
           render: (value: unknown) => {
-            const numValue = typeof value === "number" ? value : Number(value);
+            const numValue = typeof value == "number" ? value : Number(value);
             return !isNaN(numValue) && numValue > 0
               ? `${numValue} ${currencyCode}`
               : "-";
@@ -258,7 +259,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
           title: "Discount",
           dataIndex: "discount",
           render: (value: unknown) => {
-            const numValue = typeof value === "number" ? value : Number(value);
+            const numValue = typeof value == "number" ? value : Number(value);
             return !isNaN(numValue) && numValue > 0
               ? `${numValue} ${currencyCode}`
               : "-";
@@ -268,7 +269,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
           title: "Total",
           dataIndex: "total",
           render: (value: unknown) => {
-            const numValue = typeof value === "number" ? value : Number(value);
+            const numValue = typeof value == "number" ? value : Number(value);
             return !isNaN(numValue) && numValue > 0
               ? `${numValue} ${currencyCode}`
               : "-";
@@ -278,7 +279,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
           title: "Paid",
           dataIndex: "paid_amount",
           render: (value: unknown) => {
-            const numValue = typeof value === "number" ? value : Number(value);
+            const numValue = typeof value == "number" ? value : Number(value);
             return !isNaN(numValue) && numValue > 0
               ? `${numValue} ${currencyCode}`
               : "-";
@@ -288,7 +289,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
           title: "Due",
           dataIndex: "due_amount",
           render: (value: unknown) => {
-            const numValue = typeof value === "number" ? value : Number(value);
+            const numValue = typeof value == "number" ? value : Number(value);
             return !isNaN(numValue) && numValue > 0
               ? `${numValue} ${currencyCode}`
               : "-";

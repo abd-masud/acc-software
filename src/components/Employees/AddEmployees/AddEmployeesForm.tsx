@@ -63,8 +63,12 @@ export const AddEmployeesForm = () => {
   const [generalOptions, setGeneralOptions] = useState<{
     department: string[];
     role: string[];
-    status: string[];
-  }>({ department: [], role: [], status: [] });
+  }>({ department: [], role: [] });
+
+  const statusOptions = [
+    { label: "Active", value: "Active" },
+    { label: "Inactive", value: "Inactive" },
+  ];
 
   const fetchGenerals = useCallback(async () => {
     if (!user?.id) return;
@@ -87,7 +91,6 @@ export const AddEmployeesForm = () => {
       setGeneralOptions({
         department: optionsData.department || [],
         role: optionsData.role || [],
-        status: optionsData.status || [],
       });
     } catch (error) {
       console.error("Error:", error);
@@ -249,7 +252,7 @@ export const AddEmployeesForm = () => {
       });
 
       if (!res.ok) {
-        throw new Error("Failed to create employee");
+        throw new Error("This email already exists");
       }
       const hasSMTPSettings =
         formData.host && formData.username && formData.password;
@@ -266,6 +269,9 @@ export const AddEmployeesForm = () => {
       setShowSuccessModal(true);
     } catch (error) {
       console.error("Error creating employee:", error);
+      setUserMessage(
+        error instanceof Error ? error.message : "An error occurred"
+      );
     } finally {
       setTimeout(() => setUserMessage(null), 5000);
       setLoading(false);
@@ -470,24 +476,16 @@ export const AddEmployeesForm = () => {
 
         <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
           <div className="mb-4">
-            <div className="flex justify-between items-center">
-              <label className="text-[14px]" htmlFor="status">
-                Status
-              </label>
-              <Link
-                className="text-[12px] text-blue-600"
-                href={"/employees/employee-settings"}
-              >
-                Add Status
-              </Link>
-            </div>
+            <label className="text-[14px]" htmlFor="status">
+              Status
+            </label>
             <Select
               instanceId={`${instanceId}-status`}
               inputId="status"
               className="mt-2"
-              options={toSelectOptions(generalOptions.status)}
-              value={toSelectOptions(generalOptions.status).find(
-                (opt) => opt.value == formValues.status
+              options={statusOptions}
+              value={statusOptions.find(
+                (opt) => opt.value === formValues.status
               )}
               onChange={handleSelectChange("status")}
               placeholder="Select Status"

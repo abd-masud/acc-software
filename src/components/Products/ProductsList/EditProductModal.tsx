@@ -1,7 +1,7 @@
 "use client";
 
 import { Modal, message } from "antd";
-import { EditProductModalProps, Products } from "@/types/products";
+import { EditProductModalProps } from "@/types/products";
 import { useCallback, useEffect, useId, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { StylesConfig } from "react-select";
@@ -295,7 +295,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
               ) {
                 e.preventDefault();
               }
-              if (e.key === "." && price.includes(".")) {
+              if (e.key == "." && price.includes(".")) {
                 e.preventDefault();
               }
             }}
@@ -311,7 +311,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
             className="mt-2"
             options={toSelectOptions(generalOptions.category)}
             value={toSelectOptions(generalOptions.category).find(
-              (opt) => opt.value === category
+              (opt) => opt.value == category
             )}
             onChange={handleCategoryChange}
             placeholder="Select Category"
@@ -332,7 +332,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
             inputId="unit"
             className="mt-2"
             options={toSelectOptions(UNITS)}
-            value={toSelectOptions(UNITS).find((opt) => opt.value === unit)}
+            value={toSelectOptions(UNITS).find((opt) => opt.value == unit)}
             onChange={handleUnitChange}
             placeholder="Select Unit"
             styles={generalSelectStyles}
@@ -364,7 +364,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
               ) {
                 e.preventDefault();
               }
-              if (e.key === "." && price.includes(".")) {
+              if (e.key == "." && price.includes(".")) {
                 e.preventDefault();
               }
             }}

@@ -34,7 +34,7 @@ export const PolicySettingsForm = () => {
           const termsData = result.data?.terms || [];
           const formattedTerms = termsData
             .map((term: string | PolicyItem) =>
-              typeof term === "string" ? { name: term } : term
+              typeof term == "string" ? { name: term } : term
             )
             .slice(0, MAX_TERMS);
           setTerms(formattedTerms);
@@ -184,7 +184,7 @@ export const PolicySettingsForm = () => {
             value={newTerm}
             onChange={(e) => setNewTerm(e.target.value)}
             placeholder={
-              terms.length >= MAX_TERMS && editingIndex === null
+              terms.length >= MAX_TERMS && editingIndex == null
                 ? "Maximum terms reached"
                 : editingIndex !== null
                 ? "Update term"
@@ -229,7 +229,7 @@ export const PolicySettingsForm = () => {
         </div>
 
         <div className="border rounded-md overflow-hidden">
-          {terms.length === 0 ? (
+          {terms.length == 0 ? (
             <div className="p-4 text-center text-gray-500">
               No terms added yet
             </div>

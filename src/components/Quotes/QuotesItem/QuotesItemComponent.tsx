@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { QuoteData, QuotesItemProps } from "@/types/quotes";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
+import logo from "../../../../public/images/logo.png";
 import { Breadcrumb } from "./Breadcrumb";
 import { QRCodeSVG } from "qrcode.react";
 import { useAccUserRedirect } from "@/hooks/useAccUser";
@@ -146,7 +147,6 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         <span className="ml-4 text-gray-700">Loading quote...</span>
       </div>
     );
@@ -193,7 +193,7 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
               <div className="flex items-center justify-end gap-3">
                 <div>
                   <Image
-                    src={user ? user.logo : ""}
+                    src={user ? user.logo : logo}
                     alt="Company Logo"
                     width={100}
                     height={100}
@@ -201,7 +201,9 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
                   />
                 </div>
                 <div>
-                  <p className="font-bold">{user?.company}</p>
+                  <p className="font-bold">
+                    {user?.company || "Copa Business"}
+                  </p>
                   <p className="text-xs">Company</p>
                 </div>
               </div>
@@ -312,12 +314,14 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
                   Terms & Conditions:
                 </h3>
                 <div className="text-[12px] leading-snug">
-                  {Array.isArray(policyTerms) && (
+                  {Array.isArray(policyTerms) && policyTerms.length > 0 ? (
                     <ul className="list-disc pl-5">
                       {policyTerms.map((term, index) => (
                         <li key={index}>{term}</li>
                       ))}
                     </ul>
+                  ) : (
+                    "N/A"
                   )}
                 </div>
               </div>
@@ -352,14 +356,14 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
             {/* Notes */}
             <div className="bg-gray-50 mt-8 p-4 px-16 grid grid-cols-2 gap-10">
               <div>
-                {quoteData.notes && (
-                  <div className="">
-                    <h3 className="text-[16px] font-bold text-gray-800 mb-2">
-                      Notes:
-                    </h3>
-                    <p className="text-[12px]">{quoteData.notes}</p>
-                  </div>
-                )}
+                <div className="">
+                  <h3 className="text-[16px] font-bold text-gray-800 mb-2">
+                    Notes:
+                  </h3>
+                  <p className="text-[12px]">
+                    {quoteData.notes ? quoteData.notes : "N/A"}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -371,14 +375,15 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
                 </h3>
                 <p className="text-gray-800 text-[12px]">
                   <span className="font-bold">Email Address:</span>{" "}
-                  {user?.email}
+                  {user?.email || "-"}
                 </p>
                 <p className="text-gray-800 text-[12px]">
                   <span className="font-bold">Phone Number:</span>{" "}
-                  {user?.contact}
+                  {user?.contact || "-"}
                 </p>
                 <p className="text-gray-800 text-[12px]">
-                  <span className="font-bold">Address:</span> {user?.address}
+                  <span className="font-bold">Address:</span>{" "}
+                  {user?.address || "-"}
                 </p>
               </div>
               <div className="flex flex-col justify-end items-end">

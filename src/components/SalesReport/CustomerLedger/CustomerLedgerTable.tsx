@@ -9,6 +9,7 @@ import {
   Select,
   Alert,
   Card,
+  Tooltip,
 } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { InvoiceData, InvoiceItem, InvoicesTableProps } from "@/types/invoices";
@@ -151,8 +152,7 @@ export const CustomerLedgerTable: React.FC<InvoicesTableProps> = ({
       title: "Items",
       dataIndex: "items",
       render: (items: InvoiceItem[]) => (
-        <div
-          className="cursor-default"
+        <Tooltip
           title={
             Array.isArray(items)
               ? items
@@ -164,10 +164,12 @@ export const CustomerLedgerTable: React.FC<InvoicesTableProps> = ({
               : "N/A"
           }
         >
-          {Array.isArray(items)
-            ? `${items.length} ${items.length == 1 ? "item" : "items"}`
-            : "N/A"}
-        </div>
+          <div className="cursor-default border px-1 rounded">
+            {Array.isArray(items)
+              ? `${items.length} ${items.length == 1 ? "item" : "items"}`
+              : "N/A"}
+          </div>
+        </Tooltip>
       ),
     },
     {
@@ -188,14 +190,20 @@ export const CustomerLedgerTable: React.FC<InvoicesTableProps> = ({
         {
           title: "Due Date",
           dataIndex: "due_date",
-          render: (dueDate: string) =>
-            dueDate
-              ? new Date(dueDate).toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "-",
+          render: (dueDate: string) => {
+            if (!dueDate || dueDate == "N/A") {
+              return "N/A";
+            }
+            try {
+              return new Date(dueDate).toLocaleDateString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              });
+            } catch {
+              return "-";
+            }
+          },
         },
       ],
     },

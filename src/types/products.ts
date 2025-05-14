@@ -2,8 +2,13 @@ export type Products = {
     key: string;
     id: number;
     product_id: string;
+    type: string;
+    sku_id: string;
     name: string;
+    purchaser: string;
+    attribute: string;
     description: string;
+    buying_price: string;
     price: string;
     category: string;
     stock: string;

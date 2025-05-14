@@ -9,16 +9,16 @@ export const Breadcrumb = () => {
     <>
       <main className="pb-4 border-b flex justify-between items-center">
         <div>
-          <p className="text-[16px] font-[600]">General Settings</p>
+          <p className="text-[16px] font-[600]">Stock Settings</p>
           <div className="md:block hidden">
             <div className="flex items-center">
               <Link className="text-[12px] text-[#797c8b]" href="/">
                 Dashboard
               </Link>
               <FaAngleRight className="text-[12px] text-[#797c8b] mx-2" />
-              <p className="text-[12px] text-[#797c8b]">Settings</p>
+              <p className="text-[12px] text-[#797c8b]">Stock Master</p>
               <FaAngleRight className="text-[12px] text-[#797c8b] mx-2" />
-              <p className="text-[12px] text-[#797c8b]">General Settings</p>
+              <p className="text-[12px] text-[#797c8b]">Stock Settings</p>
             </div>
           </div>
         </div>

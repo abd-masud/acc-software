@@ -17,7 +17,7 @@ export const HomeComponent = () => {
     <main className="bg-gray-50 min-h-[calc(100vh-70px)] p-6">
       <HomeHeader />
       <MetricsCards />
-      <QuickActions />
+      {user.role.toLocaleLowerCase() == "admin" && <QuickActions />}
       <Overviews />
     </main>
   );

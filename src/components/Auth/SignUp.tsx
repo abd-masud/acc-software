@@ -59,7 +59,7 @@ export const SignUpComponent = () => {
       contact: formData.contact,
       company: formData.company,
       address: formData.address,
-      role: "admin",
+      role: "Admin",
       password: formData.password,
     };
 

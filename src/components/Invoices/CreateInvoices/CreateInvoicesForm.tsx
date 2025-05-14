@@ -642,7 +642,7 @@ export const CreateInvoicesForm = () => {
                           ) {
                             e.preventDefault();
                           }
-                          if (e.key === "." && item.quantity.includes(".")) {
+                          if (e.key == "." && item.quantity.includes(".")) {
                             e.preventDefault();
                           }
                         }}
@@ -797,7 +797,7 @@ export const CreateInvoicesForm = () => {
                     ) {
                       e.preventDefault();
                     }
-                    if (e.key === "." && taxRate.includes(".")) {
+                    if (e.key == "." && taxRate.includes(".")) {
                       e.preventDefault();
                     }
                   }}
@@ -830,7 +830,7 @@ export const CreateInvoicesForm = () => {
                     ) {
                       e.preventDefault();
                     }
-                    if (e.key === "." && discountAmount.includes(".")) {
+                    if (e.key == "." && discountAmount.includes(".")) {
                       e.preventDefault();
                     }
                   }}
@@ -876,7 +876,7 @@ export const CreateInvoicesForm = () => {
                       e.preventDefault();
                     }
                     if (
-                      e.key === "." &&
+                      e.key == "." &&
                       invoiceOptions.paid_amount.includes(".")
                     ) {
                       e.preventDefault();

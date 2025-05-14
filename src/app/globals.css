@@ -29,3 +29,15 @@
 .scrollbar-hide {
     -ms-overflow-style: none;
 }
+
+@media screen {
+    .pdf-only {
+        display: none;
+    }
+}
+
+@media print {
+    .screen-only {
+        display: none;
+    }
+}

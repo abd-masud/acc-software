@@ -7,7 +7,13 @@ import { FaEdit } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 
-type GeneralType = "department" | "role" | "status" | "category";
+type GeneralType =
+  | "department"
+  | "role"
+  | "category"
+  | "size"
+  | "color"
+  | "material";
 
 interface GeneralItem {
   id?: string;
@@ -17,18 +23,22 @@ interface GeneralItem {
 interface GeneralGeneralsData {
   department: GeneralItem[];
   role: GeneralItem[];
-  status: GeneralItem[];
   category: GeneralItem[];
+  size: GeneralItem[];
+  color: GeneralItem[];
+  material: GeneralItem[];
 }
 
 export const ProductSettingsForm = () => {
   const { user } = useAuth();
-  const [activeTab] = useState<GeneralType>("category");
+  const [activeTab, setActiveTab] = useState<GeneralType>("category");
   const [data, setData] = useState<GeneralGeneralsData>({
     department: [],
     role: [],
-    status: [],
     category: [],
+    size: [],
+    color: [],
+    material: [],
   });
   const [newItemName, setNewItemName] = useState("");
   const [editingItem, setEditingItem] = useState<GeneralItem | null>(null);
@@ -62,8 +72,10 @@ export const ProductSettingsForm = () => {
           department:
             apiData.department?.map((name: string) => ({ name })) || [],
           role: apiData.role?.map((name: string) => ({ name })) || [],
-          status: apiData.status?.map((name: string) => ({ name })) || [],
           category: apiData.category?.map((name: string) => ({ name })) || [],
+          size: apiData.size?.map((name: string) => ({ name })) || [],
+          color: apiData.color?.map((name: string) => ({ name })) || [],
+          material: apiData.material?.map((name: string) => ({ name })) || [],
         };
         setData(transformedData);
       }
@@ -94,8 +106,10 @@ export const ProductSettingsForm = () => {
           user_id: user.id,
           department: updatedData.department.map((item) => item.name),
           role: updatedData.role.map((item) => item.name),
-          status: updatedData.status.map((item) => item.name),
           category: updatedData.category.map((item) => item.name),
+          size: updatedData.size.map((item) => item.name),
+          color: updatedData.color.map((item) => item.name),
+          material: updatedData.material.map((item) => item.name),
         }),
       });
 
@@ -121,7 +135,9 @@ export const ProductSettingsForm = () => {
     setData(updatedData);
     setNewItemName("");
     await handleSave(updatedData);
-    setUserMessage(`${activeTab} Added`);
+    setUserMessage(
+      `${activeTab.charAt(0).toUpperCase()}${activeTab.slice(1)} Added`
+    );
     setTimeout(() => setUserMessage(null), 5000);
   };
 
@@ -140,7 +156,9 @@ export const ProductSettingsForm = () => {
     setNewItemName("");
     setIsEditModalOpen(false);
     await handleSave(updatedData);
-    setUserMessage(`${activeTab} Updated`);
+    setUserMessage(
+      `${activeTab.charAt(0).toUpperCase()}${activeTab.slice(1)} Updated`
+    );
     setTimeout(() => setUserMessage(null), 5000);
   };
 
@@ -156,7 +174,9 @@ export const ProductSettingsForm = () => {
     await handleSave(updatedData);
     setIsDeleteModalOpen(false);
     setItemToDelete(null);
-    setUserMessage(`${activeTab} Deleted`);
+    setUserMessage(
+      `${activeTab.charAt(0).toUpperCase()}${activeTab.slice(1)} Deleted`
+    );
     setTimeout(() => setUserMessage(null), 5000);
   };
 
@@ -180,14 +200,55 @@ export const ProductSettingsForm = () => {
         <h2 className="text-[13px] font-[500]">Product Settings</h2>
       </div>
 
+      <div className="flex space-x-4 mb-3 overflow-x-auto">
+        <button
+          onClick={() => setActiveTab("category")}
+          className={`px-4 py-2 rounded-md text-[14px] transition-all duration-300 ${
+            activeTab == "category"
+              ? "bg-[#307EF3] hover:bg-[#478cf3] text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
+        >
+          Categories
+        </button>
+        <button
+          onClick={() => setActiveTab("size")}
+          className={`px-4 py-2 rounded-md text-[14px] transition-all duration-300 ${
+            activeTab == "size"
+              ? "bg-[#307EF3] hover:bg-[#478cf3] text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
+        >
+          Sizes
+        </button>
+        <button
+          onClick={() => setActiveTab("color")}
+          className={`px-4 py-2 rounded-md text-[14px] transition-all duration-300 ${
+            activeTab == "color"
+              ? "bg-[#307EF3] hover:bg-[#478cf3] text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
+        >
+          Colors
+        </button>
+        <button
+          onClick={() => setActiveTab("material")}
+          className={`px-4 py-2 rounded-md text-[14px] transition-all duration-300 ${
+            activeTab == "material"
+              ? "bg-[#307EF3] hover:bg-[#478cf3] text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
+        >
+          Materials
+        </button>
+      </div>
+
       <div className="mb-4">
-        <label className="text-[14px]" htmlFor="category">
-          {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}s
-        </label>
         <div className="flex items-center gap-2 mb-4 mt-2">
           <input
             type="text"
             id="category"
+            value={newItemName}
             onChange={(e) => setNewItemName(e.target.value)}
             placeholder={`Add new ${activeTab}`}
             className="border text-[14px] py-2 px-4 w-full flex-1 bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md"

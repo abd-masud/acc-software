@@ -150,8 +150,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
       title: "Items",
       dataIndex: "items",
       render: (items: InvoiceItem[]) => (
-        <div
-          className="cursor-default"
+        <Tooltip
           title={
             Array.isArray(items)
               ? items
@@ -163,10 +162,12 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
               : "N/A"
           }
         >
-          {Array.isArray(items)
-            ? `${items.length} ${items.length == 1 ? "item" : "items"}`
-            : "N/A"}
-        </div>
+          <div className="cursor-default border px-1 rounded">
+            {Array.isArray(items)
+              ? `${items.length} ${items.length == 1 ? "item" : "items"}`
+              : "N/A"}
+          </div>
+        </Tooltip>
       ),
     },
     {

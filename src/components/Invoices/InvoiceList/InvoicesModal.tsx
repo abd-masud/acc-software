@@ -41,7 +41,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
     const newPayNow = value == "" ? "" : String(Number(value));
     setPayNow(newPayNow);
     const newDue =
-      value === ""
+      value == ""
         ? Number(total) - Number(paid)
         : Number(total) - (Number(paid) + Number(value));
     setDue(newDue);

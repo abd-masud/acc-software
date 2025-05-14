@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { CustomerApiResponse, Customers } from "@/types/customers";
 import { InvoiceApiResponse, InvoiceData } from "@/types/invoices";
 import { ProductApiResponse, Products } from "@/types/products";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { FiFileText, FiTrendingUp, FiUsers, FiPackage } from "react-icons/fi";
 
@@ -144,24 +145,28 @@ export const MetricsCards = () => {
         value: `${totalRevenue.toLocaleString()} ${currencyCode}`,
         change: <span className="text-green-600">On Target</span>,
         icon: <FiTrendingUp className="text-green-500" size={24} />,
+        link: "/invoices/closed-invoices-list",
       },
       {
         title: "Receivables",
         value: `${totalDue.toLocaleString()} ${currencyCode}`,
         change: <span className="text-red-600">Action Needed</span>,
         icon: <FiFileText className="text-yellow-500" size={24} />,
+        link: "/invoices/open-invoices-list",
       },
       {
         title: "Products",
         value: `${totalProducts.toString()} Items`,
         change: <span className="text-green-600">In Stock</span>,
         icon: <FiPackage className="text-blue-500" size={24} />,
+        link: "/products/products-list",
       },
       {
         title: "Customers",
         value: `${totalCustomers.toString()}`,
         change: <span className="text-green-600">Active</span>,
         icon: <FiUsers className="text-purple-500" size={24} />,
+        link: "/customers/customers-list",
       },
     ];
   };
@@ -184,10 +189,12 @@ export const MetricsCards = () => {
     );
   }
 
+  const isAdmin = user?.role?.toLowerCase() === "admin";
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-      {metrics.map((metric, index) => (
-        <div key={index} className="bg-white p-6 rounded-xl shadow-sm border">
+      {metrics.map((metric, index) => {
+        const cardContent = (
           <div className="flex justify-between items-start">
             <div>
               <p className="text-gray-500 text-sm font-medium">
@@ -202,8 +209,22 @@ export const MetricsCards = () => {
               {metric.icon}
             </div>
           </div>
-        </div>
-      ))}
+        );
+
+        return isAdmin ? (
+          <Link
+            key={index}
+            className="bg-white p-6 rounded-xl shadow-sm border hover:border-blue-400 transition duration-300"
+            href={metric.link}
+          >
+            {cardContent}
+          </Link>
+        ) : (
+          <div key={index} className="bg-white p-6 rounded-xl shadow-sm border">
+            {cardContent}
+          </div>
+        );
+      })}
     </div>
   );
 };

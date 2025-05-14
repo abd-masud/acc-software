@@ -7,7 +7,13 @@ import { FaEdit } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 
-type GeneralType = "department" | "role" | "status" | "category";
+type GeneralType =
+  | "department"
+  | "role"
+  | "category"
+  | "size"
+  | "color"
+  | "material";
 
 interface GeneralItem {
   id?: string;
@@ -17,8 +23,10 @@ interface GeneralItem {
 interface GeneralGeneralsData {
   department: GeneralItem[];
   role: GeneralItem[];
-  status: GeneralItem[];
   category: GeneralItem[];
+  size: GeneralItem[];
+  color: GeneralItem[];
+  material: GeneralItem[];
 }
 
 export const EmployeeSettingsForm = () => {
@@ -27,8 +35,10 @@ export const EmployeeSettingsForm = () => {
   const [data, setData] = useState<GeneralGeneralsData>({
     department: [],
     role: [],
-    status: [],
     category: [],
+    size: [],
+    color: [],
+    material: [],
   });
   const [newItemName, setNewItemName] = useState("");
   const [editingItem, setEditingItem] = useState<GeneralItem | null>(null);
@@ -62,8 +72,10 @@ export const EmployeeSettingsForm = () => {
           department:
             apiData.department?.map((name: string) => ({ name })) || [],
           role: apiData.role?.map((name: string) => ({ name })) || [],
-          status: apiData.status?.map((name: string) => ({ name })) || [],
           category: apiData.category?.map((name: string) => ({ name })) || [],
+          size: apiData.size?.map((name: string) => ({ name })) || [],
+          color: apiData.color?.map((name: string) => ({ name })) || [],
+          material: apiData.material?.map((name: string) => ({ name })) || [],
         };
         setData(transformedData);
       }
@@ -94,8 +106,10 @@ export const EmployeeSettingsForm = () => {
           user_id: user.id,
           department: updatedData.department.map((item) => item.name),
           role: updatedData.role.map((item) => item.name),
-          status: updatedData.status.map((item) => item.name),
           category: updatedData.category.map((item) => item.name),
+          size: updatedData.size.map((item) => item.name),
+          color: updatedData.color.map((item) => item.name),
+          material: updatedData.material.map((item) => item.name),
         }),
       });
 
@@ -207,16 +221,6 @@ export const EmployeeSettingsForm = () => {
         >
           Roles
         </button>
-        <button
-          onClick={() => setActiveTab("status")}
-          className={`px-4 py-2 rounded-md text-[14px] transition-all duration-300 ${
-            activeTab == "status"
-              ? "bg-[#307EF3] hover:bg-[#478cf3] text-white"
-              : "bg-gray-200 hover:bg-gray-300"
-          }`}
-        >
-          Status
-        </button>
       </div>
 
       <div className="mb-4">
@@ -224,6 +228,7 @@ export const EmployeeSettingsForm = () => {
           <input
             type="text"
             id="category"
+            value={newItemName}
             onChange={(e) => setNewItemName(e.target.value)}
             placeholder={`Add new ${activeTab}`}
             className="border text-[14px] py-2 px-4 w-full flex-1 bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md"

@@ -48,8 +48,13 @@ export const AddProductsForm = () => {
   const [formValues, setFormValues] = useState<Omit<Products, "id">>({
     key: "",
     product_id: "",
+    type: "",
+    sku_id: "",
     name: "",
+    purchaser: "",
+    attribute: "",
     description: "",
+    buying_price: "",
     price: "",
     category: "",
     stock: "",
@@ -153,7 +158,7 @@ export const AddProductsForm = () => {
       ...formValues,
       [id]:
         id == "price" || id == "tax_rate" || id == "stock"
-          ? value === ""
+          ? value == ""
             ? ""
             : Number(value)
           : value,
@@ -328,7 +333,7 @@ export const AddProductsForm = () => {
                 ) {
                   e.preventDefault();
                 }
-                if (e.key === "." && formValues.price.includes(".")) {
+                if (e.key == "." && formValues.price.includes(".")) {
                   e.preventDefault();
                 }
               }}
@@ -345,7 +350,7 @@ export const AddProductsForm = () => {
               className="mt-2"
               options={toSelectOptions(UNITS)}
               value={toSelectOptions(UNITS).find(
-                (opt) => opt.value === formValues.unit
+                (opt) => opt.value == formValues.unit
               )}
               onChange={handleSelectChange("unit")}
               placeholder="Select Unit"
@@ -401,13 +406,16 @@ export const AddProductsForm = () => {
               onChange={handleChange}
               onKeyDown={(e) => {
                 if (
-                  !/[0-9]/.test(e.key) &&
+                  !/[0-9.]/.test(e.key) &&
                   e.key !== "Backspace" &&
                   e.key !== "Delete" &&
                   e.key !== "Tab" &&
                   e.key !== "ArrowLeft" &&
                   e.key !== "ArrowRight"
                 ) {
+                  e.preventDefault();
+                }
+                if (e.key == "." && formValues.stock.includes(".")) {
                   e.preventDefault();
                 }
               }}

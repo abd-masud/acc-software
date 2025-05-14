@@ -22,7 +22,6 @@ interface SelectOption {
 interface GeneralOptions {
   department: string[];
   role: string[];
-  status: string[];
 }
 
 export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
@@ -45,8 +44,11 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
   const [generalOptions, setGeneralOptions] = useState<GeneralOptions>({
     department: [],
     role: [],
-    status: [],
   });
+  const statusOptions = [
+    { label: "Active", value: "Active" },
+    { label: "Inactive", value: "Inactive" },
+  ];
   const [formData, setFormData] = useState<SMTPSettings>({
     host: "",
     port: 587,
@@ -117,7 +119,6 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
       setGeneralOptions({
         department: optionsData.department || [],
         role: optionsData.role || [],
-        status: optionsData.status || [],
       });
     } catch (error) {
       console.error("Error:", error);
@@ -249,7 +250,6 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
         status,
       };
 
-      console.log(updatedEmployee);
       await onSave(updatedEmployee);
       await sendEmployeeCredentials(updatedEmployee);
       message.success("Employee updated successfully");
@@ -444,10 +444,8 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
             instanceId={`${instanceId}-status`}
             inputId="status"
             className="mt-2"
-            options={toSelectOptions(generalOptions.status)}
-            value={toSelectOptions(generalOptions.status).find(
-              (opt) => opt.value == status
-            )}
+            options={statusOptions}
+            value={statusOptions.find((opt) => opt.value === status)}
             onChange={(selected) =>
               setStatus((selected as SelectOption)?.value || "")
             }

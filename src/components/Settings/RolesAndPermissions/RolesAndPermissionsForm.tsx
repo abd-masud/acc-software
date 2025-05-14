@@ -10,6 +10,7 @@ import {
   PermissionResponse,
   Permissions,
 } from "@/types/permission";
+import Link from "next/link";
 
 const SIDEBAR_MODULES = [
   "customers",
@@ -18,7 +19,8 @@ const SIDEBAR_MODULES = [
   "products",
   "employees",
   "sales-report",
-  "stock-manage",
+  "stock-master",
+  "purchasers",
   "settings",
 ];
 
@@ -177,10 +179,6 @@ export const RolesAndPermissionsForm = () => {
     }
   };
 
-  if (!initialLoadComplete) {
-    return <p>Loading...</p>;
-  }
-
   const filteredRoles =
     selectedRoleFilter == "all"
       ? roles
@@ -226,6 +224,33 @@ export const RolesAndPermissionsForm = () => {
     setUserMessage(null);
   };
 
+  if (!initialLoadComplete) {
+    return <p>Loading...</p>;
+  }
+
+  if (roles.length == 0) {
+    return (
+      <div className="min-h-[calc(100vh-170px)] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="mx-auto text-gray-400">
+            <h2 className="text-2xl font-semibold text-gray-700">
+              No Roles Found
+            </h2>
+            <p className="text-gray-500 text-base mb-10">
+              There are currently no roles available. You can create a new role
+              to get started.
+            </p>
+            <Link
+              className="text-[14px] font-[500] py-2 px-3 rounded cursor-pointer transition-all duration-300 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3]"
+              href={"/settings/general-settings"}
+            >
+              Create Role
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="bg-gray-100 min-h-screen mt-4">
       {userMessage && (
@@ -287,10 +312,6 @@ export const RolesAndPermissionsForm = () => {
           const allChecked = roleModules[role.name]?.every(
             (mod) => mod.canView
           );
-          const someChecked = roleModules[role.name]?.some(
-            (mod) => mod.canView
-          );
-
           return (
             <div
               key={role.id}
@@ -307,11 +328,6 @@ export const RolesAndPermissionsForm = () => {
                     }
                     id={`permit-all-${role.name}`}
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    ref={(input) => {
-                      if (input) {
-                        input.indeterminate = someChecked && !allChecked;
-                      }
-                    }}
                   />
                   <label
                     htmlFor={`permit-all-${role.name}`}
@@ -346,9 +362,6 @@ export const RolesAndPermissionsForm = () => {
 
       {selectedRoleFilter !== "all" && (
         <div className="mb-4 p-4 bg-white rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-4">
-            Employees with {selectedRoleFilter} role
-          </h3>
           <Table
             scroll={{ x: "max-content" }}
             columns={employeeColumns}
@@ -361,14 +374,16 @@ export const RolesAndPermissionsForm = () => {
       )}
 
       {roles.length > 0 && (
-        <div className="mt-8 text-center">
-          <button
-            onClick={saveAllPermissions}
-            disabled={loading}
-            className="text-[14px] font-[500] py-2 px-3 rounded cursor-pointer transition-all duration-300 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3]"
-          >
-            {loading ? "Saving..." : "Save Settings"}
-          </button>
+        <div className="flex justify-end">
+          <div className="text-center">
+            <button
+              onClick={saveAllPermissions}
+              disabled={loading}
+              className="text-[14px] font-[500] py-2 px-3 rounded cursor-pointer transition-all duration-300 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3]"
+            >
+              {loading ? "Saving..." : "Save Settings"}
+            </button>
+          </div>
         </div>
       )}
     </div>

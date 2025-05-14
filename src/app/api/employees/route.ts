@@ -16,10 +16,23 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        const db = await connectionToDatabase();
+
+        // Check if email already exists for this user_id
+        const [existingEmployees] = await db.query<RowDataPacket[]>(
+            `SELECT id FROM employees WHERE user_id = ? AND email = ?`,
+            [user_id, email]
+        );
+
+        if (existingEmployees.length > 0) {
+            return NextResponse.json(
+                { success: true, error: 'This email already exists' },
+                { status: 409 }
+            );
+        }
+
         // Hash the password with bcrypt (using 10 salt rounds)
         const hashedPassword = await hash(password, 10);
-
-        const db = await connectionToDatabase();
 
         // Insert new employee
         const [result] = await db.query<ResultSetHeader>(
@@ -50,7 +63,6 @@ export async function POST(request: NextRequest) {
         );
     }
 }
-
 // GET - Retrieve employees
 export async function GET(request: NextRequest) {
     try {

@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
     try {
-        const { user_id, department, role, status, category } = await request.json();
+        const { user_id, department, role, category, size, color, material } = await request.json();
 
         // Validate required fields
         if (!user_id) {
@@ -63,7 +63,7 @@ export async function PUT(request: NextRequest) {
         }
 
         // Validate arrays exist and are arrays
-        const requiredArrays = { department, role, status, category };
+        const requiredArrays = { department, role, category };
         for (const [key, value] of Object.entries(requiredArrays)) {
             if (!Array.isArray(value)) {
                 return NextResponse.json(
@@ -85,17 +85,18 @@ export async function PUT(request: NextRequest) {
         const dataToStore = {
             department: JSON.stringify(department),
             role: JSON.stringify(role),
-            status: JSON.stringify(status),
-            category: JSON.stringify(category)
+            category: JSON.stringify(category),
+            size: JSON.stringify(size),
+            color: JSON.stringify(color),
+            material: JSON.stringify(material),
         };
 
         if (existingSettings.length == 0) {
             // Insert new record
             const [result] = await db.query<ResultSetHeader>(
-                `INSERT INTO generals (user_id, department, role, status, category) 
-                 VALUES (?, ?, ?, ?, ?)`,
-                [user_id, dataToStore.department, dataToStore.role,
-                    dataToStore.status, dataToStore.category]
+                `INSERT INTO generals (user_id, department, role, status, category, size, color, material) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [user_id, dataToStore.department, dataToStore.role, dataToStore.category, dataToStore.size, dataToStore.color, dataToStore.material]
             );
 
             return NextResponse.json(
@@ -110,10 +111,9 @@ export async function PUT(request: NextRequest) {
             // Update existing record
             const [result] = await db.query<ResultSetHeader>(
                 `UPDATE generals 
-                 SET department = ?, role = ?, status = ?, category = ? 
+                 SET department = ?, role = ?, category = ?, size = ?, color = ?, material = ? 
                  WHERE user_id = ?`,
-                [dataToStore.department, dataToStore.role,
-                dataToStore.status, dataToStore.category, user_id]
+                [dataToStore.department, dataToStore.role, dataToStore.category, dataToStore.size, dataToStore.color, dataToStore.material, user_id]
             );
 
             return NextResponse.json(
