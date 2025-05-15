@@ -445,7 +445,7 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
             inputId="status"
             className="mt-2"
             options={statusOptions}
-            value={statusOptions.find((opt) => opt.value === status)}
+            value={statusOptions.find((opt) => opt.value == status)}
             onChange={(selected) =>
               setStatus((selected as SelectOption)?.value || "")
             }

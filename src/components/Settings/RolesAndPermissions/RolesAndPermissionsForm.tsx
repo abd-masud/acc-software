@@ -252,7 +252,7 @@ export const RolesAndPermissionsForm = () => {
     );
   }
   return (
-    <div className="bg-gray-100 min-h-screen mt-4">
+    <div className="bg-gray-100 min-h-[calc(100vh-190px)] mt-4">
       {userMessage && (
         <div className="left-1/2 top-10 transform -translate-x-1/2 fixed z-50">
           <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-gray-800 text-green-600 border-2 border-green-600 mx-auto">
@@ -318,7 +318,7 @@ export const RolesAndPermissionsForm = () => {
               className="bg-white rounded-lg shadow-md px-6 py-3 divide-y"
             >
               <h3 className="text-lg font-semibold mb-2">{role.name}</h3>
-              <div className="pt-3 grid xl:grid-cols-9 sm:grid-cols-3 grid-cols-1 gap-1">
+              <div className="pt-3 grid 2xl:grid-cols-10 lg:grid-cols-5 sm:grid-cols-3 grid-cols-2 gap-y-2">
                 <div className="flex items-center">
                   <input
                     type="checkbox"

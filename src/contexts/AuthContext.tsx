@@ -34,6 +34,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           logo: decode.logo,
           address: decode.address,
           role: decode.role,
+          status: decode.status,
           image: decode.image,
         };
         setUser(userData);

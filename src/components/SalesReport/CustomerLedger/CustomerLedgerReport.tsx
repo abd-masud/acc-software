@@ -8,6 +8,18 @@ import barcode from "../../../../public/images/barcode.gif";
 import { useEffect, useState } from "react";
 import { InvoicesReportButtonProps } from "@/types/invoices";
 
+const getLogoDimensions = async (
+  url: string
+): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      resolve({ width: img.width, height: img.height });
+    };
+    img.src = url;
+  });
+};
+
 export const CustomerLedgerReportButton: React.FC<
   InvoicesReportButtonProps
 > = ({ invoices }) => {
@@ -48,7 +60,7 @@ export const CustomerLedgerReportButton: React.FC<
     getBarcodeUrl();
   }, []);
 
-  const handleGenerateReport = () => {
+  const handleGenerateReport = async () => {
     const doc = new jsPDF({ orientation: "landscape", unit: "mm" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 14;
@@ -60,12 +72,33 @@ export const CustomerLedgerReportButton: React.FC<
       year: "numeric",
     });
 
-    const logoWidth = 25;
+    // Logo dimensions
     const logoHeight = 25;
+    let logoWidth = 25; // Default fallback width
+
+    // Barcode dimensions
     const barcodeWidth = 100;
     const barcodeHeight = 15;
+
     const centerStartX = pageWidth / 2;
 
+    // Calculate logo width while maintaining aspect ratio
+    if (user?.logo) {
+      // If you know the original aspect ratio of user.logo, you can calculate it here
+      // For example, if aspect ratio is 2:1: logoWidth = logoHeight * 2;
+      // Otherwise, keep the default
+    } else if (logoUrl) {
+      try {
+        const dimensions = await getLogoDimensions(logoUrl);
+        const aspectRatio = dimensions.width / dimensions.height;
+        logoWidth = logoHeight * aspectRatio;
+      } catch (error) {
+        console.error("Error getting logo dimensions:", error);
+        // Fall back to default width
+      }
+    }
+
+    // Add logo to PDF
     if (user?.logo) {
       doc.addImage(user.logo, "JPEG", margin, 15, logoWidth, logoHeight);
     } else if (logoUrl) {
@@ -81,6 +114,7 @@ export const CustomerLedgerReportButton: React.FC<
       });
     }
 
+    // Add barcode to PDF
     if (barcodeUrl) {
       doc.addImage(
         barcodeUrl,
@@ -92,6 +126,7 @@ export const CustomerLedgerReportButton: React.FC<
       );
     }
 
+    // Company header information
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
     doc.text(user?.company?.toUpperCase() || "COMPANY NAME", centerStartX, 20, {
@@ -117,10 +152,12 @@ export const CustomerLedgerReportButton: React.FC<
       }
     );
 
+    // Report title
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text("CUSTOMER LEDGER", centerStartX, 50, { align: "center" });
 
+    // Date and time
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.text(`Date: ${formattedDate}`, margin + 11, 55, {
@@ -136,9 +173,11 @@ export const CustomerLedgerReportButton: React.FC<
       { align: "right" }
     );
 
+    // Divider line
     doc.setDrawColor(200, 200, 200);
     doc.line(margin, 60, pageWidth - margin, 60);
 
+    // Calculate totals
     const totals = {
       subtotal: 0,
       tax: 0,
@@ -157,6 +196,7 @@ export const CustomerLedgerReportButton: React.FC<
       totals.due += Number(invoice.due_amount) || 0;
     });
 
+    // Prepare table data
     const tableData = invoices.map((invoice, index) => [
       index + 1,
       invoice.invoice_id,
@@ -193,6 +233,7 @@ export const CustomerLedgerReportButton: React.FC<
       "",
     ];
 
+    // Add table to PDF
     autoTable(doc, {
       startY: 65,
       head: [
@@ -259,6 +300,7 @@ export const CustomerLedgerReportButton: React.FC<
       },
     });
 
+    // Add signature lines
     const signatureY = (doc as any).lastAutoTable.finalY + 20;
     const signatureWidth = 40;
     const signatureSpacing = (pageWidth - margin * 2 - signatureWidth * 4) / 3;
@@ -286,6 +328,7 @@ export const CustomerLedgerReportButton: React.FC<
       );
     }
 
+    // Add page numbers and footer
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
@@ -304,6 +347,7 @@ export const CustomerLedgerReportButton: React.FC<
       );
     }
 
+    // Generate and open PDF
     const pdfBlob = doc.output("blob");
     const pdfUrl = URL.createObjectURL(pdfBlob);
     window.open(pdfUrl, "_blank");

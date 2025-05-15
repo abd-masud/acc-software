@@ -18,8 +18,8 @@ export const AddPurchasersForm = () => {
 
   const [formValues, setFormValues] = useState({
     purchaser_id: "",
-    name: "",
     company: "",
+    owner: "",
     address: "",
     email: "",
     contact: "",
@@ -80,8 +80,8 @@ export const AddPurchasersForm = () => {
   const handleAddMore = () => {
     setFormValues({
       purchaser_id: "",
-      name: "",
       company: "",
+      owner: "",
       address: "",
       email: "",
       contact: "",
@@ -142,23 +142,6 @@ export const AddPurchasersForm = () => {
             />
           </div>
           <div className="mb-4">
-            <label className="text-[14px]" htmlFor="name">
-              Purchaser Name
-            </label>
-            <input
-              placeholder="Enter purchaser name"
-              maxLength={50}
-              className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-              type="text"
-              id="name"
-              value={formValues.name}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        </div>
-        <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4 gap-0">
-          <div className="mb-4">
             <label className="text-[14px]" htmlFor="company">
               Company Name
             </label>
@@ -169,6 +152,23 @@ export const AddPurchasersForm = () => {
               type="text"
               id="company"
               value={formValues.company}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        </div>
+        <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4 gap-0">
+          <div className="mb-4">
+            <label className="text-[14px]" htmlFor="owner">
+              Company owner
+            </label>
+            <input
+              placeholder="Enter company owner"
+              maxLength={50}
+              className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              type="text"
+              id="owner"
+              value={formValues.owner}
               onChange={handleChange}
               required
             />

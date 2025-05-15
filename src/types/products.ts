@@ -1,3 +1,5 @@
+import { Purchasers } from "./purchasers";
+
 export type Products = {
     key: string;
     id: number;
@@ -5,7 +7,7 @@ export type Products = {
     type: string;
     sku_id: string;
     name: string;
-    purchaser: string;
+    purchaser: Purchasers;
     attribute: string;
     description: string;
     buying_price: string;
@@ -13,6 +15,12 @@ export type Products = {
     category: string;
     stock: string;
     unit: string;
+};
+
+export type PurchaserOption = {
+    value: number;
+    label: string;
+    purchaser: Purchasers;
 };
 
 export interface ProductApiResponse {

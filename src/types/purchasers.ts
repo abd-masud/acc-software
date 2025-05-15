@@ -2,8 +2,8 @@ export interface Purchasers {
     key: string;
     id: number;
     purchaser_id: string;
-    name: string;
     company: string;
+    owner: string;
     address: string;
     email: string;
     contact: string;

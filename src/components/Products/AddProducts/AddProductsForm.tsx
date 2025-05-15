@@ -1,21 +1,21 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { Products } from "@/types/products";
+import { PurchaserOption } from "@/types/products";
 import { Modal } from "antd";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import success from "../../../../public/images/success.png";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useId, useState } from "react";
-import { StylesConfig } from "react-select";
+import Select, { StylesConfig } from "react-select";
 import { FaXmark } from "react-icons/fa6";
+import { Purchasers } from "@/types/purchasers";
 
-const Select = dynamic(() => import("react-select"), {
-  ssr: false,
-  loading: () => <div className="h-[38px] w-full rounded border" />,
-});
+const TYPES = [
+  "Single (Only Single product)",
+  "Bulk (Auto SKU for each product)",
+];
 
 const UNITS = [
   "Pieces",
@@ -36,6 +36,20 @@ const UNITS = [
   "Sheet",
 ];
 
+interface FormValues {
+  type: string;
+  name: string;
+  description: string;
+  buying_price: number | string;
+  price: number | string;
+  unit: string;
+  stock: number | string;
+  category: string;
+  size: string;
+  color: string;
+  material: string;
+}
+
 export const AddProductsForm = () => {
   const instanceId = useId();
   const { user } = useAuth();
@@ -43,27 +57,40 @@ export const AddProductsForm = () => {
   const [loading, setLoading] = useState(false);
   const [product_id, setProductId] = useState("");
   const [currencyCode, setCurrencyCode] = useState("USD");
+  const [purchasers, setPurchasers] = useState<Purchasers[]>([]);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [userMessage, setUserMessage] = useState<string | null>(null);
-  const [formValues, setFormValues] = useState<Omit<Products, "id">>({
-    key: "",
-    product_id: "",
+  const [selectedPurchaser, setSelectedPurchaser] = useState<Purchasers | null>(
+    null
+  );
+  const [isInHouseProduct, setIsInHouseProduct] = useState(false);
+
+  const [formValues, setFormValues] = useState<FormValues>({
     type: "",
-    sku_id: "",
     name: "",
-    purchaser: "",
-    attribute: "",
     description: "",
     buying_price: "",
     price: "",
-    category: "",
-    stock: "",
     unit: "",
+    stock: "",
+    category: "",
+    size: "",
+    color: "",
+    material: "",
   });
 
   const [generalOptions, setGeneralOptions] = useState<{
     category: string[];
-  }>({ category: [] });
+    size: string[];
+    color: string[];
+    material: string[];
+  }>({ category: [], size: [], color: [], material: [] });
+
+  const purchaserOptions = purchasers.map((purchaser: Purchasers) => ({
+    value: purchaser.id,
+    label: `${purchaser.company} (${purchaser.purchaser_id})`,
+    purchaser: purchaser,
+  }));
 
   const fetchGenerals = useCallback(async () => {
     if (!user?.id) return;
@@ -79,12 +106,15 @@ export const AddProductsForm = () => {
       const json: any = await response.json();
 
       if (!response.ok || !json.success) {
-        throw new Error(json.message || "Failed to fetch customers");
+        throw new Error(json.message || "Failed to fetch general");
       }
 
       const optionsData = json.data[0] || {};
       setGeneralOptions({
         category: optionsData.category || [],
+        size: optionsData.size || [],
+        color: optionsData.color || [],
+        material: optionsData.material || [],
       });
     } catch (error) {
       console.error("Error:", error);
@@ -96,6 +126,34 @@ export const AddProductsForm = () => {
   useEffect(() => {
     fetchGenerals();
   }, [fetchGenerals]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const fetchCustomers = async () => {
+      try {
+        const purchasersRes = await fetch(
+          `/api/purchasers?user_id=${user.id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (purchasersRes.ok) {
+          const purchasersData = await purchasersRes.json();
+          setPurchasers(
+            Array.isArray(purchasersData.data) ? purchasersData.data : []
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch customers:", error);
+      }
+    };
+
+    fetchCustomers();
+  }, [user?.id]);
 
   useEffect(() => {
     const generateProductId = () => {
@@ -140,13 +198,12 @@ export const AddProductsForm = () => {
     return (arr || []).map((item) => ({ label: item, value: item }));
   };
 
-  const handleSelectChange =
-    (field: keyof typeof formValues) => (selected: any) => {
-      setFormValues((prev) => ({
-        ...prev,
-        [field]: selected?.value || "",
-      }));
-    };
+  const handleSelectChange = (field: keyof FormValues) => (selected: any) => {
+    setFormValues((prev) => ({
+      ...prev,
+      [field]: selected?.value || "",
+    }));
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -157,8 +214,8 @@ export const AddProductsForm = () => {
     setFormValues({
       ...formValues,
       [id]:
-        id == "price" || id == "tax_rate" || id == "stock"
-          ? value == ""
+        id === "price" || id === "tax_rate" || id === "stock"
+          ? value === ""
             ? ""
             : Number(value)
           : value,
@@ -187,11 +244,11 @@ export const AddProductsForm = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Failed to add customer");
+        throw new Error(data.message || "Failed to add product");
       }
       setShowSuccessModal(true);
     } catch (error: any) {
-      setUserMessage(error || "An unexpected error occurred");
+      setUserMessage(error.message || "An unexpected error occurred");
     } finally {
       setTimeout(() => setUserMessage(null), 5000);
       setLoading(false);
@@ -199,6 +256,34 @@ export const AddProductsForm = () => {
   };
 
   const generalSelectStyles: StylesConfig<any, boolean> = {
+    control: (base) => ({
+      ...base,
+      borderColor: "#E5E7EB",
+      "&:hover": {
+        borderColor: "#E5E7EB",
+      },
+      minHeight: "48px",
+      fontSize: "14px",
+      boxShadow: "none",
+      backgroundColor: "#F2F4F7",
+      width: "full",
+    }),
+    option: (base, state) => ({
+      ...base,
+      fontSize: "14px",
+      backgroundColor: state.isSelected ? "#F2F4F7" : "white",
+      color: "black",
+      "&:hover": {
+        backgroundColor: "#F2F4F7",
+      },
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+    }),
+  };
+
+  const purchaserSelectStyles: StylesConfig<PurchaserOption, boolean> = {
     control: (base) => ({
       ...base,
       borderColor: "#E5E7EB",
@@ -260,7 +345,7 @@ export const AddProductsForm = () => {
         <h2 className="text-[13px] font-[500]">Add Product Form</h2>
       </div>
       <form onSubmit={handleSubmit}>
-        <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4 gap-0">
+        <div className="grid sm:grid-cols-3 grid-cols-1 sm:gap-4 gap-0">
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="product_id">
               Product ID
@@ -272,6 +357,25 @@ export const AddProductsForm = () => {
               id="product_id"
               value={product_id}
               readOnly
+            />
+          </div>
+          <div className="mb-4">
+            <label className="text-[14px]" htmlFor="type">
+              Single Product / Bulk Product
+            </label>
+            <Select
+              instanceId={`${instanceId}-type`}
+              inputId="type"
+              className="mt-2"
+              options={toSelectOptions(TYPES)}
+              value={toSelectOptions(TYPES).find(
+                (opt) => opt.value == formValues.type
+              )}
+              onChange={handleSelectChange("type")}
+              placeholder="Select Type"
+              styles={generalSelectStyles}
+              isClearable
+              required
             />
           </div>
           <div className="mb-4">
@@ -291,6 +395,121 @@ export const AddProductsForm = () => {
           </div>
         </div>
 
+        <div className="mb-6 p-4 border rounded-lg">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-[15px] font-semibold">
+              Purchaser <span className="sm:inline hidden">Details</span>
+            </h3>
+            <Link
+              className="text-[12px] text-blue-600"
+              href={"/purchasers/add-purchasers"}
+            >
+              Add Purchaser
+            </Link>
+          </div>
+          <div className="flex items-center gap-3 mb-3">
+            <input
+              type="checkbox"
+              id="self"
+              checked={isInHouseProduct}
+              onChange={(e) => {
+                setIsInHouseProduct(e.target.checked);
+                if (e.target.checked) {
+                  setSelectedPurchaser(null);
+                }
+              }}
+            />
+            <label className="text-sm" htmlFor="self">
+              In-House Product
+            </label>
+          </div>
+          <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4 gap-0">
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="company">
+                Company Name
+              </label>
+              <Select<{
+                value: number;
+                label: string;
+                purchaser: Purchasers;
+              }>
+                id="company"
+                className="text-[14px] mt-2"
+                options={purchaserOptions}
+                value={purchaserOptions.find(
+                  (option) => option.value == selectedPurchaser?.id
+                )}
+                onChange={(selectedOption) => {
+                  if (selectedOption) {
+                    setSelectedPurchaser(selectedOption.purchaser);
+                  } else {
+                    setSelectedPurchaser(null);
+                  }
+                }}
+                placeholder="Select purchaser"
+                isClearable
+                isSearchable
+                isDisabled={isInHouseProduct}
+                styles={purchaserSelectStyles}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="owner">
+                Company Owner
+              </label>
+              <input
+                placeholder="Enter company owner"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                type="text"
+                id="owner"
+                value={selectedPurchaser?.owner || ""}
+                readOnly
+              />
+            </div>
+          </div>
+          <div className="mb-4">
+            <label className="text-[14px]" htmlFor="address">
+              Address
+            </label>
+            <input
+              placeholder="Enter address"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              type="text"
+              id="address"
+              value={selectedPurchaser?.address || ""}
+              readOnly
+            />
+          </div>
+          <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4 gap-0">
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="email">
+                Email Address
+              </label>
+              <input
+                placeholder="Enter email address"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                type="email"
+                id="email"
+                value={selectedPurchaser?.email || ""}
+                readOnly
+              />
+            </div>
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="contact">
+                Contact Number
+              </label>
+              <input
+                placeholder="Enter contact number"
+                className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                type="text"
+                id="contact"
+                value={selectedPurchaser?.contact || ""}
+                readOnly
+              />
+            </div>
+          </div>
+        </div>
+
         <div className="mb-4">
           <label className="text-[14px]" htmlFor="description">
             Description (Optional)
@@ -306,13 +525,49 @@ export const AddProductsForm = () => {
           />
         </div>
 
-        <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
+        <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 sm:gap-4">
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="price">
-              Price ({currencyCode})
+              Buying Price ({currencyCode})
             </label>
             <input
-              placeholder="Enter price"
+              placeholder="Enter buying price"
+              className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              id="price"
+              min="0"
+              step="0.01"
+              value={formValues.buying_price}
+              onChange={handleChange}
+              onKeyDown={(e) => {
+                if (
+                  !/[0-9.]/.test(e.key) &&
+                  e.key !== "Backspace" &&
+                  e.key !== "Delete" &&
+                  e.key !== "Tab" &&
+                  e.key !== "ArrowLeft" &&
+                  e.key !== "ArrowRight"
+                ) {
+                  e.preventDefault();
+                }
+                if (
+                  e.key === "." &&
+                  formValues.buying_price.toString().includes(".")
+                ) {
+                  e.preventDefault();
+                }
+              }}
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label className="text-[14px]" htmlFor="price">
+              Selling Price ({currencyCode})
+            </label>
+            <input
+              placeholder="Enter selling price"
               className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="number"
               inputMode="numeric"
@@ -333,7 +588,10 @@ export const AddProductsForm = () => {
                 ) {
                   e.preventDefault();
                 }
-                if (e.key == "." && formValues.price.includes(".")) {
+                if (
+                  e.key === "." &&
+                  formValues.price.toString().includes(".")
+                ) {
                   e.preventDefault();
                 }
               }}
@@ -359,9 +617,7 @@ export const AddProductsForm = () => {
               required
             />
           </div>
-        </div>
 
-        <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
           <div className="mb-4">
             <div className="flex justify-between items-center">
               <label className="text-[14px]" htmlFor="category">
@@ -391,6 +647,66 @@ export const AddProductsForm = () => {
           </div>
 
           <div className="mb-4">
+            <div className="flex justify-between items-center">
+              <label className="text-[14px]" htmlFor="category">
+                Attributes
+              </label>
+              <Link
+                className="text-[12px] text-blue-600"
+                href={"/products/product-settings"}
+              >
+                Add Attribute
+              </Link>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-2">
+              <Select
+                instanceId={`${instanceId}-category`}
+                inputId="size"
+                className="mt-2"
+                options={toSelectOptions(generalOptions.size)}
+                value={toSelectOptions(generalOptions.size).find(
+                  (opt) => opt.value == formValues.size
+                )}
+                onChange={handleSelectChange("size")}
+                placeholder="Size"
+                styles={generalSelectStyles}
+                isClearable
+                required
+              />
+
+              <Select
+                instanceId={`${instanceId}-color`}
+                inputId="color"
+                className="mt-2"
+                options={toSelectOptions(generalOptions.color)}
+                value={toSelectOptions(generalOptions.color).find(
+                  (opt) => opt.value == formValues.color
+                )}
+                onChange={handleSelectChange("color")}
+                placeholder="Color"
+                styles={generalSelectStyles}
+                isClearable
+                required
+              />
+
+              <Select
+                instanceId={`${instanceId}-material`}
+                inputId="material"
+                className="mt-2"
+                options={toSelectOptions(generalOptions.material)}
+                value={toSelectOptions(generalOptions.material).find(
+                  (opt) => opt.value == formValues.material
+                )}
+                onChange={handleSelectChange("material")}
+                placeholder="Materials"
+                styles={generalSelectStyles}
+                isClearable
+                required
+              />
+            </div>
+          </div>
+
+          <div className="mb-4">
             <label className="text-[14px]" htmlFor="stock">
               Stock Quantity
             </label>
@@ -415,7 +731,10 @@ export const AddProductsForm = () => {
                 ) {
                   e.preventDefault();
                 }
-                if (e.key == "." && formValues.stock.includes(".")) {
+                if (
+                  e.key === "." &&
+                  formValues.stock.toString().includes(".")
+                ) {
                   e.preventDefault();
                 }
               }}
@@ -428,6 +747,7 @@ export const AddProductsForm = () => {
           <button
             type="submit"
             className="text-[14px] font-[500] py-2 w-40 rounded cursor-pointer transition-all duration-300 mt-4 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3] disabled:opacity-50"
+            disabled={loading}
           >
             {loading ? "Adding..." : "Add Product"}
           </button>

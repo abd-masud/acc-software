@@ -64,7 +64,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         if (user.role.toLowerCase() == "admin") {
           allowedModules = SIDEBAR_MODULES;
         } else {
-          const matchedRole = permissionsList.find((p) => p.role === user.role);
+          const matchedRole = permissionsList.find((p) => p.role == user.role);
           allowedModules = matchedRole?.allowedModules || [];
         }
 
@@ -88,7 +88,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
   const canAccessModule = (module: string) => {
     const userRole = user?.role;
     const modules = roleModules[userRole] || [];
-    return modules.find((m) => m.name === module && m.canView);
+    return modules.find((m) => m.name == module && m.canView);
   };
 
   const toggleSection = (section: string) => {

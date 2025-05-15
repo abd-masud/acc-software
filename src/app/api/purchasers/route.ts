@@ -5,10 +5,10 @@ import { NextRequest, NextResponse } from 'next/server';
 // POST - Create a new purchaser
 export async function POST(request: NextRequest) {
     try {
-        const { user_id, purchaser_id, name, company, address, email, contact } = await request.json();
+        const { user_id, purchaser_id, company, owner, address, email, contact } = await request.json();
 
         // Basic validation
-        if (!user_id || !purchaser_id || !name || !company || !address || !email || !contact) {
+        if (!user_id || !purchaser_id || !company || !owner || !address || !email || !contact) {
             return NextResponse.json(
                 { success: false, error: 'Missing required fields' },
                 { status: 400 }
@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
 
         // Insert new purchaser
         const [result] = await db.query<ResultSetHeader>(
-            `INSERT INTO purchasers (user_id, purchaser_id, name, company, address, email, contact)
+            `INSERT INTO purchasers (user_id, purchaser_id, company, owner, address, email, contact)
              VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [user_id, purchaser_id, name, company, address, email, contact]
+            [user_id, purchaser_id, company, owner, address, email, contact]
         );
 
         if (result.affectedRows == 1) {
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
 // PUT - Update a purchaser
 export async function PUT(request: NextRequest) {
     try {
-        const { id, purchaser_id, name, company, address, email, contact } = await request.json();
+        const { id, purchaser_id, company, owner, address, email, contact } = await request.json();
 
         const db = await connectionToDatabase();
 
@@ -119,9 +119,9 @@ export async function PUT(request: NextRequest) {
         // Update purchaser
         const [result] = await db.query<ResultSetHeader>(
             `UPDATE purchasers 
-             SET purchaser_id =?, name = ?, company = ?, address = ?, email = ?, contact = ?
+             SET purchaser_id =?, company = ?, owner = ?, address = ?, email = ?, contact = ?
              WHERE id = ?`,
-            [purchaser_id, name, company, address, email, contact, id]
+            [purchaser_id, company, owner, address, email, contact, id]
         );
 
         if (result.affectedRows == 1) {

@@ -69,7 +69,8 @@ export async function POST(request: NextRequest) {
                 id: employee.user_id,
                 name: employee.name,
                 email: employee.email,
-                role: employee.role
+                role: employee.role,
+                status: employee.status,
             },
             SECRET_KEY,
             { expiresIn: '1h' }

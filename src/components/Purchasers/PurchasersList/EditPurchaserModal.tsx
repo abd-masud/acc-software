@@ -12,8 +12,8 @@ export const EditPurchaserModal: React.FC<EditPurchaserModalProps> = ({
   onSave,
 }) => {
   const [purchaserId, setPurchaserId] = useState("");
-  const [purchaserName, setPurchaserName] = useState("");
   const [company, setCompany] = useState("");
+  const [owner, setOwner] = useState("");
   const [address, setAddress] = useState("");
   const [email, setEmail] = useState("");
   const [contact, setContact] = useState("");
@@ -22,8 +22,8 @@ export const EditPurchaserModal: React.FC<EditPurchaserModalProps> = ({
   useEffect(() => {
     if (currentPurchaser) {
       setPurchaserId(currentPurchaser.purchaser_id);
-      setPurchaserName(currentPurchaser.name);
       setCompany(currentPurchaser.company);
+      setOwner(currentPurchaser.owner);
       setAddress(currentPurchaser.address);
       setEmail(currentPurchaser.email);
       setContact(currentPurchaser.contact);
@@ -34,8 +34,8 @@ export const EditPurchaserModal: React.FC<EditPurchaserModalProps> = ({
     if (!currentPurchaser) return;
 
     if (
-      !purchaserName.trim() ||
       !company.trim() ||
+      !owner.trim() ||
       !address.trim() ||
       !email.trim() ||
       !contact.trim()
@@ -60,7 +60,7 @@ export const EditPurchaserModal: React.FC<EditPurchaserModalProps> = ({
       const updatedPurchaser = {
         ...currentPurchaser,
         purchaserId,
-        name: purchaserName,
+        owner,
         company,
         address,
         email,
@@ -116,21 +116,6 @@ export const EditPurchaserModal: React.FC<EditPurchaserModalProps> = ({
       </div>
       <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4 gap-0">
         <div className="mb-4">
-          <label className="text-[14px]" htmlFor="name">
-            Purchaser Name
-          </label>
-          <input
-            placeholder="Enter purchaser name"
-            maxLength={50}
-            className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-            type="text"
-            id="name"
-            value={purchaserName}
-            onChange={(e) => setPurchaserName(e.target.value)}
-            required
-          />
-        </div>
-        <div className="mb-4">
           <label className="text-[14px]" htmlFor="company">
             Company Name
           </label>
@@ -142,6 +127,21 @@ export const EditPurchaserModal: React.FC<EditPurchaserModalProps> = ({
             id="company"
             value={company}
             onChange={(e) => setCompany(e.target.value)}
+            required
+          />
+        </div>
+        <div className="mb-4">
+          <label className="text-[14px]" htmlFor="owner">
+            Company Owner
+          </label>
+          <input
+            placeholder="Enter company owner"
+            maxLength={50}
+            className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+            type="text"
+            id="owner"
+            value={owner}
+            onChange={(e) => setOwner(e.target.value)}
             required
           />
         </div>

@@ -4,7 +4,7 @@ import React, { useState, useRef, ChangeEvent, useEffect } from "react";
 import Image from "next/image";
 import dummy from "../../../public/images/dummy.jpg";
 import { useAuth } from "@/contexts/AuthContext";
-import { FaEdit, FaSave, FaTimes, FaUpload } from "react-icons/fa";
+import { FaUpload } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
 import { useAccUserRedirect } from "@/hooks/useAccUser";
 
@@ -200,42 +200,36 @@ export const ProfileCompound = () => {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-          {/* Header Section */}
-          <div className="flex justify-between items-center bg-gradient-to-r from-[#307DF1] to-[#307DF1]/90 text-white p-6">
-            <h1 className="text-2xl font-bold">Profile Information</h1>
+          <div className="flex justify-between items-center bg-[#131226] text-white p-6">
+            <h1 className="text-xl font-bold">Profile</h1>
             {!isEditMode ? (
               <button
                 onClick={() => setIsEditMode(true)}
-                className="flex items-center gap-2 bg-white hover:bg-gray-100 text-[#307DF1] px-4 py-2 rounded-lg font-medium transition-colors shadow-sm"
+                className="flex items-center gap-2 bg-white hover:bg-gray-100 text-sm text-[#307DF1] px-4 py-1 rounded-lg font-medium transition-colors shadow-sm"
               >
-                <FaEdit className="text-sm" />
                 Edit Profile
               </button>
             ) : (
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   onClick={handleCancel}
                   disabled={isLoading}
-                  className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 shadow-sm"
+                  className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-sm text-gray-700 px-4 py-1 rounded-lg font-medium transition-colors disabled:opacity-50 shadow-sm"
                 >
-                  <FaTimes className="text-sm" />
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={isLoading}
-                  className="flex items-center gap-2 bg-[#307DF1] hover:bg-[#2a6fd8] text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 shadow-sm"
+                  className="flex items-center gap-2 bg-[#307DF1] hover:bg-[#2a6fd8] text-sm text-white px-4 py-1 rounded-lg font-medium transition-colors disabled:opacity-50 shadow-sm"
                 >
-                  <FaSave className="text-sm" />
-                  {isLoading ? "Saving..." : "Save Changes"}
+                  {isLoading ? "Saving..." : "Save"}
                 </button>
               </div>
             )}
           </div>
 
-          {/* Profile Section */}
           <div className="flex flex-col sm:flex-row items-center gap-6 p-6 sm:p-8 bg-[#307DF1]/10">
-            {/* Profile Image */}
             <div className="relative group">
               <div className="w-32 h-32 rounded-full border-4 border-white shadow-md overflow-hidden relative">
                 <Image
@@ -267,8 +261,7 @@ export const ProfileCompound = () => {
               )}
             </div>
 
-            {/* Profile Info */}
-            <div className="text-center sm:text-left space-y-3 w-full">
+            <div className="text-left space-y-3 w-full">
               {isEditMode ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -321,21 +314,22 @@ export const ProfileCompound = () => {
                     </label>
                     <div className="flex items-center gap-3">
                       {previewLogo && (
-                        <div className="w-10 h-10 relative rounded-md overflow-hidden border border-gray-200">
+                        <div className="h-10 relative">
                           <Image
                             src={previewLogo}
                             alt="Company Logo"
-                            fill
-                            className="object-contain bg-white"
+                            height={500}
+                            width={500}
+                            className="h-10 w-auto"
                           />
                         </div>
                       )}
                       <button
                         onClick={triggerLogoInput}
-                        className="flex items-center gap-2 bg-[#307DF1] hover:bg-[#2a6fd8] text-white px-3 py-[13px] rounded-lg text-sm shadow-sm"
+                        className="flex items-center gap-2 bg-[#307DF1] hover:bg-[#2a6fd8] text-white px-3 py-3 rounded-lg text-sm shadow-sm mt-[2px]"
                       >
                         <FaUpload className="text-xs" />
-                        {previewLogo ? "Change Logo" : "Upload Logo"}
+                        {previewLogo ? "Change" : "Upload Logo"}
                       </button>
                       <input
                         type="file"
@@ -350,7 +344,7 @@ export const ProfileCompound = () => {
                 </div>
               ) : (
                 <>
-                  <h1 className="text-3xl font-bold text-gray-800">
+                  <h1 className="text-3xl truncate font-bold text-gray-800">
                     {user?.name} {user?.last_name}
                   </h1>
                   {user?.company && (
@@ -359,12 +353,13 @@ export const ProfileCompound = () => {
                         {user?.company}
                       </p>
                       {user?.logo && (
-                        <div className="w-10 h-10 relative rounded-md overflow-hidden border border-gray-200">
+                        <div className="w-auto h-10 relative">
                           <Image
                             src={user.logo}
                             alt="Company Logo"
-                            fill
-                            className="object-contain bg-white"
+                            height={500}
+                            width={500}
+                            className="h-10 w-auto"
                           />
                         </div>
                       )}
@@ -375,7 +370,6 @@ export const ProfileCompound = () => {
             </div>
           </div>
 
-          {/* Contact Information Section */}
           <div className="p-6">
             <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
               <h2 className="text-xl font-semibold text-gray-800 mb-6 pb-2 border-b border-gray-200">

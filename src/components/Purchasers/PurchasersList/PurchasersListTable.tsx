@@ -114,12 +114,12 @@ export const PurchasersListTable: React.FC<PurchasersTableProps> = ({
       dataIndex: "purchaser_id",
     },
     {
-      title: "Purchaser Name",
-      dataIndex: "name",
-    },
-    {
       title: "Company Name",
       dataIndex: "company",
+    },
+    {
+      title: "Company Owner",
+      dataIndex: "owner",
     },
     {
       title: "Address",

@@ -1,5 +1,6 @@
 // Interface representing a user object
 export interface User {
+    status: string;
     id: number;
     name: string;
     last_name: string;

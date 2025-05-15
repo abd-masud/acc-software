@@ -485,7 +485,7 @@ export const AddEmployeesForm = () => {
               className="mt-2"
               options={statusOptions}
               value={statusOptions.find(
-                (opt) => opt.value === formValues.status
+                (opt) => opt.value == formValues.status
               )}
               onChange={handleSelectChange("status")}
               placeholder="Select Status"
