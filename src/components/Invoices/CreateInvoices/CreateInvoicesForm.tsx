@@ -70,7 +70,11 @@ export const CreateInvoicesForm = () => {
     customer: customer,
   }));
 
-  const productOptions = products.map((product) => ({
+  const uniqueProducts = Array.from(
+    new Map(products.map((p) => [p.product_id, p])).values()
+  );
+
+  const productOptions = uniqueProducts.map((product) => ({
     value: product.id,
     label: `${product.name} (${product.product_id})`,
     product: product,

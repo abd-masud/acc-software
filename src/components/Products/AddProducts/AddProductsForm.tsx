@@ -40,10 +40,10 @@ interface FormValues {
   type: string;
   name: string;
   description: string;
-  buying_price: number | string;
-  price: number | string;
+  buying_price: string;
+  price: string;
   unit: string;
-  stock: number | string;
+  stock: string;
   category: string;
   size: string;
   color: string;
@@ -64,7 +64,6 @@ export const AddProductsForm = () => {
     null
   );
   const [isInHouseProduct, setIsInHouseProduct] = useState(false);
-
   const [formValues, setFormValues] = useState<FormValues>({
     type: "",
     name: "",
@@ -199,10 +198,20 @@ export const AddProductsForm = () => {
   };
 
   const handleSelectChange = (field: keyof FormValues) => (selected: any) => {
-    setFormValues((prev) => ({
-      ...prev,
-      [field]: selected?.value || "",
-    }));
+    const value = selected?.value || "";
+
+    if (field === "type") {
+      setFormValues((prev) => ({
+        ...prev,
+        type: value,
+        stock: value === "Single (Only Single product)" ? "1" : "",
+      }));
+    } else {
+      setFormValues((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
   };
 
   const handleChange = (
@@ -222,15 +231,51 @@ export const AddProductsForm = () => {
     });
   };
 
+  const generateSKU = () => {
+    const now = new Date();
+    const pad = (num: number) => num.toString().padStart(2, "0");
+    const year = now.getFullYear();
+    const month = pad(now.getMonth() + 1);
+    const day = pad(now.getDate());
+    const hour = pad(now.getHours());
+    const minute = pad(now.getMinutes());
+    const second = pad(now.getSeconds());
+    const random = Math.floor(100 + Math.random() * 900);
+    const sanitized = user?.company
+      .replace(/\s+/g, "")
+      .toUpperCase()
+      .slice(0, 2);
+    return `P${sanitized}${year}${month}${day}${hour}${minute}${second}${random}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
-    const payload = {
-      ...formValues,
+    const { size, color, material, stock, type, ...restFormValues } =
+      formValues;
+
+    const stockQty = Number(stock) || 1;
+    const attribute = [
+      { name: "size", value: size },
+      { name: "color", value: color },
+      { name: "material", value: material },
+    ].filter((attr) => attr.value);
+
+    const skuList = Array.from({ length: stockQty }, () => generateSKU());
+
+    const payloads = skuList.map((sku) => ({
+      ...restFormValues,
+      stock: 1,
+      type,
       user_id: user?.id,
-      product_id: product_id,
-    };
+      product_id,
+      purchaser: isInHouseProduct
+        ? "In-house product"
+        : selectedPurchaser || null,
+      attribute,
+      sku,
+    }));
 
     try {
       const res = await fetch("/api/products", {
@@ -238,14 +283,14 @@ export const AddProductsForm = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ products: payloads }),
       });
 
       const data = await res.json();
-
       if (!res.ok) {
-        throw new Error(data.message || "Failed to add product");
+        throw new Error(data.message || "Failed to add product(s)");
       }
+
       setShowSuccessModal(true);
     } catch (error: any) {
       setUserMessage(error.message || "An unexpected error occurred");
@@ -293,7 +338,8 @@ export const AddProductsForm = () => {
       minHeight: "48px",
       fontSize: "14px",
       boxShadow: "none",
-      backgroundColor: "#F2F4F7",
+      backgroundColor: isInHouseProduct ? "#D1D5DB" : "#F2F4F7",
+      color: isInHouseProduct ? "#6b7280" : "#111827",
     }),
     option: (base, state) => ({
       ...base,
@@ -527,7 +573,7 @@ export const AddProductsForm = () => {
 
         <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 sm:gap-4">
           <div className="mb-4">
-            <label className="text-[14px]" htmlFor="price">
+            <label className="text-[14px]" htmlFor="buying_price">
               Buying Price ({currencyCode})
             </label>
             <input
@@ -536,7 +582,7 @@ export const AddProductsForm = () => {
               type="number"
               inputMode="numeric"
               pattern="[0-9]*"
-              id="price"
+              id="buying_price"
               min="0"
               step="0.01"
               value={formValues.buying_price}
@@ -712,7 +758,11 @@ export const AddProductsForm = () => {
             </label>
             <input
               placeholder="Enter Stock Quantity"
-              className="border text-[14px] py-[13px] px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1"
+              className={`border text-[14px] py-[13px] px-[10px] w-full ${
+                formValues.type === "Bulk (Auto SKU for each product)"
+                  ? "bg-[#F2F4F7]"
+                  : "bg-gray-300"
+              } hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1`}
               type="number"
               inputMode="numeric"
               pattern="[0-9]*"
@@ -720,6 +770,7 @@ export const AddProductsForm = () => {
               min="0"
               value={formValues.stock}
               onChange={handleChange}
+              disabled={formValues.type !== "Bulk (Auto SKU for each product)"}
               onKeyDown={(e) => {
                 if (
                   !/[0-9.]/.test(e.key) &&

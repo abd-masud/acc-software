@@ -8,6 +8,7 @@ import { MdOutlineDeleteSweep, MdOutlinePictureAsPdf } from "react-icons/md";
 import { useAuth } from "@/contexts/AuthContext";
 import { FaInfo } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
+import { BsFilePost } from "react-icons/bs";
 
 export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
   invoices,
@@ -272,6 +273,14 @@ export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
               href={`/invoices/${record.id}`}
             >
               <MdOutlinePictureAsPdf />
+            </Link>
+          </Tooltip>
+          <Tooltip title="Pos">
+            <Link
+              className="text-white hover:text-white text-[14px] bg-orange-500 hover:bg-orange-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+              href={`/pos/${record.id}`}
+            >
+              <BsFilePost />
             </Link>
           </Tooltip>
           <Tooltip title="Delete">

@@ -29,13 +29,19 @@ export const CurrencySettingsTable = () => {
           })
         );
 
-        const dbRes = await fetch(`/api/currencies?user_id=${user.id}`, {});
-        const dbJson = await dbRes.json();
-        const activeCurrency = dbJson?.data?.[0]?.currency;
+        let activeCurrency = null;
+
+        const dbRes = await fetch(`/api/currencies?user_id=${user.id}`);
+        if (dbRes.status === 404) {
+          activeCurrency = "USD";
+        } else {
+          const dbJson = await dbRes.json();
+          activeCurrency = dbJson?.data?.[0]?.currency;
+        }
 
         const updated = currencyList.map((item) => ({
           ...item,
-          isDefault: item.code == activeCurrency,
+          isDefault: item.code === activeCurrency,
         }));
 
         setData(updated);
