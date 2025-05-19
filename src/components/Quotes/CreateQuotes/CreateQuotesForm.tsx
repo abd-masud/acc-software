@@ -70,11 +70,21 @@ export const CreateQuotesForm = () => {
     customer: customer,
   }));
 
-  const productOptions = products.map((product) => ({
+  const uniqueProducts = Array.from(
+    new Map(products.map((p) => [p.product_id, p])).values()
+  );
+
+  const productOptions = uniqueProducts.map((product) => ({
     value: product.id,
-    label: `${product.name} (${product.product_id})`,
+    label: `${product.name} (${product.product_id}): ${
+      products.filter((p) => p.product_id === product.product_id).length
+    }`,
     product: product,
   }));
+
+  const getAvailableCount = (productId: string) => {
+    return products.filter((p) => p.product_id === productId).length;
+  };
 
   // Fetch customers
   useEffect(() => {
@@ -166,10 +176,10 @@ export const CreateQuotesForm = () => {
     const total = subtotal + total_tax - Number(discountAmount);
 
     return {
-      subtotal,
-      tax: total_tax || 0,
-      total,
-      discount: discountAmount || 0,
+      subtotal: Number(subtotal.toFixed(2)),
+      tax: Number((total_tax || 0).toFixed(2)),
+      total: Number(total.toFixed(2)),
+      discount: Number((Number(discountAmount) || 0).toFixed(2)),
     };
   };
 
@@ -196,15 +206,23 @@ export const CreateQuotesForm = () => {
     setQuoteItems(
       quoteItems.map((item) => {
         if (item.id == id) {
+          let newValue = value;
+
+          if (field === "quantity" && item.product_id) {
+            const availableCount = getAvailableCount(item.product_id);
+            const quantity = Number(value);
+            newValue = quantity > availableCount ? availableCount : value;
+          }
+
           const updatedItem = {
             ...item,
-            [field]: field == "product" ? value : value,
+            [field]: field == "product" ? value : newValue,
           };
 
           if (field == "quantity" || field == "unit_price") {
             const quantity = Number(updatedItem.quantity);
             const unit_price = Number(updatedItem.unit_price);
-            updatedItem.amount = String(quantity * unit_price); // Convert to string
+            updatedItem.amount = String(quantity * unit_price);
           }
 
           return updatedItem;
@@ -406,12 +424,14 @@ export const CreateQuotesForm = () => {
         {/* Customer Details */}
         <div className="mb-6 p-4 border rounded-lg">
           <div className="flex items-center justify-between">
-            <h3 className="text-[15px] font-semibold mb-3">Customer Details</h3>
+            <h3 className="text-[15px] font-semibold mb-3">
+              Customer <span className="sm:inline hidden">Details</span>
+            </h3>
             <Link
-              className="text-[12px] py-1 px-3 rounded bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors duration-300"
+              className="text-[12px] text-blue-600"
               href={"/customers/add-customers"}
             >
-              Add Customers
+              Add Customer
             </Link>
           </div>
           <div className="mb-4">
@@ -551,6 +571,15 @@ export const CreateQuotesForm = () => {
                         onChange={(selectedOption) => {
                           if (selectedOption) {
                             const product = selectedOption.product;
+                            const availableCount = getAvailableCount(
+                              product.product_id
+                            );
+                            const currentQuantity = Number(item.quantity);
+                            const newQuantity =
+                              currentQuantity > availableCount
+                                ? availableCount
+                                : currentQuantity || 1;
+
                             setQuoteItems(
                               quoteItems.map((i) =>
                                 i.id == item.id
@@ -560,9 +589,9 @@ export const CreateQuotesForm = () => {
                                       product: product.name,
                                       unit: String(product.unit),
                                       unit_price: String(product.price),
+                                      quantity: String(newQuantity),
                                       amount: String(
-                                        Number(i.quantity) *
-                                          Number(product.price)
+                                        newQuantity * Number(product.price)
                                       ),
                                     }
                                   : i
@@ -579,6 +608,7 @@ export const CreateQuotesForm = () => {
                                       unit: "",
                                       unit_price: "",
                                       amount: "",
+                                      quantity: "",
                                     }
                                   : i
                               )
@@ -586,23 +616,43 @@ export const CreateQuotesForm = () => {
                           }
                         }}
                         placeholder="Select product"
+                        styles={productSelectStyles}
                         isClearable
                         isSearchable
                         menuPosition="fixed"
-                        styles={productSelectStyles}
                         required
                       />
                     </td>
                     <td className="px-4 py-2">
                       <input
                         type="number"
-                        min="1"
+                        inputMode="numeric"
+                        pattern="[0-9]"
+                        min={1}
+                        max={
+                          item.product_id
+                            ? getAvailableCount(item.product_id)
+                            : undefined
+                        }
+                        step="1"
                         placeholder="Enter quantity"
                         className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                         value={item.quantity}
                         onChange={(e) =>
                           handleItemChange(item.id, "quantity", e.target.value)
                         }
+                        onKeyDown={(e) => {
+                          if (
+                            !/[0-9]/.test(e.key) &&
+                            e.key !== "Backspace" &&
+                            e.key !== "Delete" &&
+                            e.key !== "Tab" &&
+                            e.key !== "ArrowLeft" &&
+                            e.key !== "ArrowRight"
+                          ) {
+                            e.preventDefault();
+                          }
+                        }}
                         required
                       />
                     </td>
@@ -677,7 +727,7 @@ export const CreateQuotesForm = () => {
                 {subtotal} {currencyCode}
               </span>
             </div>
-            <div className="flex justify-between mb-2">
+            <div className="flex justify-between items-center mb-2">
               <span className="text-[14px]">Tax:</span>
               <div className="space-x-1 mr-[17px]">
                 <input
@@ -691,7 +741,7 @@ export const CreateQuotesForm = () => {
                 <span className="text-[14px] font-medium">%</span>
               </div>
             </div>
-            <div className="flex justify-between mb-2">
+            <div className="flex justify-between items-center mb-2">
               <span className="text-[14px]">Discount:</span>
               <div className="space-x-1">
                 <input

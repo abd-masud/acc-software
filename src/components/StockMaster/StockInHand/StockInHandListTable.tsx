@@ -3,11 +3,9 @@
 import { Table, TableColumnsType, Button, Input, Modal, Tooltip } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { Products, ProductsTableProps } from "@/types/products";
-// import { FaEdit } from "react-icons/fa";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 import { useAuth } from "@/contexts/AuthContext";
 import { FaXmark } from "react-icons/fa6";
-// import { EditStockInHandModal } from "./EditStockInHandModal";
 
 export const StockInHandListTable: React.FC<ProductsTableProps> = ({
   products,
@@ -15,19 +13,12 @@ export const StockInHandListTable: React.FC<ProductsTableProps> = ({
   loading,
 }) => {
   const { user } = useAuth();
-  // const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  // const [currentProduct, setCurrentProduct] = useState<Products | null>(null);
   const [productToDelete, setProductToDelete] = useState<Products | null>(null);
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [searchText, setSearchText] = useState("");
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [userMessage, setUserMessage] = useState<string | null>(null);
-
-  // const showEditModal = (product: Products) => {
-  //   setCurrentProduct(product);
-  //   setIsEditModalOpen(true);
-  // };
 
   const showDeleteModal = (product: Products) => {
     setProductToDelete(product);
@@ -77,31 +68,6 @@ export const StockInHandListTable: React.FC<ProductsTableProps> = ({
     fetchCurrencies();
   }, [user?.id]);
 
-  // const handleEditSubmit = async (updatedProduct: Products) => {
-  //   try {
-  //     const response = await fetch("/api/products", {
-  //       method: "PUT",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify(updatedProduct),
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error("Failed to update product");
-  //     }
-
-  //     setUserMessage("Product updated");
-  //     setIsEditModalOpen(false);
-  //     fetchProducts();
-  //   } catch (err) {
-  //     console.error(err);
-  //     throw err;
-  //   } finally {
-  //     setTimeout(() => setUserMessage(null), 5000);
-  //   }
-  // };
-
   const handleDelete = async () => {
     if (!productToDelete) return;
 
@@ -136,7 +102,7 @@ export const StockInHandListTable: React.FC<ProductsTableProps> = ({
       render: (_, __, index) => index + 1,
     },
     {
-      title: "SKU ID",
+      title: "SKU",
       dataIndex: "sku",
     },
     {
@@ -177,16 +143,12 @@ export const StockInHandListTable: React.FC<ProductsTableProps> = ({
       },
     },
     {
-      title: "Description",
-      dataIndex: "description",
-    },
-    {
       title: "Buying Price",
       dataIndex: "buying_price",
-      render: (price) => `${price} ${currencyCode}`,
+      render: (buying_price) => `${buying_price} ${currencyCode}`,
     },
     {
-      title: "Selling Price",
+      title: "Price",
       dataIndex: "price",
       render: (price) => `${price} ${currencyCode}`,
     },
@@ -202,14 +164,6 @@ export const StockInHandListTable: React.FC<ProductsTableProps> = ({
       title: "Action",
       render: (_, record) => (
         <div className="flex justify-center items-center gap-2">
-          {/* <Tooltip title="Edit">
-            <button
-              className="text-white text-[14px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
-              onClick={() => showEditModal(record)}
-            >
-              <FaEdit />
-            </button>
-          </Tooltip> */}
           <Tooltip title="Delete">
             <button
               className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
@@ -267,13 +221,6 @@ export const StockInHandListTable: React.FC<ProductsTableProps> = ({
         bordered
         rowKey="id"
       />
-
-      {/* <EditStockInHandModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        currentProduct={currentProduct}
-        onSave={handleEditSubmit}
-      /> */}
 
       <Modal
         title="Confirm Delete Product"

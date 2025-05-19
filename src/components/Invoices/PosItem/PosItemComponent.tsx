@@ -115,17 +115,34 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
                   width: 100%;
                   padding: 2mm;
                 }
+                .logo-container img {
+                  width: auto;
+                  height: auto;
+                  max-width: 100%;
+                  max-height: 50px;
+                  object-fit: contain;
+                }
                 .text-center { text-align: center; }
                 .text-right { text-align: right; }
                 .font-bold { font-weight: bold; }
                 .border-top { border-top: 1px dashed #000; }
                 .border-bottom { border-bottom: 1px dashed #000; }
                 .my-1 { margin-top: 0.25rem; margin-bottom: 0.25rem; }
-                table { width: 100%; border-collapse: collapse; }
-                th { text-align: left; }
+                .items-header, .items-row {
+                  display: flex;
+                  justify-content: space-between;
+                }
+                .items-header span, .items-row span {
+                  flex: 1;
+                }
                 .dashed-line {
                   border-top: 1px dashed #000;
                   margin: 0.5rem 0;
+                }
+                .truncate {
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
                 }
               }
             </style>
@@ -222,16 +239,19 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
               margin-top: 0.25rem;
               margin-bottom: 0.25rem;
             }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-            }
-            th {
-              text-align: left;
+            .items-header,
+            .items-row {
+              display: flex;
+              justify-content: space-between;
             }
             .dashed-line {
               border-top: 1px dashed #000;
               margin: 0.5rem 0;
+            }
+            .truncate {
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
             }
             @media print {
               body {
@@ -245,13 +265,29 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
           `}</style>
 
           <div className="text-center my-1">
-            <Image
-              src={user?.logo || logo}
-              width={200}
-              height={200}
-              alt="Logo"
-              className="grayscale"
-            />
+            <div
+              className="logo-container mx-auto"
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "10px",
+              }}
+            >
+              <Image
+                src={user?.logo || logo}
+                width={200}
+                height={200}
+                alt="Logo"
+                className="grayscale"
+                style={{
+                  width: "auto",
+                  height: "auto",
+                  maxWidth: "200px",
+                  maxHeight: "200px",
+                }}
+              />
+            </div>
 
             <div className="font-bold text-sm">
               {user?.company || "Copa Business"}
@@ -264,7 +300,7 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
 
           <div className="text-center my-1">
             <div className="font-bold text-sm">INVOICE</div>
-            <div className="text-xs">ID: {invoiceData?.invoice_id}</div>
+            <div className="text-xs">Inv ID: {invoiceData?.invoice_id}</div>
             <div className="text-xs">Date: {formatDate(invoiceData.date)}</div>
           </div>
 
@@ -279,28 +315,24 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
 
           <div className="dashed-line"></div>
 
-          <table className="my-1 text-xs">
-            <thead>
-              <tr>
-                <th className="text-left">Item</th>
-                <th className="text-right">Qty</th>
-                <th className="text-right">Price</th>
-                <th className="text-right">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoiceData?.items?.map((item, index) => (
-                <tr key={index}>
-                  <td className="truncate max-w-[20mm]">{item.product}</td>
-                  <td className="text-right truncate">
-                    {item.quantity} {item.unit}
-                  </td>
-                  <td className="text-right">{item.unit_price}</td>
-                  <td className="text-right">{item.amount}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="my-1 text-xs">
+            <div className="items-header font-bold">
+              <span>Item</span>
+              <span>Qty</span>
+              <span>Price</span>
+              <span>Total</span>
+            </div>
+            {invoiceData?.items?.map((item, index) => (
+              <div className="items-row" key={index}>
+                <span className="truncate">{item.product}</span>
+                <span className="truncate">
+                  {item.quantity} {item.unit?.charAt(0)}
+                </span>
+                <span>{item.unit_price}</span>
+                <span>{item.amount}</span>
+              </div>
+            ))}
+          </div>
 
           <div className="dashed-line"></div>
 
@@ -318,7 +350,10 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
                 Tax: {invoiceData.tax} {currencyCode}
               </div>
             )}
-            <div className="font-bold border-top pt-1">
+
+            <div className="dashed-line"></div>
+
+            <div className="font-bold pt-1">
               TOTAL: {invoiceData?.total || "0"} {currencyCode}
             </div>
           </div>
@@ -327,7 +362,11 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
 
           <div className="my-1 text-xs">
             <div className="font-bold">Payment:</div>
-            <div>Method: {invoiceData?.pay_type || "Cash"}</div>
+            <div>
+              Method:{" "}
+              {invoiceData?.pay_type?.charAt(0).toUpperCase() +
+                invoiceData?.pay_type?.slice(1) || "Cash"}
+            </div>
             <div>
               Paid: {invoiceData?.paid_amount || "0"} {currencyCode}
             </div>

@@ -136,7 +136,9 @@ export const MetricsCards = () => {
       return sum + Number(invoice.due_amount);
     }, 0);
 
-    const totalProducts = productsData.length;
+    const totalProducts = new Set(
+      productsData.map((product) => product.product_id)
+    ).size;
     const totalCustomers = customersData.length;
 
     return [

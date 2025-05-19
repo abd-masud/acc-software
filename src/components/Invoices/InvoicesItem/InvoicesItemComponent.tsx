@@ -206,7 +206,7 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
                   />
                 </div>
                 <div>
-                  <p className="font-bold">
+                  <p className="font-bold truncate">
                     {user?.company || "Copa Business"}
                   </p>
                   <p className="text-xs">Company</p>

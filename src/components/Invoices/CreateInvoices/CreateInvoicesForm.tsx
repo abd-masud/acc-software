@@ -76,9 +76,15 @@ export const CreateInvoicesForm = () => {
 
   const productOptions = uniqueProducts.map((product) => ({
     value: product.id,
-    label: `${product.name} (${product.product_id})`,
+    label: `${product.name} (${product.product_id}): ${
+      products.filter((p) => p.product_id === product.product_id).length
+    }`,
     product: product,
   }));
+
+  const getAvailableCount = (productId: string) => {
+    return products.filter((p) => p.product_id === productId).length;
+  };
 
   useEffect(() => {
     if (!user?.id) return;
@@ -168,11 +174,11 @@ export const CreateInvoicesForm = () => {
     const due_amount = total - Number(invoiceOptions.paid_amount);
 
     return {
-      subtotal,
-      tax: total_tax || 0,
-      total,
-      due_amount,
-      discount: discountAmount || 0,
+      subtotal: Number(subtotal.toFixed(2)),
+      tax: Number((total_tax || 0).toFixed(2)),
+      total: Number(total.toFixed(2)),
+      due_amount: Number(due_amount.toFixed(2)),
+      discount: Number((Number(discountAmount) || 0).toFixed(2)),
     };
   };
 
@@ -198,9 +204,17 @@ export const CreateInvoicesForm = () => {
     setInvoiceItems(
       invoiceItems.map((item) => {
         if (item.id == id) {
+          let newValue = value;
+
+          if (field === "quantity" && item.product_id) {
+            const availableCount = getAvailableCount(item.product_id);
+            const quantity = Number(value);
+            newValue = quantity > availableCount ? availableCount : value;
+          }
+
           const updatedItem = {
             ...item,
-            [field]: field == "product" ? value : value,
+            [field]: field == "product" ? value : newValue,
           };
 
           if (field == "quantity" || field == "unit_price") {
@@ -261,6 +275,7 @@ export const CreateInvoicesForm = () => {
         date: invoiceOptions.date,
       },
     ];
+
     const invoiceData = {
       customer: customerDetails,
       items: invoiceItems,
@@ -293,9 +308,31 @@ export const CreateInvoicesForm = () => {
       if (!res.ok) {
         throw new Error(data.message || "Failed to create invoice");
       }
+
+      // const productsToDelete = invoiceItems.map((item) => ({
+      //   product_id: item.product_id,
+      //   quantity: item.quantity,
+      // }));
+
+      // const deleteRes = await fetch("/api/products", {
+      //   method: "DELETE",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify({
+      //     products: productsToDelete,
+      //   }),
+      // });
+
+      // const deleteData = await deleteRes.json();
+
+      // if (!deleteRes.ok) {
+      //   throw new Error(deleteData.message || "Failed to delete products");
+      // }
+
       setShowSuccessModal(true);
     } catch (error: any) {
-      setUserMessage(error || "An unexpected error occurred");
+      setUserMessage(error.message || "An unexpected error occurred");
     } finally {
       setTimeout(() => setUserMessage(null), 5000);
       setLoading(false);
@@ -436,9 +473,11 @@ export const CreateInvoicesForm = () => {
 
         <div className="mb-6 p-4 border rounded-lg">
           <div className="flex items-center justify-between">
-            <h3 className="text-[15px] font-semibold mb-3">Customer Details</h3>
+            <h3 className="text-[15px] font-semibold mb-3">
+              Customer <span className="sm:inline hidden">Details</span>
+            </h3>
             <Link
-              className="text-[12px] py-1 px-3 rounded bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors duration-300"
+              className="text-[12px] text-blue-600"
               href={"/customers/add-customers"}
             >
               Add Customer
@@ -580,6 +619,15 @@ export const CreateInvoicesForm = () => {
                         onChange={(selectedOption) => {
                           if (selectedOption) {
                             const product = selectedOption.product;
+                            const availableCount = getAvailableCount(
+                              product.product_id
+                            );
+                            const currentQuantity = Number(item.quantity);
+                            const newQuantity =
+                              currentQuantity > availableCount
+                                ? availableCount
+                                : currentQuantity || 1;
+
                             setInvoiceItems(
                               invoiceItems.map((i) =>
                                 i.id == item.id
@@ -589,9 +637,9 @@ export const CreateInvoicesForm = () => {
                                       product: product.name,
                                       unit: String(product.unit),
                                       unit_price: String(product.price),
+                                      quantity: String(newQuantity),
                                       amount: String(
-                                        Number(i.quantity) *
-                                          Number(product.price)
+                                        newQuantity * Number(product.price)
                                       ),
                                     }
                                   : i
@@ -608,6 +656,7 @@ export const CreateInvoicesForm = () => {
                                       unit: "",
                                       unit_price: "",
                                       amount: "",
+                                      quantity: "",
                                     }
                                   : i
                               )
@@ -615,10 +664,10 @@ export const CreateInvoicesForm = () => {
                           }
                         }}
                         placeholder="Select product"
+                        styles={productSelectStyles}
                         isClearable
                         isSearchable
                         menuPosition="fixed"
-                        styles={productSelectStyles}
                         required
                       />
                     </td>
@@ -628,7 +677,12 @@ export const CreateInvoicesForm = () => {
                         inputMode="numeric"
                         pattern="[0-9]"
                         min={1}
-                        step="0.01"
+                        max={
+                          item.product_id
+                            ? getAvailableCount(item.product_id)
+                            : undefined
+                        }
+                        step="1"
                         placeholder="Enter quantity"
                         className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                         value={item.quantity}
@@ -637,16 +691,13 @@ export const CreateInvoicesForm = () => {
                         }
                         onKeyDown={(e) => {
                           if (
-                            !/[0-9.]/.test(e.key) &&
+                            !/[0-9]/.test(e.key) &&
                             e.key !== "Backspace" &&
                             e.key !== "Delete" &&
                             e.key !== "Tab" &&
                             e.key !== "ArrowLeft" &&
                             e.key !== "ArrowRight"
                           ) {
-                            e.preventDefault();
-                          }
-                          if (e.key == "." && item.quantity.includes(".")) {
                             e.preventDefault();
                           }
                         }}

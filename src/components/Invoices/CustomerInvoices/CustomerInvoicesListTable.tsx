@@ -291,7 +291,7 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
               <MdOutlinePictureAsPdf />
             </Link>
           </Tooltip>
-          <Tooltip title="Pos">
+          <Tooltip title="POS">
             <Link
               className="text-white hover:text-white text-[14px] bg-orange-500 hover:bg-orange-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
               href={`/pos/${record.id}`}

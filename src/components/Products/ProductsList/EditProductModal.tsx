@@ -1,17 +1,12 @@
 "use client";
 
 import { Modal, message } from "antd";
-import { EditProductModalProps } from "@/types/products";
-import { useCallback, useEffect, useId, useState } from "react";
+import { EditProductModalProps, PurchaserOption } from "@/types/products";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { StylesConfig } from "react-select";
-import dynamic from "next/dynamic";
+import Select, { StylesConfig } from "react-select";
 import { FaXmark } from "react-icons/fa6";
-
-const Select = dynamic(() => import("react-select"), {
-  ssr: false,
-  loading: () => <div className="h-[38px] w-full rounded border" />,
-});
+import { Purchasers } from "@/types/purchasers";
 
 const UNITS = [
   "Pieces",
@@ -43,17 +38,46 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [productId, setProductId] = useState("");
   const [productName, setProductName] = useState("");
+  const [purchasers, setPurchasers] = useState<Purchasers[]>([]);
   const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
+  const [buyingPrice, setBuyingPrice] = useState("");
+  const [sellingPrice, setSellingPrice] = useState("");
   const [category, setCategory] = useState("");
-  const [stock, setStock] = useState("");
   const [unit, setUnit] = useState("");
   const [userMessage, setUserMessage] = useState<string | null>(null);
   const [currencyCode, setCurrencyCode] = useState("USD");
-
+  const [isInHouseProduct, setIsInHouseProduct] = useState(false);
+  const [selectedPurchaser, setSelectedPurchaser] = useState<Purchasers | null>(
+    null
+  );
+  const [attributes, setAttributes] = useState({
+    size: "",
+    color: "",
+    material: "",
+  });
   const [generalOptions, setGeneralOptions] = useState<{
     category: string[];
-  }>({ category: [] });
+    size: string[];
+    color: string[];
+    material: string[];
+  }>({ category: [], size: [], color: [], material: [] });
+
+  const purchaserOptions = useMemo(() => {
+    return purchasers.map((purchaser: Purchasers) => ({
+      value: purchaser.id,
+      label: `${purchaser.company} (${purchaser.purchaser_id})`,
+      purchaser: purchaser,
+    }));
+  }, [purchasers]);
+
+  const transformAttributes = (
+    attributeArray: Array<{ name: string; value: string }> = []
+  ) => {
+    return attributeArray.reduce((acc: { [key: string]: string }, attr) => {
+      acc[attr.name] = attr.value;
+      return acc;
+    }, {});
+  };
 
   const fetchGenerals = useCallback(async () => {
     if (!user?.id) return;
@@ -75,6 +99,9 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
       const optionsData = json.data[0] || {};
       setGeneralOptions({
         category: optionsData.category || [],
+        size: optionsData.size || [],
+        color: optionsData.color || [],
+        material: optionsData.material || [],
       });
     } catch (error) {
       console.error("Error:", error);
@@ -86,6 +113,34 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
   useEffect(() => {
     fetchGenerals();
   }, [fetchGenerals]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const fetchCustomers = async () => {
+      try {
+        const purchasersRes = await fetch(
+          `/api/purchasers?user_id=${user.id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (purchasersRes.ok) {
+          const purchasersData = await purchasersRes.json();
+          setPurchasers(
+            Array.isArray(purchasersData.data) ? purchasersData.data : []
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch customers:", error);
+      }
+    };
+
+    fetchCustomers();
+  }, [user?.id]);
 
   useEffect(() => {
     const fetchCurrencies = async () => {
@@ -119,22 +174,41 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
       setProductId(currentProduct.product_id);
       setProductName(currentProduct.name);
       setDescription(currentProduct.description);
-      setPrice(currentProduct.price || "");
+      setBuyingPrice(currentProduct.buying_price || "");
+      setSellingPrice(currentProduct.price || "");
       setCategory(currentProduct.category);
-      setStock(currentProduct.stock || "");
       setUnit(currentProduct.unit);
+      setIsInHouseProduct(!currentProduct.purchaser.id);
+
+      const transformedAttributes = transformAttributes(
+        currentProduct.attribute
+      );
+      setAttributes({
+        size: transformedAttributes.size || "",
+        color: transformedAttributes.color || "",
+        material: transformedAttributes.material || "",
+      });
+
+      if (currentProduct.purchaser.id && purchasers.length > 0) {
+        const productPurchaser = purchasers.find(
+          (p) => p.id === currentProduct.purchaser.id
+        );
+        setSelectedPurchaser(productPurchaser || null);
+      }
     }
-  }, [currentProduct]);
+  }, [currentProduct, purchasers]);
 
   const handleSubmit = async () => {
     if (!currentProduct) return;
 
+    setUserMessage(null);
+
     if (
       !productName.trim() ||
-      !price.trim() ||
+      !buyingPrice.trim() ||
+      !sellingPrice.trim() ||
       !category.trim() ||
-      !unit.trim() ||
-      !stock.trim()
+      !unit.trim()
     ) {
       setUserMessage("Fill in all fields");
       setTimeout(() => setUserMessage(null), 5000);
@@ -142,20 +216,35 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
     }
 
     try {
-      const updatedProduct = {
-        ...currentProduct,
+      setLoading(true);
+
+      const attribute = [
+        { name: "size", value: attributes.size.trim() },
+        { name: "color", value: attributes.color.trim() },
+        { name: "material", value: attributes.material.trim() },
+      ].filter((attr) => attr.value);
+
+      const updatedProduct: any = {
+        product_id: productId,
         name: productName,
-        description,
-        price: String(price),
-        category,
-        stock: String(stock),
-        unit,
+        purchaser: isInHouseProduct ? "In-house product" : selectedPurchaser,
+        description: description,
+        buying_price: buyingPrice,
+        price: sellingPrice,
+        category: category,
+        unit: unit,
+        attribute,
       };
 
       await onSave(updatedProduct);
+      message.success("Product updated successfully");
+      onClose();
     } catch (err) {
       console.error(err);
+      setUserMessage("Failed to update product. Please try again.");
       message.error("Failed to update product");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -170,6 +259,34 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
       fontSize: "14px",
       boxShadow: "none",
       backgroundColor: "#F2F4F7",
+    }),
+    option: (base, state) => ({
+      ...base,
+      fontSize: "14px",
+      backgroundColor: state.isSelected ? "#F2F4F7" : "white",
+      color: "black",
+      "&:hover": {
+        backgroundColor: "#F2F4F7",
+      },
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,
+    }),
+  };
+
+  const purchaserSelectStyles: StylesConfig<PurchaserOption, boolean> = {
+    control: (base) => ({
+      ...base,
+      borderColor: "#E5E7EB",
+      "&:hover": {
+        borderColor: "#E5E7EB",
+      },
+      minHeight: "48px",
+      fontSize: "14px",
+      boxShadow: "none",
+      backgroundColor: isInHouseProduct ? "#D1D5DB" : "#F2F4F7",
+      color: isInHouseProduct ? "#6b7280" : "#111827",
     }),
     option: (base, state) => ({
       ...base,
@@ -256,6 +373,115 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
         </div>
       </div>
 
+      <div className="mb-6 p-4 border rounded-lg">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-[15px] font-semibold">
+            Purchaser <span className="sm:inline hidden">Details</span>
+          </h3>
+        </div>
+        <div className="flex items-center gap-3 mb-3">
+          <input
+            type="checkbox"
+            id="self"
+            checked={isInHouseProduct}
+            onChange={(e) => {
+              setIsInHouseProduct(e.target.checked);
+              if (e.target.checked) {
+                setSelectedPurchaser(null);
+              }
+            }}
+          />
+          <label className="text-sm" htmlFor="self">
+            In-House Product
+          </label>
+        </div>
+        <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4 gap-0">
+          <div className="mb-4">
+            <label className="text-[14px]" htmlFor="company">
+              Company Name
+            </label>
+            <Select<{
+              value: number;
+              label: string;
+              purchaser: Purchasers;
+            }>
+              id="company"
+              className="text-[14px] mt-2"
+              options={purchaserOptions}
+              value={purchaserOptions.find(
+                (option) => option.value == selectedPurchaser?.id
+              )}
+              onChange={(selectedOption) => {
+                if (selectedOption) {
+                  setSelectedPurchaser(selectedOption.purchaser);
+                } else {
+                  setSelectedPurchaser(null);
+                }
+              }}
+              placeholder="Select purchaser"
+              isClearable
+              isSearchable
+              isDisabled={isInHouseProduct}
+              styles={purchaserSelectStyles}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="text-[14px]" htmlFor="owner">
+              Company Owner
+            </label>
+            <input
+              placeholder="Enter company owner"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              type="text"
+              id="owner"
+              value={selectedPurchaser?.owner || ""}
+              readOnly
+            />
+          </div>
+        </div>
+        <div className="mb-4">
+          <label className="text-[14px]" htmlFor="address">
+            Address
+          </label>
+          <input
+            placeholder="Enter address"
+            className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+            type="text"
+            id="address"
+            value={selectedPurchaser?.address || ""}
+            readOnly
+          />
+        </div>
+        <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4 gap-0">
+          <div className="mb-4">
+            <label className="text-[14px]" htmlFor="email">
+              Email Address
+            </label>
+            <input
+              placeholder="Enter email address"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              type="email"
+              id="email"
+              value={selectedPurchaser?.email || ""}
+              readOnly
+            />
+          </div>
+          <div className="mb-4">
+            <label className="text-[14px]" htmlFor="contact">
+              Contact Number
+            </label>
+            <input
+              placeholder="Enter contact number"
+              className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+              type="text"
+              id="contact"
+              value={selectedPurchaser?.contact || ""}
+              readOnly
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="mb-4">
         <label className="text-[14px]" htmlFor="description">
           Description
@@ -272,18 +498,18 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
 
       <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4">
         <div className="mb-4">
-          <label className="text-[14px]" htmlFor="price">
-            Price ({currencyCode})
+          <label className="text-[14px]" htmlFor="buying_price">
+            Buying Price ({currencyCode})
           </label>
           <input
-            id="price"
+            id="buying_price"
             type="number"
             inputMode="numeric"
             pattern="[0-9]"
-            placeholder="Enter price"
+            placeholder="Enter buying price"
             className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
+            value={buyingPrice}
+            onChange={(e) => setBuyingPrice(e.target.value)}
             onKeyDown={(e) => {
               if (
                 !/[0-9.]/.test(e.key) &&
@@ -295,7 +521,37 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
               ) {
                 e.preventDefault();
               }
-              if (e.key == "." && price.includes(".")) {
+              if (e.key == "." && buyingPrice.includes(".")) {
+                e.preventDefault();
+              }
+            }}
+          />
+        </div>
+        <div className="mb-4">
+          <label className="text-[14px]" htmlFor="price">
+            Selling Price ({currencyCode})
+          </label>
+          <input
+            id="price"
+            type="number"
+            inputMode="numeric"
+            pattern="[0-9]"
+            placeholder="Enter selling price"
+            className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+            value={sellingPrice}
+            onChange={(e) => setSellingPrice(e.target.value)}
+            onKeyDown={(e) => {
+              if (
+                !/[0-9.]/.test(e.key) &&
+                e.key !== "Backspace" &&
+                e.key !== "Delete" &&
+                e.key !== "Tab" &&
+                e.key !== "ArrowLeft" &&
+                e.key !== "ArrowRight"
+              ) {
+                e.preventDefault();
+              }
+              if (e.key == "." && sellingPrice.includes(".")) {
                 e.preventDefault();
               }
             }}
@@ -320,9 +576,6 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
             required
           />
         </div>
-      </div>
-
-      <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4">
         <div className="mb-4">
           <label className="text-[14px]" htmlFor="unit">
             Unit
@@ -340,34 +593,70 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
             required
           />
         </div>
-        <div className="mb-4">
-          <label className="text-[14px]" htmlFor="stock">
-            Stock
-          </label>
-          <input
-            id="stock"
-            type="number"
-            inputMode="numeric"
-            pattern="[0-9]"
-            placeholder="Enter stock quantity"
-            className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
-            onKeyDown={(e) => {
-              if (
-                !/[0-9.]/.test(e.key) &&
-                e.key !== "Backspace" &&
-                e.key !== "Delete" &&
-                e.key !== "Tab" &&
-                e.key !== "ArrowLeft" &&
-                e.key !== "ArrowRight"
-              ) {
-                e.preventDefault();
-              }
-              if (e.key == "." && price.includes(".")) {
-                e.preventDefault();
-              }
-            }}
+      </div>
+      <div className="mb-4">
+        <label className="text-[14px]" htmlFor="category">
+          Attributes
+        </label>
+        <div className="grid sm:grid-cols-3 gap-2">
+          <Select
+            instanceId={`${instanceId}-size`}
+            inputId="size"
+            className="mt-2"
+            options={toSelectOptions(generalOptions.size)}
+            value={toSelectOptions(generalOptions.size).find(
+              (opt) => opt.value === attributes.size
+            )}
+            onChange={(selectedOption) =>
+              setAttributes((prev) => ({
+                ...prev,
+                size: selectedOption?.value || "",
+              }))
+            }
+            styles={generalSelectStyles}
+            placeholder="Size"
+            isClearable
+            required
+          />
+
+          <Select
+            instanceId={`${instanceId}-color`}
+            inputId="color"
+            className="mt-2"
+            options={toSelectOptions(generalOptions.color)}
+            value={toSelectOptions(generalOptions.color).find(
+              (opt) => opt.value === attributes.color
+            )}
+            onChange={(selectedOption) =>
+              setAttributes((prev) => ({
+                ...prev,
+                color: selectedOption?.value || "",
+              }))
+            }
+            styles={generalSelectStyles}
+            placeholder="Color"
+            isClearable
+            required
+          />
+
+          <Select
+            instanceId={`${instanceId}-material`}
+            inputId="material"
+            className="mt-2"
+            options={toSelectOptions(generalOptions.material)}
+            value={toSelectOptions(generalOptions.material).find(
+              (opt) => opt.value === attributes.material
+            )}
+            onChange={(selectedOption) =>
+              setAttributes((prev) => ({
+                ...prev,
+                material: selectedOption?.value || "",
+              }))
+            }
+            styles={generalSelectStyles}
+            placeholder="Material"
+            isClearable
+            required
           />
         </div>
       </div>

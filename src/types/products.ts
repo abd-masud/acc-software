@@ -1,5 +1,10 @@
 import { Purchasers } from "./purchasers";
 
+type ProductAttribute = {
+    name: string;
+    value: string;
+};
+
 export type Products = {
     key: string;
     id: number;
@@ -8,7 +13,7 @@ export type Products = {
     sku_id: string;
     name: string;
     purchaser: Purchasers;
-    attribute: string;
+    attribute: ProductAttribute[];
     description: string;
     buying_price: string;
     price: string;

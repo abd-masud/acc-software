@@ -130,46 +130,127 @@ export async function GET(request: NextRequest) {
 
 // PUT - Update a product
 export async function PUT(request: NextRequest) {
+    const db = await connectionToDatabase();
+    let connection = null;
+
     try {
-        const { id, name, description, price, category, stock, unit } = await request.json();
+        const rawBody = await request.text();
+        let products = JSON.parse(rawBody);
 
-        if (!id) {
-            return NextResponse.json({ success: false, message: 'Product ID is required' }, { status: 400 });
+        if (!Array.isArray(products)) {
+            products = [products];
         }
 
-        const db = await connectionToDatabase();
+        if (products.length === 0) {
+            return NextResponse.json(
+                { success: false, message: 'No products provided' },
+                { status: 400 }
+            );
+        }
 
-        const [existing] = await db.query<RowDataPacket[]>(
-            `SELECT * FROM products WHERE id = ?`,
-            [id]
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        for (const product of products) {
+            const {
+                product_id,
+                name,
+                purchaser,
+                description,
+                buying_price,
+                price,
+                category,
+                unit,
+                attribute,
+            } = product;
+
+            const requiredFields = { name, price, category, unit, product_id };
+            const missingFields = Object.entries(requiredFields)
+                .filter(([value]) => !value)
+                .map(([key]) => key);
+
+            if (missingFields.length > 0) {
+                await connection.rollback();
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: `Missing required fields for product_id: ${product_id}`,
+                        missingFields,
+                    },
+                    { status: 400 }
+                );
+            }
+
+            const [existing] = await connection.query<RowDataPacket[]>(
+                `SELECT product_id FROM products WHERE product_id = ? FOR UPDATE`,
+                [product_id]
+            );
+
+            if (existing.length === 0) {
+                await connection.rollback();
+                return NextResponse.json(
+                    { success: false, message: `Product not found: ${product_id}` },
+                    { status: 404 }
+                );
+            }
+
+            const purchaserData = purchaser ? JSON.stringify(purchaser) : null;
+            const attributeData = Array.isArray(attribute) ? JSON.stringify(attribute) : null;
+
+            const [result] = await connection.query<ResultSetHeader>(
+                `UPDATE products SET
+            name = ?,
+            purchaser = ?,
+            description = ?,
+            buying_price = ?,
+            price = ?,
+            category = ?,
+            unit = ?,
+            attribute = ?
+           WHERE product_id = ?`,
+                [
+                    name.trim(),
+                    purchaserData,
+                    description?.trim() || null,
+                    Number(buying_price) || null,
+                    Number(price),
+                    category.trim(),
+                    unit.trim(),
+                    attributeData,
+                    product_id,
+                ]
+            );
+
+            if (result.affectedRows < 1) {
+                await connection.rollback();
+                return NextResponse.json(
+                    { success: false, message: `Failed to update product: ${product_id}` },
+                    { status: 400 }
+                );
+            }
+        }
+
+        await connection.commit();
+
+        return NextResponse.json(
+            { success: true, message: 'Product(s) updated successfully' },
+            { status: 200 }
         );
-
-        if (existing.length == 0) {
-            return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
-        }
-
-        const [result] = await db.query<ResultSetHeader>(
-            `UPDATE products
-             SET name = ?, description = ?, price = ?, category = ?, stock = ?, unit = ?
-             WHERE id = ?`,
-            [name, description, price, category, stock, unit, id]
-        );
-
-        if (result.affectedRows == 1) {
-            return NextResponse.json({ success: true, message: 'Product updated successfully' }, { status: 200 });
-        } else {
-            throw new Error('Failed to update product');
-        }
-
     } catch (error) {
-        return NextResponse.json({
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to update product'
-        }, { status: 500 });
+        if (connection) await connection.rollback();
+
+        console.error('Product update error:', error);
+
+        return NextResponse.json(
+            { success: false, message: 'Failed to update product(s)' },
+            { status: 500 }
+        );
+    } finally {
+        if (connection) connection.release();
     }
 }
 
-// DELETE - Remove a product
+// DELETE - Remove products completely
 export async function DELETE(request: NextRequest) {
     try {
         const { id, product_id } = await request.json();

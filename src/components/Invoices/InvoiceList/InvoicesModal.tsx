@@ -33,7 +33,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
       setPayNow("");
       const calculatedDue =
         Number(currentInvoice.total) - Number(currentInvoice.paid_amount);
-      setDue(calculatedDue);
+      setDue(Number(calculatedDue.toFixed(2)));
     }
   }, [currentInvoice]);
 
@@ -109,7 +109,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
       const updatedInvoice = {
         ...currentInvoice,
         paid_amount: String(updatedPaidAmount),
-        due_amount: String(updatedDueAmount),
+        due_amount: String(updatedDueAmount.toFixed(2)),
         sub_invoice: updatedSubInvoice,
       };
 
@@ -227,7 +227,7 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
             className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
             min={0}
             id="due"
-            value={due}
+            value={due.toFixed(2)}
             readOnly
           />
         </div>
@@ -260,13 +260,16 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
             }}
             onKeyDown={(e) => {
               if (
-                !/[0-9]/.test(e.key) &&
+                !/[0-9.]/.test(e.key) &&
                 e.key !== "Backspace" &&
                 e.key !== "Delete" &&
                 e.key !== "Tab" &&
                 e.key !== "ArrowLeft" &&
                 e.key !== "ArrowRight"
               ) {
+                e.preventDefault();
+              }
+              if (e.key == "." && payNow.includes(".")) {
                 e.preventDefault();
               }
             }}
