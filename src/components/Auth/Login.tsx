@@ -88,7 +88,7 @@ export const LoginComponent = () => {
   };
 
   return (
-    <main className="bg-auth_bg bg-cover bg-center bg-fixed h-screen flex justify-center items-center relative">
+    <main className="bg-auth_bg bg-cover bg-center bg-fixed min-h-screen flex justify-center items-center relative">
       {error && (
         <div className="flex items-center px-4 py-2 mb-4 rounded-lg bg-gray-800 text-red-400 border-2 border-red-400 absolute top-5 right-5">
           <div className="text-sm font-medium">{error}</div>
@@ -190,14 +190,17 @@ export const LoginComponent = () => {
             {!signLoading ? "Sign in" : "Signing in..."}
           </button>
           <p className="text-[14px] text-[#9B9B9B] mt-4 tracking-wide">
-            Don&apos;t have account?{" "}
-            <Link className="text-[#307EF3]" href={"/auth/sign-up"}>
-              Create account
+            <Link
+              className="text-[#307EF3] font-semibold"
+              href={"/auth/employee-login"}
+            >
+              Continue as Employee
             </Link>
           </p>
           <p className="text-[14px] text-[#9B9B9B] tracking-wide">
-            <Link className="text-[#307EF3]" href={"/auth/employee-login"}>
-              Continue as Employee
+            Don&apos;t have account?{" "}
+            <Link className="text-[#307EF3]" href={"/auth/sign-up"}>
+              Create account
             </Link>
           </p>
         </form>

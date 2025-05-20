@@ -15,6 +15,9 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      fontFamily: {
+        sans: ['var(--font-lato)', 'sans-serif'],
+      },
     },
   },
   plugins: [require('tailwind-scrollbar-hide')],

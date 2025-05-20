@@ -1,4 +1,4 @@
-export const StockSettingsForm = () => {
+export const SubscriptionPlanCard = () => {
   return (
     <main className="min-h-[calc(100vh-190px)] flex flex-col items-center justify-center p-4">
       <div className="max-w-4xl w-full text-center space-y-8">

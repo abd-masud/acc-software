@@ -7,6 +7,7 @@ import { EditPurchaserModal } from "./EditPurchaserModal";
 import { FaEdit } from "react-icons/fa";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 import { FaXmark } from "react-icons/fa6";
+import styled from "styled-components";
 
 export const PurchasersListTable: React.FC<PurchasersTableProps> = ({
   purchasers,
@@ -24,6 +25,16 @@ export const PurchasersListTable: React.FC<PurchasersTableProps> = ({
   const [searchText, setSearchText] = useState("");
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [userMessage, setUserMessage] = useState<string | null>(null);
+  const StyledTable = styled(Table)`
+    .ant-table-thead > tr:nth-child(1) > th {
+      background-color: #478cf3;
+      color: white;
+    }
+    .ant-table-thead > tr:nth-child(2) > th {
+      background-color: #6aa2f5;
+      color: white;
+    }
+  `;
 
   const showEditModal = (purchaser: Purchasers) => {
     setCurrentPurchaser(purchaser);
@@ -181,7 +192,7 @@ export const PurchasersListTable: React.FC<PurchasersTableProps> = ({
       )}
       <div className="flex sm:justify-between justify-end items-center mb-5">
         <div className="sm:flex items-center hidden">
-          <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
+          <div className="h-2 w-2 bg-[#307EF3] rounded-full mr-2"></div>
           <h2 className="text-[13px] font-[500]">Purchasers Info</h2>
         </div>
         <div className="flex items-center justify-end gap-2">
@@ -194,7 +205,7 @@ export const PurchasersListTable: React.FC<PurchasersTableProps> = ({
           />
         </div>
       </div>
-      <Table
+      <StyledTable<any>
         scroll={{ x: "max-content" }}
         columns={columns}
         dataSource={filteredPurchasers}

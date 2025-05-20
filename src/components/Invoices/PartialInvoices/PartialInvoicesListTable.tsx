@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import dayjs from "dayjs";
 import Link from "next/link";
 import { MdOutlinePictureAsPdf } from "react-icons/md";
+import styled from "styled-components";
 
 export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
   invoices,
@@ -15,6 +16,16 @@ export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
   const { user } = useAuth();
   const [currencyCode, setCurrencyCode] = useState<string>("USD");
   const [flattenedData, setFlattenedData] = useState<FlattenedInvoice[]>([]);
+  const StyledTable = styled(Table)`
+    .ant-table-thead > tr:nth-child(1) > th {
+      background-color: #478cf3;
+      color: white;
+    }
+    .ant-table-thead > tr:nth-child(2) > th {
+      background-color: #6aa2f5;
+      color: white;
+    }
+  `;
 
   useEffect(() => {
     const flatData: FlattenedInvoice[] = invoices.flatMap((invoice) => {
@@ -157,7 +168,7 @@ export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
       <div className="flex sm:justify-between justify-end items-center mb-5">
         <div className="sm:flex items-center hidden">
-          <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
+          <div className="h-2 w-2 bg-[#307EF3] rounded-full mr-2"></div>
           <h2 className="text-[13px] font-[500]">Partial Invoices Info</h2>
         </div>
         <Link
@@ -167,13 +178,15 @@ export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
           Report
         </Link>
       </div>
-      <Table
+      <StyledTable<any>
         scroll={{ x: "max-content" }}
         columns={columns}
         dataSource={flattenedData}
         loading={loading}
         bordered
-        rowKey={(record) => `${record.id}-${record.sub_item?.id || "main"}`}
+        rowKey={(record: { id: any; sub_item: { id: any } }) =>
+          `${record.id}-${record.sub_item?.id || "main"}`
+        }
       />
     </main>
   );

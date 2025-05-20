@@ -11,6 +11,7 @@ import {
   Permissions,
 } from "@/types/permission";
 import Link from "next/link";
+import styled from "styled-components";
 
 const SIDEBAR_MODULES = [
   "customers",
@@ -35,6 +36,16 @@ export const RolesAndPermissionsForm = () => {
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>("all");
   const [employeesData, setEmployeesData] = useState<Employees[]>([]);
   const [userMessage, setUserMessage] = useState<string | null>(null);
+  const StyledTable = styled(Table)`
+    .ant-table-thead > tr:nth-child(1) > th {
+      background-color: #478cf3;
+      color: white;
+    }
+    .ant-table-thead > tr:nth-child(2) > th {
+      background-color: #6aa2f5;
+      color: white;
+    }
+  `;
 
   useEffect(() => {
     const fetchRolesAndModules = async () => {
@@ -362,7 +373,7 @@ export const RolesAndPermissionsForm = () => {
 
       {selectedRoleFilter !== "all" && (
         <div className="mb-4 p-4 bg-white rounded-lg shadow-md">
-          <Table
+          <StyledTable<any>
             scroll={{ x: "max-content" }}
             columns={employeeColumns}
             dataSource={getEmployeesByRole(selectedRoleFilter)}

@@ -7,6 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { FaUpload } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
 import { useAccUserRedirect } from "@/hooks/useAccUser";
+import Cropper, { ReactCropperElement } from "react-cropper";
+import "cropperjs/dist/cropper.css";
 
 export const ProfileCompound = () => {
   const { user } = useAuth();
@@ -25,8 +27,13 @@ export const ProfileCompound = () => {
   const [selectedLogo, setSelectedLogo] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showImageCropper, setShowImageCropper] = useState(false);
+  const [showLogoCropper, setShowLogoCropper] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const cropperRef = useRef<ReactCropperElement>(null);
+  const logoCropperRef = useRef<ReactCropperElement>(null);
   useAccUserRedirect();
 
   useEffect(() => {
@@ -46,11 +53,10 @@ export const ProfileCompound = () => {
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setSelectedImage(file);
-
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string);
+      reader.onload = () => {
+        setImageToCrop(reader.result as string);
+        setShowImageCropper(true);
       };
       reader.readAsDataURL(file);
     }
@@ -59,13 +65,46 @@ export const ProfileCompound = () => {
   const handleLogoChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setSelectedLogo(file);
-
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewLogo(reader.result as string);
+      reader.onload = () => {
+        setImageToCrop(reader.result as string);
+        setShowLogoCropper(true);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCrop = (isLogo = false) => {
+    const cropper = isLogo
+      ? logoCropperRef.current?.cropper
+      : cropperRef.current?.cropper;
+
+    if (cropper) {
+      const croppedCanvas = cropper.getCroppedCanvas();
+      croppedCanvas.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], "cropped-image.jpg", {
+            type: "image/jpeg",
+          });
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (isLogo) {
+              setPreviewLogo(reader.result as string);
+              setSelectedLogo(file);
+            } else {
+              setPreviewImage(reader.result as string);
+              setSelectedImage(file);
+            }
+          };
+          reader.readAsDataURL(blob);
+        }
+      }, "image/jpeg");
+    }
+
+    if (isLogo) {
+      setShowLogoCropper(false);
+    } else {
+      setShowImageCropper(false);
     }
   };
 
@@ -185,7 +224,7 @@ export const ProfileCompound = () => {
   };
 
   return (
-    <main className="min-h-[calc(100vh-70px)] bg-gradient-to-br from-gray-50 to-gray-100">
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {error && (
         <div className="flex items-center px-4 py-3 mb-4 rounded-lg bg-red-50 text-red-600 border border-red-200 absolute top-5 right-5 shadow-md animate-fade-in">
           <div className="text-sm font-medium">{error}</div>
@@ -195,6 +234,68 @@ export const ProfileCompound = () => {
           >
             <FaXmark />
           </button>
+        </div>
+      )}
+
+      {showImageCropper && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-4 max-w-2xl w-full">
+            <h2 className="text-xl font-semibold mb-4">Crop Profile Picture</h2>
+            <div className="h-96 w-full">
+              <Cropper
+                src={imageToCrop}
+                style={{ height: "100%", width: "100%" }}
+                aspectRatio={1}
+                guides={true}
+                ref={cropperRef}
+              />
+            </div>
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => setShowImageCropper(false)}
+                className="px-4 py-2 bg-gray-300 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleCrop(false)}
+                className="px-4 py-2 bg-[#307DF1] text-white rounded-md"
+              >
+                Crop & Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLogoCropper && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-4 max-w-2xl w-full">
+            <h2 className="text-xl font-semibold mb-4">Crop Company Logo</h2>
+            <div className="h-96 w-full">
+              <Cropper
+                src={imageToCrop}
+                style={{ height: "100%", width: "100%" }}
+                aspectRatio={NaN}
+                guides={true}
+                ref={logoCropperRef}
+              />
+            </div>
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => setShowLogoCropper(false)}
+                className="px-4 py-2 bg-gray-300 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleCrop(true)}
+                className="px-4 py-2 bg-[#307DF1] text-white rounded-md"
+              >
+                Crop & Save
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

@@ -5,11 +5,22 @@ import { Table, Switch, Input } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { CurrencyType } from "@/types/currency";
 import { useAuth } from "@/contexts/AuthContext";
+import styled from "styled-components";
 
 export const CurrencySettingsTable = () => {
   const { user } = useAuth();
   const [data, setData] = useState<CurrencyType[]>([]);
   const [searchText, setSearchText] = useState("");
+  const StyledTable = styled(Table)`
+    .ant-table-thead > tr:nth-child(1) > th {
+      background-color: #478cf3;
+      color: white;
+    }
+    .ant-table-thead > tr:nth-child(2) > th {
+      background-color: #6aa2f5;
+      color: white;
+    }
+  `;
 
   useEffect(() => {
     if (!user?.id) return;
@@ -128,7 +139,7 @@ export const CurrencySettingsTable = () => {
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
       <div className="flex sm:justify-between justify-end items-center mb-5">
         <div className="sm:flex items-center hidden">
-          <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
+          <div className="h-2 w-2 bg-[#307EF3] rounded-full mr-2"></div>
           <h2 className="text-[13px] font-[500]">Currency Settings Info</h2>
         </div>
         <div className="flex items-center justify-end gap-2">
@@ -141,7 +152,7 @@ export const CurrencySettingsTable = () => {
           />
         </div>
       </div>
-      <Table
+      <StyledTable<any>
         columns={columns}
         dataSource={filteredCurrency}
         scroll={{ x: "max-content" }}

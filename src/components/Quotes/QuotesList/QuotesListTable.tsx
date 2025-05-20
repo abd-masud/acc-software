@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import dayjs from "dayjs";
 import { FaXmark } from "react-icons/fa6";
+import styled from "styled-components";
 
 export const QuotesListTable: React.FC<QuotesTableProps> = ({
   quotes,
@@ -38,6 +39,16 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
   const [payNow, setPayNow] = useState("");
   const [dueDate, setDueDate] = useState(dayjs().add(7, "days"));
   const [paymentType, setPaymentType] = useState("cash");
+  const StyledTable = styled(Table)`
+    .ant-table-thead > tr:nth-child(1) > th {
+      background-color: #478cf3;
+      color: white;
+    }
+    .ant-table-thead > tr:nth-child(2) > th {
+      background-color: #6aa2f5;
+      color: white;
+    }
+  `;
 
   const dateFormat = "DD MMMM YYYY";
 
@@ -360,7 +371,7 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
       )}
       <div className="flex sm:justify-between justify-end items-center mb-5">
         <div className="sm:flex items-center hidden">
-          <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
+          <div className="h-2 w-2 bg-[#307EF3] rounded-full mr-2"></div>
           <h2 className="text-[13px] font-[500]">Quotes Info</h2>
         </div>
         <div className="flex items-center justify-end gap-2">
@@ -373,7 +384,7 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
           />
         </div>
       </div>
-      <Table
+      <StyledTable<any>
         scroll={{ x: "max-content" }}
         columns={columns}
         dataSource={filteredQuotes}
@@ -393,7 +404,7 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
       >
         <form id="invoiceForm" onSubmit={handleSubmit}>
           <div className="flex items-center pb-3">
-            <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
+            <div className="h-2 w-2 bg-[#307EF3] rounded-full mr-2"></div>
             <h2 className="text-[13px] font-[500]">Invoice</h2>
           </div>
           <div className="grid md:grid-cols-2 grid-cols-1 gap-3">

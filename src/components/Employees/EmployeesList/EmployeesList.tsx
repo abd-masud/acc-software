@@ -45,7 +45,7 @@ export const EmployeesListComponent = () => {
   }, [fetchEmployees]);
 
   return (
-    <main className="bg-[#F2F4F7] min-h-[calc(100vh-70px)] p-5">
+    <main className="bg-[#F2F4F7] min-h-screen p-5">
       <Breadcrumb />
       <EmployeesListTable
         employees={employeesData}

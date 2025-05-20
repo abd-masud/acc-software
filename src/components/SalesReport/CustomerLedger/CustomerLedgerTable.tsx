@@ -16,6 +16,7 @@ import { InvoiceData, InvoiceItem, InvoicesTableProps } from "@/types/invoices";
 import { CustomerLedgerReportButton } from "./CustomerLedgerReport";
 import { Customers } from "@/types/customers";
 import { useAuth } from "@/contexts/AuthContext";
+import styled from "styled-components";
 
 export const CustomerLedgerTable: React.FC<InvoicesTableProps> = ({
   invoices,
@@ -26,6 +27,16 @@ export const CustomerLedgerTable: React.FC<InvoicesTableProps> = ({
   const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null);
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [customerSelected, setCustomerSelected] = useState(false);
+  const StyledTable = styled(Table)`
+    .ant-table-thead > tr:nth-child(1) > th {
+      background-color: #478cf3;
+      color: white;
+    }
+    .ant-table-thead > tr:nth-child(2) > th {
+      background-color: #6aa2f5;
+      color: white;
+    }
+  `;
 
   useEffect(() => {
     if (!user?.id) return;
@@ -269,7 +280,7 @@ export const CustomerLedgerTable: React.FC<InvoicesTableProps> = ({
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
       <div className="flex sm:justify-between justify-end items-center mb-5">
         <div className="sm:flex items-center hidden">
-          <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
+          <div className="h-2 w-2 bg-[#307EF3] rounded-full mr-2"></div>
           <h2 className="text-[13px] font-[500]">Invoice Info</h2>
         </div>
         <div className="sm:flex gap-2">
@@ -312,7 +323,7 @@ export const CustomerLedgerTable: React.FC<InvoicesTableProps> = ({
           />
         </Card>
       ) : (
-        <Table
+        <StyledTable<any>
           scroll={{ x: "max-content" }}
           columns={columns}
           dataSource={filteredInvoices}

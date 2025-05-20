@@ -123,7 +123,7 @@ export const AddPurchasersForm = () => {
         </div>
       )}
       <div className="flex items-center pb-5">
-        <div className="h-2 w-2 bg-[#E3E4EA] rounded-full mr-2"></div>
+        <div className="h-2 w-2 bg-[#307EF3] rounded-full mr-2"></div>
         <h2 className="text-[13px] font-[500]">Add Purchaser Form</h2>
       </div>
       <form onSubmit={handleSubmit}>
