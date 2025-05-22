@@ -4,7 +4,6 @@ import Image from "next/image";
 import logo from "../../../public/images/logo.png";
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { FaXmark } from "react-icons/fa6";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -12,7 +11,6 @@ export const EmployeeLoginComponent = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const { setUser } = useAuth();
   const [signLoading, setSignLoading] = useState(false);
 
@@ -38,7 +36,7 @@ export const EmployeeLoginComponent = () => {
         const { token, user: userData } = await response.json();
         setUser(userData);
         localStorage.setItem("acc_user", token);
-        router.push("/");
+        window.location.href = "/";
       } else {
         const errorData = await response.json().catch(() => ({}));
         setError(errorData.message || "Invalid email or password");
@@ -56,7 +54,7 @@ export const EmployeeLoginComponent = () => {
   };
 
   return (
-    <main className="bg-auth_bg bg-cover bg-center bg-fixed min-h-screen flex justify-center items-center relative">
+    <main className="bg-auth_bg bg-cover bg-center bg-fixed min-h-[calc(100vh+1px)] flex justify-center items-center relative">
       {error && (
         <div className="flex items-center px-4 py-2 mb-4 rounded-lg bg-gray-800 text-red-400 border-2 border-red-400 absolute top-5 right-5">
           <div className="text-sm font-medium">{error}</div>

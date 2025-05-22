@@ -12,7 +12,7 @@ import { useAccUserRedirect } from "@/hooks/useAccUser";
 export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
   const { user } = useAuth();
   const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
-  const [policyTerms, setPolicyTerms] = useState<string[]>([]);
+  const [terms, setTerms] = useState<string[]>([]);
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,9 +43,9 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
       }
     };
 
-    const fetchPolicyTerms = async () => {
+    const fetchTerms = async () => {
       try {
-        const response = await fetch(`/api/policy?user_id=${user.id}`, {
+        const response = await fetch(`/api/terms?user_id=${user.id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -55,10 +55,10 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
         if (response.ok) {
           const data = await response.json();
           const terms = Array.isArray(data.data?.terms) ? data.data.terms : [];
-          setPolicyTerms(terms);
+          setTerms(terms);
         }
       } catch (err) {
-        console.error("Policy terms error:", err);
+        console.error("Terms terms error:", err);
         setError((err as Error).message);
       }
     };
@@ -68,7 +68,7 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
       setError(null);
 
       await fetchQuoteData();
-      await fetchPolicyTerms();
+      await fetchTerms();
 
       setLoading(false);
     };
@@ -314,9 +314,9 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
                   Terms & Conditions:
                 </h3>
                 <div className="text-[12px] leading-snug">
-                  {Array.isArray(policyTerms) && policyTerms.length > 0 ? (
+                  {Array.isArray(terms) && terms.length > 0 ? (
                     <ul className="list-disc pl-5">
-                      {policyTerms.map((term, index) => (
+                      {terms.map((term, index) => (
                         <li key={index}>{term}</li>
                       ))}
                     </ul>

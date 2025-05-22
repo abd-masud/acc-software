@@ -34,6 +34,7 @@ export const ProfileCompound = () => {
   const logoInputRef = useRef<HTMLInputElement>(null);
   const cropperRef = useRef<ReactCropperElement>(null);
   const logoCropperRef = useRef<ReactCropperElement>(null);
+  const [originalLogoType, setOriginalLogoType] = useState<string>("");
   useAccUserRedirect();
 
   useEffect(() => {
@@ -65,6 +66,7 @@ export const ProfileCompound = () => {
   const handleLogoChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      setOriginalLogoType(file.type);
       const reader = new FileReader();
       reader.onload = () => {
         setImageToCrop(reader.result as string);
@@ -81,10 +83,15 @@ export const ProfileCompound = () => {
 
     if (cropper) {
       const croppedCanvas = cropper.getCroppedCanvas();
+      const fileType = isLogo ? originalLogoType : "image/jpeg";
+      const fileName = isLogo
+        ? `cropped-logo.${fileType.split("/")[1] || "png"}`
+        : "cropped-image.jpg";
+
       croppedCanvas.toBlob((blob) => {
         if (blob) {
-          const file = new File([blob], "cropped-image.jpg", {
-            type: "image/jpeg",
+          const file = new File([blob], fileName, {
+            type: fileType,
           });
           const reader = new FileReader();
           reader.onloadend = () => {
@@ -98,7 +105,7 @@ export const ProfileCompound = () => {
           };
           reader.readAsDataURL(blob);
         }
-      }, "image/jpeg");
+      }, fileType);
     }
 
     if (isLogo) {
@@ -302,7 +309,10 @@ export const ProfileCompound = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
           <div className="flex justify-between items-center bg-[#131226] text-white p-6">
-            <h1 className="text-xl font-bold">Profile</h1>
+            <h1 className="text-xl font-bold">
+              Profile{" "}
+              <span className="sm:inline-block hidden">Information</span>
+            </h1>
             {!isEditMode ? (
               <button
                 onClick={() => setIsEditMode(true)}
@@ -345,7 +355,7 @@ export const ProfileCompound = () => {
                 <>
                   <button
                     onClick={triggerFileInput}
-                    className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-2 bg-[#307DF1] text-white py-2 text-sm font-medium hover:bg-[#2a6fd8] transition-colors"
+                    className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-2 bg-[#307DF1] text-white py-1 text-sm font-medium hover:bg-[#2a6fd8] transition-colors rounded-lg"
                   >
                     <FaUpload className="text-xs" />
                     {previewImage ? "Change" : "Upload"}
@@ -427,7 +437,7 @@ export const ProfileCompound = () => {
                       )}
                       <button
                         onClick={triggerLogoInput}
-                        className="flex items-center gap-2 bg-[#307DF1] hover:bg-[#2a6fd8] text-white px-3 py-3 rounded-lg text-sm shadow-sm mt-[2px]"
+                        className="flex items-center gap-2 bg-[#307DF1] hover:bg-[#2a6fd8] text-white px-3 py-1 rounded-lg text-sm shadow-sm mt-[2px]"
                       >
                         <FaUpload className="text-xs" />
                         {previewLogo ? "Change" : "Upload Logo"}
@@ -445,14 +455,11 @@ export const ProfileCompound = () => {
                 </div>
               ) : (
                 <>
-                  <h1 className="text-3xl truncate font-bold text-gray-800">
+                  <h1 className="text-3xl truncate font-bold sm:text-left text-center text-gray-800">
                     {user?.name} {user?.last_name}
                   </h1>
-                  {user?.company && (
-                    <div className="flex items-center gap-4">
-                      <p className="text-[#307DF1] font-medium">
-                        {user?.company}
-                      </p>
+                  {user && (
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
                       {user?.logo && (
                         <div className="w-auto h-10 relative">
                           <Image
@@ -464,6 +471,9 @@ export const ProfileCompound = () => {
                           />
                         </div>
                       )}
+                      <p className="text-[#307DF1] font-medium">
+                        {user?.company}
+                      </p>
                     </div>
                   )}
                 </>

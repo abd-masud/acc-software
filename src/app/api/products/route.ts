@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
                 unit,
                 type,
                 sku,
-                purchaser,
+                supplier,
                 attribute
             } = product;
 
@@ -44,16 +44,16 @@ export async function POST(request: NextRequest) {
                 );
             }
 
-            const purchaserData = purchaser
-                ? JSON.stringify(purchaser)
+            const supplierData = supplier
+                ? JSON.stringify(supplier)
                 : JSON.stringify({});
 
             const attributeData = Array.isArray(attribute)
                 ? JSON.stringify(attribute)
                 : JSON.stringify([]);
 
-            const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
-            const numericBuyingPrice = typeof buying_price === 'string'
+            const numericPrice = typeof price == 'string' ? parseFloat(price) : price;
+            const numericBuyingPrice = typeof buying_price == 'string'
                 ? parseFloat(buying_price)
                 : buying_price;
 
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
                 unit,
                 type,
                 sku,
-                purchaserData,
+                supplierData,
                 attributeData
             ]);
         }
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
         const [result] = await db.query<ResultSetHeader>(
             `INSERT INTO products 
              (user_id, product_id, name, description, price, buying_price, 
-              category, stock, unit, type, sku, purchaser, attribute)
+              category, stock, unit, type, sku, supplier, attribute)
              VALUES ${insertValues.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ')}`,
             insertValues.flat()
         );
@@ -141,7 +141,7 @@ export async function PUT(request: NextRequest) {
             products = [products];
         }
 
-        if (products.length === 0) {
+        if (products.length == 0) {
             return NextResponse.json(
                 { success: false, message: 'No products provided' },
                 { status: 400 }
@@ -155,7 +155,7 @@ export async function PUT(request: NextRequest) {
             const {
                 product_id,
                 name,
-                purchaser,
+                supplier,
                 description,
                 buying_price,
                 price,
@@ -186,7 +186,7 @@ export async function PUT(request: NextRequest) {
                 [product_id]
             );
 
-            if (existing.length === 0) {
+            if (existing.length == 0) {
                 await connection.rollback();
                 return NextResponse.json(
                     { success: false, message: `Product not found: ${product_id}` },
@@ -194,13 +194,13 @@ export async function PUT(request: NextRequest) {
                 );
             }
 
-            const purchaserData = purchaser ? JSON.stringify(purchaser) : null;
+            const supplierData = supplier ? JSON.stringify(supplier) : null;
             const attributeData = Array.isArray(attribute) ? JSON.stringify(attribute) : null;
 
             const [result] = await connection.query<ResultSetHeader>(
                 `UPDATE products SET
             name = ?,
-            purchaser = ?,
+            supplier = ?,
             description = ?,
             buying_price = ?,
             price = ?,
@@ -210,7 +210,7 @@ export async function PUT(request: NextRequest) {
            WHERE product_id = ?`,
                 [
                     name.trim(),
-                    purchaserData,
+                    supplierData,
                     description?.trim() || null,
                     Number(buying_price) || null,
                     Number(price),
@@ -271,7 +271,7 @@ export async function DELETE(request: NextRequest) {
                 [id]
             );
 
-            if (existing.length === 0) {
+            if (existing.length == 0) {
                 return NextResponse.json(
                     { success: false, message: 'Product not found' },
                     { status: 404 }
@@ -283,7 +283,7 @@ export async function DELETE(request: NextRequest) {
                 [id]
             );
 
-            return result.affectedRows === 1
+            return result.affectedRows == 1
                 ? NextResponse.json(
                     { success: true, message: 'Product deleted successfully' },
                     { status: 200 }

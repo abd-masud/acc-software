@@ -1,4 +1,4 @@
-import { Purchasers } from "./purchasers";
+import { Suppliers } from "./suppliers";
 
 type ProductAttribute = {
     name: string;
@@ -12,7 +12,7 @@ export type Products = {
     type: string;
     sku_id: string;
     name: string;
-    purchaser: Purchasers;
+    supplier: Suppliers;
     attribute: ProductAttribute[];
     description: string;
     buying_price: string;
@@ -22,10 +22,10 @@ export type Products = {
     unit: string;
 };
 
-export type PurchaserOption = {
+export type SupplierOption = {
     value: number;
     label: string;
-    purchaser: Purchasers;
+    supplier: Suppliers;
 };
 
 export interface ProductApiResponse {

@@ -94,7 +94,7 @@ export async function PUT(request: NextRequest) {
         if (existingSettings.length == 0) {
             // Insert new record
             const [result] = await db.query<ResultSetHeader>(
-                `INSERT INTO generals (user_id, department, role, status, category, size, color, material) 
+                `INSERT INTO generals (user_id, department, role, category, size, color, material) 
                  VALUES (?, ?, ?, ?, ?, ?, ?)`,
                 [user_id, dataToStore.department, dataToStore.role, dataToStore.category, dataToStore.size, dataToStore.color, dataToStore.material]
             );

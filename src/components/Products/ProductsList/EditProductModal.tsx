@@ -1,12 +1,12 @@
 "use client";
 
 import { Modal, message } from "antd";
-import { EditProductModalProps, PurchaserOption } from "@/types/products";
+import { EditProductModalProps, SupplierOption } from "@/types/products";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Select, { StylesConfig } from "react-select";
 import { FaXmark } from "react-icons/fa6";
-import { Purchasers } from "@/types/purchasers";
+import { Suppliers } from "@/types/suppliers";
 
 const UNITS = [
   "Pieces",
@@ -38,7 +38,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [productId, setProductId] = useState("");
   const [productName, setProductName] = useState("");
-  const [purchasers, setPurchasers] = useState<Purchasers[]>([]);
+  const [suppliers, setSuppliers] = useState<Suppliers[]>([]);
   const [description, setDescription] = useState("");
   const [buyingPrice, setBuyingPrice] = useState("");
   const [sellingPrice, setSellingPrice] = useState("");
@@ -47,7 +47,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
   const [userMessage, setUserMessage] = useState<string | null>(null);
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [isInHouseProduct, setIsInHouseProduct] = useState(false);
-  const [selectedPurchaser, setSelectedPurchaser] = useState<Purchasers | null>(
+  const [selectedSupplier, setSelectedSupplier] = useState<Suppliers | null>(
     null
   );
   const [attributes, setAttributes] = useState({
@@ -62,13 +62,13 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
     material: string[];
   }>({ category: [], size: [], color: [], material: [] });
 
-  const purchaserOptions = useMemo(() => {
-    return purchasers.map((purchaser: Purchasers) => ({
-      value: purchaser.id,
-      label: `${purchaser.company} (${purchaser.purchaser_id})`,
-      purchaser: purchaser,
+  const supplierOptions = useMemo(() => {
+    return suppliers.map((supplier: Suppliers) => ({
+      value: supplier.id,
+      label: `${supplier.company} (${supplier.supplier_id})`,
+      supplier: supplier,
     }));
-  }, [purchasers]);
+  }, [suppliers]);
 
   const transformAttributes = (
     attributeArray: Array<{ name: string; value: string }> = []
@@ -118,20 +118,17 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
     if (!user?.id) return;
     const fetchCustomers = async () => {
       try {
-        const purchasersRes = await fetch(
-          `/api/purchasers?user_id=${user.id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const suppliersRes = await fetch(`/api/suppliers?user_id=${user.id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
-        if (purchasersRes.ok) {
-          const purchasersData = await purchasersRes.json();
-          setPurchasers(
-            Array.isArray(purchasersData.data) ? purchasersData.data : []
+        if (suppliersRes.ok) {
+          const suppliersData = await suppliersRes.json();
+          setSuppliers(
+            Array.isArray(suppliersData.data) ? suppliersData.data : []
           );
         }
       } catch (error) {
@@ -178,7 +175,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
       setSellingPrice(currentProduct.price || "");
       setCategory(currentProduct.category);
       setUnit(currentProduct.unit);
-      setIsInHouseProduct(!currentProduct.purchaser.id);
+      setIsInHouseProduct(!currentProduct.supplier.id);
 
       const transformedAttributes = transformAttributes(
         currentProduct.attribute
@@ -189,14 +186,14 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
         material: transformedAttributes.material || "",
       });
 
-      if (currentProduct.purchaser.id && purchasers.length > 0) {
-        const productPurchaser = purchasers.find(
-          (p) => p.id === currentProduct.purchaser.id
+      if (currentProduct.supplier.id && suppliers.length > 0) {
+        const productSupplier = suppliers.find(
+          (p) => p.id == currentProduct.supplier.id
         );
-        setSelectedPurchaser(productPurchaser || null);
+        setSelectedSupplier(productSupplier || null);
       }
     }
-  }, [currentProduct, purchasers]);
+  }, [currentProduct, suppliers]);
 
   const handleSubmit = async () => {
     if (!currentProduct) return;
@@ -227,7 +224,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
       const updatedProduct: any = {
         product_id: productId,
         name: productName,
-        purchaser: isInHouseProduct ? "In-house product" : selectedPurchaser,
+        supplier: isInHouseProduct ? "In-house product" : selectedSupplier,
         description: description,
         buying_price: buyingPrice,
         price: sellingPrice,
@@ -275,7 +272,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
     }),
   };
 
-  const purchaserSelectStyles: StylesConfig<PurchaserOption, boolean> = {
+  const supplierSelectStyles: StylesConfig<SupplierOption, boolean> = {
     control: (base) => ({
       ...base,
       borderColor: "#E5E7EB",
@@ -376,7 +373,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
       <div className="mb-6 p-4 border rounded-lg">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-[15px] font-semibold">
-            Purchaser <span className="sm:inline hidden">Details</span>
+            Supplier <span className="sm:inline hidden">Details</span>
           </h3>
         </div>
         <div className="flex items-center gap-3 mb-3">
@@ -387,7 +384,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
             onChange={(e) => {
               setIsInHouseProduct(e.target.checked);
               if (e.target.checked) {
-                setSelectedPurchaser(null);
+                setSelectedSupplier(null);
               }
             }}
           />
@@ -403,26 +400,26 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
             <Select<{
               value: number;
               label: string;
-              purchaser: Purchasers;
+              supplier: Suppliers;
             }>
               id="company"
               className="text-[14px] mt-2"
-              options={purchaserOptions}
-              value={purchaserOptions.find(
-                (option) => option.value == selectedPurchaser?.id
+              options={supplierOptions}
+              value={supplierOptions.find(
+                (option) => option.value == selectedSupplier?.id
               )}
               onChange={(selectedOption) => {
                 if (selectedOption) {
-                  setSelectedPurchaser(selectedOption.purchaser);
+                  setSelectedSupplier(selectedOption.supplier);
                 } else {
-                  setSelectedPurchaser(null);
+                  setSelectedSupplier(null);
                 }
               }}
-              placeholder="Select purchaser"
+              placeholder="Select supplier"
               isClearable
               isSearchable
               isDisabled={isInHouseProduct}
-              styles={purchaserSelectStyles}
+              styles={supplierSelectStyles}
             />
           </div>
           <div className="mb-4">
@@ -434,7 +431,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
               className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="owner"
-              value={selectedPurchaser?.owner || ""}
+              value={selectedSupplier?.owner || ""}
               readOnly
             />
           </div>
@@ -448,7 +445,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
             className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
             type="text"
             id="address"
-            value={selectedPurchaser?.address || ""}
+            value={selectedSupplier?.address || ""}
             readOnly
           />
         </div>
@@ -462,7 +459,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
               className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="email"
               id="email"
-              value={selectedPurchaser?.email || ""}
+              value={selectedSupplier?.email || ""}
               readOnly
             />
           </div>
@@ -475,7 +472,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
               className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="contact"
-              value={selectedPurchaser?.contact || ""}
+              value={selectedSupplier?.contact || ""}
               readOnly
             />
           </div>
@@ -605,7 +602,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
             className="mt-2"
             options={toSelectOptions(generalOptions.size)}
             value={toSelectOptions(generalOptions.size).find(
-              (opt) => opt.value === attributes.size
+              (opt) => opt.value == attributes.size
             )}
             onChange={(selectedOption) =>
               setAttributes((prev) => ({
@@ -625,7 +622,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
             className="mt-2"
             options={toSelectOptions(generalOptions.color)}
             value={toSelectOptions(generalOptions.color).find(
-              (opt) => opt.value === attributes.color
+              (opt) => opt.value == attributes.color
             )}
             onChange={(selectedOption) =>
               setAttributes((prev) => ({
@@ -645,7 +642,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
             className="mt-2"
             options={toSelectOptions(generalOptions.material)}
             value={toSelectOptions(generalOptions.material).find(
-              (opt) => opt.value === attributes.material
+              (opt) => opt.value == attributes.material
             )}
             onChange={(selectedOption) =>
               setAttributes((prev) => ({

@@ -96,7 +96,7 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
 
   const handlePrint = () => {
     if (!receiptRef.current) return;
-    const printWindow = window.open("", "_blank");
+    const printWindow = window.open("", "");
     if (printWindow) {
       printWindow.document.write(`
         <html>
@@ -279,13 +279,7 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
                 width={200}
                 height={200}
                 alt="Logo"
-                className="grayscale"
-                style={{
-                  width: "auto",
-                  height: "auto",
-                  maxWidth: "200px",
-                  maxHeight: "200px",
-                }}
+                className="grayscale h-14 w-auto"
               />
             </div>
 
@@ -382,7 +376,7 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
           <div className="text-center my-1">
             <QRCodeSVG
               value={generateQRData()}
-              size={60}
+              size={100}
               level="L"
               className="mx-auto"
             />

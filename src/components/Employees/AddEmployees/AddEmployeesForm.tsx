@@ -3,20 +3,14 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Employees } from "@/types/employees";
 import { SMTPSettings } from "@/types/smtp";
-import { Modal } from "antd";
-import dynamic from "next/dynamic";
+import { Button, Modal } from "antd";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useId, useState } from "react";
 import { FaXmark } from "react-icons/fa6";
-import { StylesConfig } from "react-select";
+import Select, { StylesConfig } from "react-select";
 import success from "../../../../public/images/success.png";
+import warning from "../../../../public/images/warning.png";
 import Image from "next/image";
-import Link from "next/link";
-
-const Select = dynamic(() => import("react-select"), {
-  ssr: false,
-  loading: () => <div className="h-[38px] w-full rounded border" />,
-});
 
 export const AddEmployeesForm = () => {
   const instanceId = useId();
@@ -26,6 +20,7 @@ export const AddEmployeesForm = () => {
   const [employee_id, setEmployeeId] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [userMessage, setUserMessage] = useState<string | null>(null);
+  const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false);
 
   const [formValues, setFormValues] = useState<Omit<Employees, "id">>({
     key: "",
@@ -70,6 +65,14 @@ export const AddEmployeesForm = () => {
     { label: "Inactive", value: "Inactive" },
   ];
 
+  const showNoSettingsModal = () => {
+    setIsSettingsModalVisible(true);
+  };
+
+  const handleSettingsModalClose = () => {
+    setIsSettingsModalVisible(false);
+  };
+
   const fetchGenerals = useCallback(async () => {
     if (!user?.id) return;
     setLoading(true);
@@ -88,10 +91,18 @@ export const AddEmployeesForm = () => {
       }
 
       const optionsData = json.data[0] || {};
-      setGeneralOptions({
+      const newGeneralOptions = {
         department: optionsData.department || [],
         role: optionsData.role || [],
-      });
+      };
+      setGeneralOptions(newGeneralOptions);
+
+      if (
+        newGeneralOptions.department.length === 0 ||
+        newGeneralOptions.role.length === 0
+      ) {
+        showNoSettingsModal();
+      }
     } catch (error) {
       console.error("Error:", error);
     } finally {
@@ -305,10 +316,6 @@ export const AddEmployeesForm = () => {
     }),
   };
 
-  if (loading) {
-    return <div>Loading form...</div>;
-  }
-
   const handleOkay = () => {
     setShowSuccessModal(false);
     router.push("/employees/employees-list");
@@ -423,12 +430,6 @@ export const AddEmployeesForm = () => {
               <label className="text-[14px]" htmlFor="department">
                 Department
               </label>
-              <Link
-                className="text-[12px] text-blue-600"
-                href={"/employees/employee-settings"}
-              >
-                Add Department
-              </Link>
             </div>
             <Select
               instanceId={`${instanceId}-department`}
@@ -450,12 +451,6 @@ export const AddEmployeesForm = () => {
               <label className="text-[14px]" htmlFor="role">
                 Role
               </label>
-              <Link
-                className="text-[12px] text-blue-600"
-                href={"/employees/employee-settings"}
-              >
-                Add Role
-              </Link>
             </div>
             <Select
               instanceId={`${instanceId}-role`}
@@ -542,6 +537,42 @@ export const AddEmployeesForm = () => {
             Employee has been added successfully.
           </p>
         </div>
+      </Modal>
+
+      <Modal
+        open={isSettingsModalVisible}
+        closable={false}
+        maskClosable={false}
+        keyboard={false}
+        footer={[
+          <Button
+            key="add"
+            type="primary"
+            onClick={() => {
+              router.push("/employees/employee-settings");
+              handleSettingsModalClose();
+            }}
+          >
+            Add Options
+          </Button>,
+        ]}
+      >
+        <div className="flex justify-center">
+          <Image
+            height={150}
+            width={150}
+            src={warning}
+            alt="Warning"
+            priority
+          />
+        </div>
+        <h2 className="text-xl font-bold text-center mb-4">
+          No Department or Role Available
+        </h2>
+        <p className="text-center">
+          There are no departments or roles available. Please add departments
+          and roles first.
+        </p>
       </Modal>
     </main>
   );

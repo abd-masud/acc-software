@@ -28,7 +28,7 @@ const SIDEBAR_MODULES = [
   "employees",
   "sales-report",
   "stock-master",
-  "purchasers",
+  "suppliers",
   "settings",
   "subscription-plan",
 ];
@@ -136,49 +136,49 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         Dashboard
       </Link>
 
-      {canAccessModule("purchasers") && (
+      {canAccessModule("suppliers") && (
         <>
           <button
-            onClick={() => toggleSection("purchasers")}
+            onClick={() => toggleSection("suppliers")}
             className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
-              pathname.includes("/purchasers") ? "text-white bg-[#1E2639]" : ""
+              pathname.includes("/suppliers") ? "text-white bg-[#1E2639]" : ""
             }`}
           >
             <div className="flex items-center">
               <div
                 className={`h-[23px] w-[3px] group-hover:bg-[#307DF1] transition duration-300 ${
-                  pathname.includes("/purchasers")
+                  pathname.includes("/suppliers")
                     ? "bg-[#307DF1]"
                     : "bg-transparent"
                 }`}
               ></div>
               <GiBuyCard className="ml-[21px] text-[16px] mr-3 w-5" />
-              Purchasers
+              Suppliers
             </div>
             <FaChevronDown />
           </button>
           <div
             className={`overflow-hidden transition-all duration-500 transform ${
-              openSection == "purchasers"
+              openSection == "suppliers"
                 ? "max-h-[90px] opacity-100"
                 : "max-h-0 opacity-0"
             }`}
           >
             <div className="pl-[56px] bg-[#1D1B31] text-[13px]">
               <Link
-                className={subLinkClass("/purchasers/add-purchasers")}
-                href="/purchasers/add-purchasers"
+                className={subLinkClass("/suppliers/add-suppliers")}
+                href="/suppliers/add-suppliers"
                 onClick={handleLinkClick}
               >
-                Add Purchasers
+                Add Suppliers
               </Link>
 
               <Link
-                className={subLinkClass("/purchasers/purchasers-list")}
-                href="/purchasers/purchasers-list"
+                className={subLinkClass("/suppliers/suppliers-list")}
+                href="/suppliers/suppliers-list"
                 onClick={handleLinkClick}
               >
-                Purchasers List
+                Suppliers List
               </Link>
             </div>
           </div>
@@ -600,11 +600,11 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
               </Link>
 
               <Link
-                className={subLinkClass("/settings/policy-settings")}
-                href="/settings/policy-settings"
+                className={subLinkClass("/settings/terms-and-conditions")}
+                href="/settings/terms-and-conditions"
                 onClick={handleLinkClick}
               >
-                Policy Settings
+                Terms & Conditions
               </Link>
 
               <Link

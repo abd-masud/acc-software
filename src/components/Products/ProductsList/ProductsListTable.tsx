@@ -85,7 +85,7 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
         const currencyRes = await fetch(`/api/currencies?user_id=${user.id}`);
         const currencyJson = await currencyRes.json();
 
-        if (currencyRes.status === 404 || !currencyJson.success) {
+        if (currencyRes.status == 404 || !currencyJson.success) {
           setCurrencyCode("USD");
         } else if (currencyJson.data?.length > 0) {
           setCurrencyCode(currencyJson.data[0].currency || "USD");
@@ -170,16 +170,16 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
       dataIndex: "name",
     },
     {
-      title: "Purchaser",
-      dataIndex: "purchaser",
+      title: "Supplier",
+      dataIndex: "supplier",
       render: (value: any) => {
-        if (typeof value === "string") {
+        if (typeof value == "string") {
           return value;
         }
         if (Array.isArray(value)) {
           return value.map((v) => v?.company ?? "[No Company]").join(", ");
         }
-        if (typeof value === "object" && value !== null) {
+        if (typeof value == "object" && value !== null) {
           return value.company ?? "[No Company]";
         }
         return "-";
@@ -189,10 +189,10 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
       title: "Attribute",
       dataIndex: "attribute",
       render: (value: any) => {
-        if (typeof value === "object" && value !== null) {
+        if (typeof value == "object" && value !== null) {
           return Object.values(value)
             .map((val: any) => {
-              if (val && typeof val === "object") {
+              if (val && typeof val == "object") {
                 return val.value ?? "[object]";
               }
               return val;

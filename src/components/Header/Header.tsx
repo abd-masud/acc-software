@@ -93,6 +93,20 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
         >
           <VscThreeBars className="fill-black" />
         </button>
+        <div className="ml-4 sm:block hidden">
+          {user.logo ? (
+            <Image
+              className="h-10 w-auto"
+              priority
+              src={user.logo}
+              height={500}
+              width={500}
+              alt="Copa Business Logo"
+            />
+          ) : (
+            ""
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-3">
         <button onClick={toggleFullScreen}>

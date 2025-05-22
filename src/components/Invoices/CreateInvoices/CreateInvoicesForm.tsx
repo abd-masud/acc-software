@@ -7,13 +7,13 @@ import { Products } from "@/types/products";
 import { useRouter } from "next/navigation";
 import Select, { StylesConfig } from "react-select";
 import { useState, useEffect } from "react";
+import { FaXmark } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
-import Link from "next/link";
 import dayjs from "dayjs";
-import { DatePicker, Modal } from "antd";
+import { DatePicker, Modal, Button } from "antd";
 import Image from "next/image";
 import success from "../../../../public/images/success.png";
-import { FaXmark } from "react-icons/fa6";
+import warning from "../../../../public/images/warning.png";
 
 export const CreateInvoicesForm = () => {
   const { user } = useAuth();
@@ -28,6 +28,8 @@ export const CreateInvoicesForm = () => {
   const [notes, setNotes] = useState("");
   const [discountAmount, setDiscountAmount] = useState("");
   const [paymentType, setPaymentType] = useState("cash");
+  const [isCustomersModalVisible, setIsCustomersModalVisible] = useState(false);
+  const [isProductsModalVisible, setIsProductsModalVisible] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customers | null>(
     null
   );
@@ -77,31 +79,51 @@ export const CreateInvoicesForm = () => {
   const productOptions = uniqueProducts.map((product) => ({
     value: product.id,
     label: `${product.name} (${product.product_id}): ${
-      products.filter((p) => p.product_id === product.product_id).length
+      products.filter((p) => p.product_id == product.product_id).length
     }`,
     product: product,
   }));
 
   const getAvailableCount = (productId: string) => {
-    return products.filter((p) => p.product_id === productId).length;
+    return products.filter((p) => p.product_id == productId).length;
   };
 
+  const showNoCustomersModal = () => {
+    setIsCustomersModalVisible(true);
+  };
+
+  const showNoProductModal = () => {
+    setIsProductsModalVisible(true);
+  };
+
+  const handleCustomersModalClose = () => {
+    setIsCustomersModalVisible(false);
+  };
+
+  const handleProductsModalClose = () => {
+    setIsProductsModalVisible(false);
+  };
+
+  // Fetch customers
   useEffect(() => {
     if (!user?.id) return;
+
     const fetchCustomers = async () => {
       try {
-        const customersRes = await fetch(`/api/customers?user_id=${user.id}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const customersRes = await fetch(`/api/customers?user_id=${user.id}`);
 
         if (customersRes.ok) {
           const customersData = await customersRes.json();
-          setCustomers(
-            Array.isArray(customersData.data) ? customersData.data : []
-          );
+          const customersList = Array.isArray(customersData.data)
+            ? customersData.data
+            : [];
+          setCustomers(customersList);
+
+          if (customersList.length === 0) {
+            showNoCustomersModal();
+          }
+        } else if (customersRes.status === 404) {
+          showNoCustomersModal();
         }
       } catch (error) {
         console.error("Failed to fetch customers:", error);
@@ -111,22 +133,26 @@ export const CreateInvoicesForm = () => {
     fetchCustomers();
   }, [user?.id]);
 
+  // Fetch products
   useEffect(() => {
     if (!user?.id) return;
+
     const fetchProducts = async () => {
       try {
-        const productsRes = await fetch(`/api/products?user_id=${user.id}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const productsRes = await fetch(`/api/products?user_id=${user.id}`);
 
         if (productsRes.ok) {
           const productsData = await productsRes.json();
-          setProducts(
-            Array.isArray(productsData.data) ? productsData.data : []
-          );
+          const productsList = Array.isArray(productsData.data)
+            ? productsData.data
+            : [];
+          setProducts(productsList);
+
+          if (productsList.length === 0) {
+            showNoProductModal();
+          }
+        } else if (productsRes.status === 404) {
+          showNoProductModal();
         }
       } catch (error) {
         console.error("Failed to fetch products:", error);
@@ -206,7 +232,7 @@ export const CreateInvoicesForm = () => {
         if (item.id == id) {
           let newValue = value;
 
-          if (field === "quantity" && item.product_id) {
+          if (field == "quantity" && item.product_id) {
             const availableCount = getAvailableCount(item.product_id);
             const quantity = Number(value);
             newValue = quantity > availableCount ? availableCount : value;
@@ -476,12 +502,6 @@ export const CreateInvoicesForm = () => {
             <h3 className="text-[15px] font-semibold mb-3">
               Customer <span className="sm:inline hidden">Details</span>
             </h3>
-            <Link
-              className="text-[12px] text-blue-600"
-              href={"/customers/add-customers"}
-            >
-              Add Customer
-            </Link>
           </div>
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="customer">
@@ -960,7 +980,7 @@ export const CreateInvoicesForm = () => {
             className="text-[14px] font-[500] py-2 w-40 rounded cursor-pointer transition-all duration-300 mt-4 text-white bg-[#307EF3] hover:bg-[#478cf3]"
             disabled={loading}
           >
-            {loading ? "Saving..." : "Save Invoice"}
+            {loading ? "Creating..." : "Create Invoice"}
           </button>
         </div>
       </form>
@@ -986,6 +1006,76 @@ export const CreateInvoicesForm = () => {
             Invoice has been created successfully.
           </p>
         </div>
+      </Modal>
+
+      <Modal
+        open={isCustomersModalVisible}
+        closable={false}
+        maskClosable={false}
+        keyboard={false}
+        footer={[
+          <Button
+            key="add"
+            type="primary"
+            onClick={() => {
+              router.push("/customers/add-customers");
+              handleCustomersModalClose();
+            }}
+          >
+            Add Customers
+          </Button>,
+        ]}
+      >
+        <div className="flex justify-center">
+          <Image
+            height={150}
+            width={150}
+            src={warning}
+            alt="Warning"
+            priority
+          />
+        </div>
+        <h2 className="text-xl font-bold text-center mb-4">
+          No Customers Available
+        </h2>
+        <p className="text-center">
+          There are no customers available. Please add customers first.
+        </p>
+      </Modal>
+
+      <Modal
+        open={isProductsModalVisible}
+        closable={false}
+        maskClosable={false}
+        keyboard={false}
+        footer={[
+          <Button
+            key="add"
+            type="primary"
+            onClick={() => {
+              router.push("/products/add-products");
+              handleProductsModalClose();
+            }}
+          >
+            Add Products
+          </Button>,
+        ]}
+      >
+        <div className="flex justify-center">
+          <Image
+            height={150}
+            width={150}
+            src={warning}
+            alt="Warning"
+            priority
+          />
+        </div>
+        <h2 className="text-xl font-bold text-center mb-4">
+          No Products Available
+        </h2>
+        <p className="text-center">
+          There are no products available. Please add products first.
+        </p>
       </Modal>
     </main>
   );

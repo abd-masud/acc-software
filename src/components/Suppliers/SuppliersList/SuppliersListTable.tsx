@@ -1,22 +1,27 @@
 "use client";
 
-import { Table, TableColumnsType, Button, Input, Modal, Tooltip } from "antd";
-import React, { useEffect, useMemo, useState } from "react";
-import { Products, ProductsTableProps } from "@/types/products";
+import { Table, TableColumnsType, Modal, Input, Button, Tooltip } from "antd";
+import React, { useState, useMemo } from "react";
+import { Suppliers, SuppliersTableProps } from "@/types/suppliers";
+import { EditSupplierModal } from "./EditSupplierModal";
+import { FaEdit } from "react-icons/fa";
 import { MdOutlineDeleteSweep } from "react-icons/md";
-import { useAuth } from "@/contexts/AuthContext";
 import { FaXmark } from "react-icons/fa6";
 import styled from "styled-components";
 
-export const StockInHandListTable: React.FC<ProductsTableProps> = ({
-  products,
-  fetchProducts,
+export const SuppliersListTable: React.FC<SuppliersTableProps> = ({
+  suppliers,
+  fetchSuppliers,
   loading,
 }) => {
-  const { user } = useAuth();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<Products | null>(null);
-  const [currencyCode, setCurrencyCode] = useState("USD");
+  const [currentSupplier, setCurrentSupplier] = useState<Suppliers | null>(
+    null
+  );
+  const [supplierToDelete, setSupplierToDelete] = useState<Suppliers | null>(
+    null
+  );
   const [searchText, setSearchText] = useState("");
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [userMessage, setUserMessage] = useState<string | null>(null);
@@ -31,74 +36,77 @@ export const StockInHandListTable: React.FC<ProductsTableProps> = ({
     }
   `;
 
-  const showDeleteModal = (product: Products) => {
-    setProductToDelete(product);
+  const showEditModal = (supplier: Suppliers) => {
+    setCurrentSupplier(supplier);
+    setIsEditModalOpen(true);
+  };
+
+  const showDeleteModal = (supplier: Suppliers) => {
+    setSupplierToDelete(supplier);
     setDeleteConfirmationText("");
     setIsDeleteModalOpen(true);
   };
 
-  const filteredProducts = useMemo(() => {
-    const sortedProducts = [...products].sort((a, b) => {
+  const filteredSuppliers = useMemo(() => {
+    const sortedSuppliers = [...suppliers].sort((a, b) => {
       return b.id - a.id;
     });
-    if (!searchText) return sortedProducts;
+    if (!searchText) return sortedSuppliers;
 
-    return sortedProducts.filter((product) =>
-      Object.values(product).some(
+    return sortedSuppliers.filter((supplier) =>
+      Object.values(supplier).some(
         (value) =>
           value &&
           value.toString().toLowerCase().includes(searchText.toLowerCase())
       )
     );
-  }, [products, searchText]);
+  }, [suppliers, searchText]);
 
-  useEffect(() => {
-    if (!user?.id) return;
-    const fetchCurrencies = async () => {
-      try {
-        const currencyRes = await fetch(`/api/currencies?user_id=${user.id}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+  const handleEditSubmit = async (updatedSupplier: Suppliers) => {
+    try {
+      const response = await fetch("/api/suppliers", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedSupplier),
+      });
 
-        const currencyJson = await currencyRes.json();
-
-        if (currencyRes.status == 404 || !currencyJson.success) {
-          setCurrencyCode("USD");
-        } else if (currencyJson.data && currencyJson.data.length > 0) {
-          setCurrencyCode(currencyJson.data[0].currency || "USD");
-        }
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-        setCurrencyCode("USD");
+      if (!response.ok) {
+        throw new Error("Failed to update supplier");
       }
-    };
 
-    fetchCurrencies();
-  }, [user?.id]);
+      setUserMessage("Supplier updated");
+      setIsEditModalOpen(false);
+      fetchSuppliers();
+    } catch (err) {
+      console.error(err);
+      throw err;
+    } finally {
+      setTimeout(() => setUserMessage(null), 5000);
+    }
+  };
 
   const handleDelete = async () => {
-    if (!productToDelete) return;
+    if (!supplierToDelete) return;
 
     try {
-      const response = await fetch("/api/products", {
+      const response = await fetch("/api/suppliers", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id: productToDelete.id }),
+        body: JSON.stringify({ id: supplierToDelete.id }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete product");
+        throw new Error("Failed to delete supplier");
       }
 
-      setUserMessage("Product deleted");
+      setUserMessage("Supplier deleted");
       setIsDeleteModalOpen(false);
       setDeleteConfirmationText("");
-      fetchProducts();
+      fetchSuppliers();
     } catch {
       setUserMessage("Delete failed");
     } finally {
@@ -106,75 +114,48 @@ export const StockInHandListTable: React.FC<ProductsTableProps> = ({
     }
   };
 
-  const columns: TableColumnsType<Products> = [
+  const columns: TableColumnsType<Suppliers> = [
     {
       title: "#",
       width: "40px",
       render: (_, __, index) => index + 1,
     },
     {
-      title: "SKU",
-      dataIndex: "sku",
+      title: "Supplier ID",
+      dataIndex: "supplier_id",
     },
     {
-      title: "Product Name",
-      dataIndex: "name",
+      title: "Company Name",
+      dataIndex: "company",
     },
     {
-      title: "Supplier",
-      dataIndex: "supplier",
-      render: (value: any) => {
-        if (typeof value == "string") {
-          return value;
-        }
-        if (Array.isArray(value)) {
-          return value.map((v) => v?.company ?? "[No Company]").join(", ");
-        }
-        if (typeof value == "object" && value !== null) {
-          return value.company ?? "[No Company]";
-        }
-        return "-";
-      },
+      title: "Company Owner",
+      dataIndex: "owner",
     },
     {
-      title: "Attribute",
-      dataIndex: "attribute",
-      render: (value: any) => {
-        if (typeof value == "object" && value !== null) {
-          return Object.values(value)
-            .map((val: any) => {
-              if (val && typeof val == "object") {
-                return val.value ?? "[object]";
-              }
-              return val;
-            })
-            .join(", ");
-        }
-        return "-";
-      },
+      title: "Address",
+      dataIndex: "address",
     },
     {
-      title: "Buying Price",
-      dataIndex: "buying_price",
-      render: (buying_price) => `${buying_price} ${currencyCode}`,
+      title: "Email Address",
+      dataIndex: "email",
     },
     {
-      title: "Price",
-      dataIndex: "price",
-      render: (price) => `${price} ${currencyCode}`,
-    },
-    {
-      title: "Unit",
-      dataIndex: "unit",
-    },
-    {
-      title: "Category",
-      dataIndex: "category",
+      title: "Contact Number",
+      dataIndex: "contact",
     },
     {
       title: "Action",
       render: (_, record) => (
         <div className="flex justify-center items-center gap-2">
+          <Tooltip title="Edit">
+            <button
+              className="text-white text-[14px] bg-blue-500 hover:bg-blue-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
+              onClick={() => showEditModal(record)}
+            >
+              <FaEdit />
+            </button>
+          </Tooltip>
           <Tooltip title="Delete">
             <button
               className="text-white text-[17px] bg-red-500 hover:bg-red-600 h-6 w-6 rounded transition-colors duration-300 flex justify-center items-center"
@@ -212,7 +193,7 @@ export const StockInHandListTable: React.FC<ProductsTableProps> = ({
       <div className="flex sm:justify-between justify-end items-center mb-5">
         <div className="sm:flex items-center hidden">
           <div className="h-2 w-2 bg-[#307EF3] rounded-full mr-2"></div>
-          <h2 className="text-[13px] font-[500]">Stock In Hand Info</h2>
+          <h2 className="text-[13px] font-[500]">Suppliers Info</h2>
         </div>
         <div className="flex items-center justify-end gap-2">
           <Input
@@ -227,14 +208,21 @@ export const StockInHandListTable: React.FC<ProductsTableProps> = ({
       <StyledTable<any>
         scroll={{ x: "max-content" }}
         columns={columns}
-        dataSource={filteredProducts}
+        dataSource={filteredSuppliers}
         loading={loading}
         bordered
         rowKey="id"
       />
 
+      <EditSupplierModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        currentSupplier={currentSupplier}
+        onSave={handleEditSubmit}
+      />
+
       <Modal
-        title="Confirm Delete Product"
+        title="Confirm Delete Supplier"
         open={isDeleteModalOpen}
         onCancel={() => setIsDeleteModalOpen(false)}
         footer={[
@@ -248,7 +236,7 @@ export const StockInHandListTable: React.FC<ProductsTableProps> = ({
             onClick={handleDelete}
             disabled={deleteConfirmationText !== "DELETE"}
           >
-            Delete Product
+            Delete Supplier
           </Button>,
         ]}
         destroyOnClose
@@ -266,7 +254,7 @@ export const StockInHandListTable: React.FC<ProductsTableProps> = ({
             onChange={(e) => setDeleteConfirmationText(e.target.value)}
           />
           <p className="text-red-500 text-[12px] font-bold">
-            Warning: This action will permanently delete the product record.
+            Warning: This action will permanently delete the supplier record.
           </p>
         </div>
       </Modal>

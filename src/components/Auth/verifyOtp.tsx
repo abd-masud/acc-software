@@ -134,7 +134,7 @@ export const VerifyOtpComponent = () => {
     }
   }, [timer]);
   return (
-    <main className="bg-auth_bg bg-cover bg-center bg-fixed min-h-screen flex justify-center items-center">
+    <main className="bg-auth_bg bg-cover bg-center bg-fixed min-h-[calc(100vh+1px)] flex justify-center items-center">
       {error && (
         <div className="flex items-center p-4 mb-4 rounded-lg bg-gray-800 text-red-400 absolute top-5 right-5">
           <div className="text-sm font-medium">{error}</div>

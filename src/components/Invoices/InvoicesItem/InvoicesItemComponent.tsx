@@ -12,7 +12,7 @@ import { useAccUserRedirect } from "@/hooks/useAccUser";
 export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
   const { user } = useAuth();
   const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
-  const [policyTerms, setPolicyTerms] = useState<string[]>([]);
+  const [terms, setTerms] = useState<string[]>([]);
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,9 +46,9 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
       }
     };
 
-    const fetchPolicyTerms = async () => {
+    const fetchTerms = async () => {
       try {
-        const response = await fetch(`/api/policy?user_id=${user.id}`, {
+        const response = await fetch(`/api/terms?user_id=${user.id}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -58,10 +58,10 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
         if (response.ok) {
           const data = await response.json();
           const terms = Array.isArray(data.data?.terms) ? data.data.terms : [];
-          setPolicyTerms(terms);
+          setTerms(terms);
         }
       } catch (err) {
-        console.error("Policy terms error:", err);
+        console.error("Terms error:", err);
         setError((err as Error).message);
       }
     };
@@ -71,7 +71,7 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
       setError(null);
 
       await fetchInvoiceData();
-      await fetchPolicyTerms();
+      await fetchTerms();
 
       setLoading(false);
     };
@@ -198,7 +198,7 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
               <div className="flex items-center justify-end gap-3">
                 <div>
                   <Image
-                    src={user ? user.logo : logo}
+                    src={user?.logo || logo}
                     alt="Company Logo"
                     width={100}
                     height={100}
@@ -323,9 +323,9 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
                   Terms & Conditions:
                 </h3>
                 <div className="text-[12px] leading-snug">
-                  {Array.isArray(policyTerms) && policyTerms.length > 0 ? (
+                  {Array.isArray(terms) && terms.length > 0 ? (
                     <ul className="list-disc pl-5">
-                      {policyTerms.map((term, index) => (
+                      {terms.map((term, index) => (
                         <li key={index}>{term}</li>
                       ))}
                     </ul>

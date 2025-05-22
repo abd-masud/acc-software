@@ -43,7 +43,7 @@ export const CurrencySettingsTable = () => {
         let activeCurrency = null;
 
         const dbRes = await fetch(`/api/currencies?user_id=${user.id}`);
-        if (dbRes.status === 404) {
+        if (dbRes.status == 404) {
           activeCurrency = "USD";
         } else {
           const dbJson = await dbRes.json();
@@ -52,7 +52,7 @@ export const CurrencySettingsTable = () => {
 
         const updated = currencyList.map((item) => ({
           ...item,
-          isDefault: item.code === activeCurrency,
+          isDefault: item.code == activeCurrency,
         }));
 
         setData(updated);

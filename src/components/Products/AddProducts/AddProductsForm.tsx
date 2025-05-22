@@ -1,16 +1,16 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { PurchaserOption } from "@/types/products";
-import { Modal } from "antd";
+import { SupplierOption } from "@/types/products";
 import Image from "next/image";
 import success from "../../../../public/images/success.png";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useId, useState } from "react";
 import Select, { StylesConfig } from "react-select";
 import { FaXmark } from "react-icons/fa6";
-import { Purchasers } from "@/types/purchasers";
+import { Suppliers } from "@/types/suppliers";
+import { Button, Modal } from "antd";
+import warning from "../../../../public/images/warning.png";
 
 const TYPES = [
   "Single (Only Single product)",
@@ -57,10 +57,13 @@ export const AddProductsForm = () => {
   const [loading, setLoading] = useState(false);
   const [product_id, setProductId] = useState("");
   const [currencyCode, setCurrencyCode] = useState("USD");
-  const [purchasers, setPurchasers] = useState<Purchasers[]>([]);
+  const [suppliers, setSuppliers] = useState<Suppliers[]>([]);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [userMessage, setUserMessage] = useState<string | null>(null);
-  const [selectedPurchaser, setSelectedPurchaser] = useState<Purchasers | null>(
+  const [isSuppliersModalVisible, setIsSuppliersModalVisible] = useState(false);
+  const [isCategoriesModalVisible, setIsCategoriesModalVisible] =
+    useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<Suppliers | null>(
     null
   );
   const [isInHouseProduct, setIsInHouseProduct] = useState(false);
@@ -85,11 +88,34 @@ export const AddProductsForm = () => {
     material: string[];
   }>({ category: [], size: [], color: [], material: [] });
 
-  const purchaserOptions = purchasers.map((purchaser: Purchasers) => ({
-    value: purchaser.id,
-    label: `${purchaser.company} (${purchaser.purchaser_id})`,
-    purchaser: purchaser,
+  const supplierOptions = suppliers.map((supplier: Suppliers) => ({
+    value: supplier.id,
+    label: `${supplier.company} (${supplier.supplier_id})`,
+    supplier: supplier,
   }));
+
+  const showNoSuppliersModal = () => {
+    setIsSuppliersModalVisible(true);
+  };
+
+  const showNoCategoryModal = () => {
+    setIsCategoriesModalVisible(true);
+  };
+
+  const handleSuppliersModalClose = () => {
+    setIsSuppliersModalVisible(false);
+    checkEmptyCategories();
+  };
+
+  const handleCategoriesModalClose = () => {
+    setIsCategoriesModalVisible(false);
+  };
+
+  const checkEmptyCategories = () => {
+    if (generalOptions.category.length == 0) {
+      showNoCategoryModal();
+    }
+  };
 
   const fetchGenerals = useCallback(async () => {
     if (!user?.id) return;
@@ -128,31 +154,38 @@ export const AddProductsForm = () => {
 
   useEffect(() => {
     if (!user?.id) return;
-    const fetchCustomers = async () => {
-      try {
-        const purchasersRes = await fetch(
-          `/api/purchasers?user_id=${user.id}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
 
-        if (purchasersRes.ok) {
-          const purchasersData = await purchasersRes.json();
-          setPurchasers(
-            Array.isArray(purchasersData.data) ? purchasersData.data : []
-          );
+    const fetchSuppliers = async () => {
+      try {
+        const suppliersRes = await fetch(`/api/suppliers?user_id=${user.id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (suppliersRes.ok) {
+          const suppliersData = await suppliersRes.json();
+          const suppliersList = Array.isArray(suppliersData.data)
+            ? suppliersData.data
+            : [];
+          setSuppliers(suppliersList);
+
+          if (suppliersList.length === 0) {
+            showNoSuppliersModal();
+          } else if (generalOptions.category.length === 0) {
+            showNoCategoryModal();
+          }
+        } else if (suppliersRes.status === 404) {
+          showNoSuppliersModal();
         }
       } catch (error) {
-        console.error("Failed to fetch customers:", error);
+        console.error("Failed to fetch suppliers:", error);
       }
     };
 
-    fetchCustomers();
-  }, [user?.id]);
+    fetchSuppliers();
+  }, [user?.id, generalOptions.category.length]);
 
   useEffect(() => {
     const generateProductId = () => {
@@ -200,11 +233,11 @@ export const AddProductsForm = () => {
   const handleSelectChange = (field: keyof FormValues) => (selected: any) => {
     const value = selected?.value || "";
 
-    if (field === "type") {
+    if (field == "type") {
       setFormValues((prev) => ({
         ...prev,
         type: value,
-        stock: value === "Single (Only Single product)" ? "1" : "",
+        stock: value == "Single (Only Single product)" ? "1" : "",
       }));
     } else {
       setFormValues((prev) => ({
@@ -223,8 +256,8 @@ export const AddProductsForm = () => {
     setFormValues({
       ...formValues,
       [id]:
-        id === "price" || id === "tax_rate" || id === "stock"
-          ? value === ""
+        id == "price" || id == "tax" || id == "stock"
+          ? value == ""
             ? ""
             : Number(value)
           : value,
@@ -241,11 +274,10 @@ export const AddProductsForm = () => {
     const minute = pad(now.getMinutes());
     const second = pad(now.getSeconds());
     const random = Math.floor(100 + Math.random() * 900);
-    const sanitized = user?.company
-      .replace(/\s+/g, "")
-      .toUpperCase()
-      .slice(0, 2);
-    return `P${sanitized}${year}${month}${day}${hour}${minute}${second}${random}`;
+    const companyPrefix = user?.company
+      ? user.company.replace(/\s+/g, "CO").toUpperCase().slice(0, 2)
+      : "CO";
+    return `P${companyPrefix}${year}${month}${day}${hour}${minute}${second}${random}`;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -270,9 +302,9 @@ export const AddProductsForm = () => {
       type,
       user_id: user?.id,
       product_id,
-      purchaser: isInHouseProduct
+      supplier: isInHouseProduct
         ? "In-house product"
-        : selectedPurchaser || null,
+        : selectedSupplier || null,
       attribute,
       sku,
     }));
@@ -328,7 +360,7 @@ export const AddProductsForm = () => {
     }),
   };
 
-  const purchaserSelectStyles: StylesConfig<PurchaserOption, boolean> = {
+  const supplierSelectStyles: StylesConfig<SupplierOption, boolean> = {
     control: (base) => ({
       ...base,
       borderColor: "#E5E7EB",
@@ -364,10 +396,6 @@ export const AddProductsForm = () => {
   const handleCloseMessage = () => {
     setUserMessage(null);
   };
-
-  if (loading) {
-    return <div>Loading form...</div>;
-  }
 
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
@@ -407,7 +435,7 @@ export const AddProductsForm = () => {
           </div>
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="type">
-              Single Product / Bulk Product
+              Single / Bulk Product
             </label>
             <Select
               instanceId={`${instanceId}-type`}
@@ -442,17 +470,7 @@ export const AddProductsForm = () => {
         </div>
 
         <div className="mb-6 p-4 border rounded-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[15px] font-semibold">
-              Purchaser <span className="sm:inline hidden">Details</span>
-            </h3>
-            <Link
-              className="text-[12px] text-blue-600"
-              href={"/purchasers/add-purchasers"}
-            >
-              Add Purchaser
-            </Link>
-          </div>
+          <h3 className="text-[15px] font-semibold mb-3">Supplier Details</h3>
           <div className="flex items-center gap-3 mb-3">
             <input
               type="checkbox"
@@ -461,7 +479,7 @@ export const AddProductsForm = () => {
               onChange={(e) => {
                 setIsInHouseProduct(e.target.checked);
                 if (e.target.checked) {
-                  setSelectedPurchaser(null);
+                  setSelectedSupplier(null);
                 }
               }}
             />
@@ -477,26 +495,26 @@ export const AddProductsForm = () => {
               <Select<{
                 value: number;
                 label: string;
-                purchaser: Purchasers;
+                supplier: Suppliers;
               }>
                 id="company"
                 className="text-[14px] mt-2"
-                options={purchaserOptions}
-                value={purchaserOptions.find(
-                  (option) => option.value == selectedPurchaser?.id
+                options={supplierOptions}
+                value={supplierOptions.find(
+                  (option) => option.value == selectedSupplier?.id
                 )}
                 onChange={(selectedOption) => {
                   if (selectedOption) {
-                    setSelectedPurchaser(selectedOption.purchaser);
+                    setSelectedSupplier(selectedOption.supplier);
                   } else {
-                    setSelectedPurchaser(null);
+                    setSelectedSupplier(null);
                   }
                 }}
-                placeholder="Select purchaser"
+                placeholder="Select supplier"
                 isClearable
                 isSearchable
                 isDisabled={isInHouseProduct}
-                styles={purchaserSelectStyles}
+                styles={supplierSelectStyles}
               />
             </div>
             <div className="mb-4">
@@ -508,7 +526,7 @@ export const AddProductsForm = () => {
                 className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="text"
                 id="owner"
-                value={selectedPurchaser?.owner || ""}
+                value={selectedSupplier?.owner || ""}
                 readOnly
               />
             </div>
@@ -522,7 +540,7 @@ export const AddProductsForm = () => {
               className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
               type="text"
               id="address"
-              value={selectedPurchaser?.address || ""}
+              value={selectedSupplier?.address || ""}
               readOnly
             />
           </div>
@@ -536,7 +554,7 @@ export const AddProductsForm = () => {
                 className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="email"
                 id="email"
-                value={selectedPurchaser?.email || ""}
+                value={selectedSupplier?.email || ""}
                 readOnly
               />
             </div>
@@ -549,7 +567,7 @@ export const AddProductsForm = () => {
                 className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="text"
                 id="contact"
-                value={selectedPurchaser?.contact || ""}
+                value={selectedSupplier?.contact || ""}
                 readOnly
               />
             </div>
@@ -599,7 +617,7 @@ export const AddProductsForm = () => {
                   e.preventDefault();
                 }
                 if (
-                  e.key === "." &&
+                  e.key == "." &&
                   formValues.buying_price.toString().includes(".")
                 ) {
                   e.preventDefault();
@@ -634,10 +652,7 @@ export const AddProductsForm = () => {
                 ) {
                   e.preventDefault();
                 }
-                if (
-                  e.key === "." &&
-                  formValues.price.toString().includes(".")
-                ) {
+                if (e.key == "." && formValues.price.toString().includes(".")) {
                   e.preventDefault();
                 }
               }}
@@ -669,12 +684,6 @@ export const AddProductsForm = () => {
               <label className="text-[14px]" htmlFor="category">
                 Category
               </label>
-              <Link
-                className="text-[12px] text-blue-600"
-                href={"/products/product-settings"}
-              >
-                Add Category
-              </Link>
             </div>
             <Select
               instanceId={`${instanceId}-category`}
@@ -697,12 +706,6 @@ export const AddProductsForm = () => {
               <label className="text-[14px]" htmlFor="category">
                 Attributes
               </label>
-              <Link
-                className="text-[12px] text-blue-600"
-                href={"/products/product-settings"}
-              >
-                Add Attribute
-              </Link>
             </div>
             <div className="grid sm:grid-cols-3 gap-2">
               <Select
@@ -717,7 +720,6 @@ export const AddProductsForm = () => {
                 placeholder="Size"
                 styles={generalSelectStyles}
                 isClearable
-                required
               />
 
               <Select
@@ -732,7 +734,6 @@ export const AddProductsForm = () => {
                 placeholder="Color"
                 styles={generalSelectStyles}
                 isClearable
-                required
               />
 
               <Select
@@ -747,7 +748,6 @@ export const AddProductsForm = () => {
                 placeholder="Materials"
                 styles={generalSelectStyles}
                 isClearable
-                required
               />
             </div>
           </div>
@@ -759,7 +759,7 @@ export const AddProductsForm = () => {
             <input
               placeholder="Enter Stock Quantity"
               className={`border text-[14px] py-[13px] px-[10px] w-full ${
-                formValues.type === "Bulk (Auto SKU for each product)"
+                formValues.type == "Bulk (Auto SKU for each product)"
                   ? "bg-[#F2F4F7]"
                   : "bg-gray-300"
               } hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-1`}
@@ -782,10 +782,7 @@ export const AddProductsForm = () => {
                 ) {
                   e.preventDefault();
                 }
-                if (
-                  e.key === "." &&
-                  formValues.stock.toString().includes(".")
-                ) {
+                if (e.key == "." && formValues.stock.toString().includes(".")) {
                   e.preventDefault();
                 }
               }}
@@ -826,6 +823,84 @@ export const AddProductsForm = () => {
             Product has been added successfully.
           </p>
         </div>
+      </Modal>
+
+      <Modal
+        open={isSuppliersModalVisible}
+        onCancel={handleSuppliersModalClose}
+        closable={false}
+        footer={[
+          <Button
+            key="continue"
+            onClick={handleSuppliersModalClose}
+            className="mr-1"
+          >
+            Continue
+          </Button>,
+          <Button
+            key="add"
+            type="primary"
+            onClick={() => {
+              router.push("/suppliers/add-suppliers");
+              handleSuppliersModalClose();
+            }}
+          >
+            Add Suppliers
+          </Button>,
+        ]}
+      >
+        <div className="flex justify-center">
+          <Image
+            height={150}
+            width={150}
+            src={warning}
+            alt="Warning"
+            priority
+          />
+        </div>
+        <h2 className="text-xl font-bold text-center mb-4">
+          No Suppliers Available
+        </h2>
+        <p>
+          There are no suppliers available. Please add suppliers first or just
+          continue with in-house products.
+        </p>
+      </Modal>
+
+      <Modal
+        open={isCategoriesModalVisible}
+        closable={false}
+        maskClosable={false}
+        keyboard={false}
+        footer={[
+          <Button
+            key="add"
+            type="primary"
+            onClick={() => {
+              router.push("/products/product-settings");
+              handleCategoriesModalClose();
+            }}
+          >
+            Add Categories
+          </Button>,
+        ]}
+      >
+        <div className="flex justify-center">
+          <Image
+            height={150}
+            width={150}
+            src={warning}
+            alt="Warning"
+            priority
+          />
+        </div>
+        <h2 className="text-xl font-bold text-center mb-4">
+          No Categories Available
+        </h2>
+        <p className="text-center">
+          There are no product categories available. Please add categories
+          first.
+        </p>
       </Modal>
     </main>
   );
