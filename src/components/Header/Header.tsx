@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dummy from "../../../public/images/dummy.jpg";
 import { useAuth } from "@/contexts/AuthContext";
-import { FaUser } from "react-icons/fa";
+import { FaCalculator, FaUser } from "react-icons/fa";
 import { FaKey } from "react-icons/fa6";
 import { FaRightFromBracket } from "react-icons/fa6";
 import { signOut } from "next-auth/react";
@@ -14,6 +14,7 @@ import { VscThreeBars } from "react-icons/vsc";
 import { useState } from "react";
 import { MdFullscreen, MdOutlineFullscreenExit } from "react-icons/md";
 import { useAccUserRedirect } from "@/hooks/useAccUser";
+import { CalculatorModal } from "./Calculator";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -21,6 +22,7 @@ interface HeaderProps {
 
 export const Header = ({ toggleSidebar }: HeaderProps) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isCalculatorVisible, setIsCalculatorVisible] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
   useAccUserRedirect();
@@ -34,6 +36,14 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
       document.exitFullscreen();
       setIsFullScreen(false);
     }
+  };
+
+  const showCalculator = () => {
+    setIsCalculatorVisible(true);
+  };
+
+  const handleCalculatorCancel = () => {
+    setIsCalculatorVisible(false);
   };
 
   const handleSignOut = async () => {
@@ -85,53 +95,62 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
   );
 
   return (
-    <main className="flex justify-between items-center h-[70px] p-5 shadow-md w-full bg-white border-b border-[#dddddd]">
-      <div className="flex items-center">
-        <button
-          className="text-[#6E6F78] px-3 py-1 border rounded-md"
-          onClick={toggleSidebar}
-        >
-          <VscThreeBars className="fill-black" />
-        </button>
-        <div className="ml-4 sm:block hidden">
-          {user.logo ? (
-            <Image
-              className="h-10 w-auto"
-              priority
-              src={user.logo}
-              height={500}
-              width={500}
-              alt="Copa Business Logo"
-            />
-          ) : (
-            ""
-          )}
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        <button onClick={toggleFullScreen}>
-          {isFullScreen ? (
-            <MdOutlineFullscreenExit className="h-8 w-8 fill-black" />
-          ) : (
-            <MdFullscreen className="h-8 w-8 fill-black" />
-          )}
-        </button>
-        <Popover
-          content={popoverContent}
-          trigger="click"
-          placement="bottomRight"
-        >
-          <button className="flex items-center border-2 border-[#307DF1] rounded-full overflow-hidden">
-            <Image
-              className="h-10 w-10"
-              src={user?.image || dummy}
-              height={225}
-              width={225}
-              alt={"User"}
-            />
+    <>
+      <main className="flex justify-between items-center h-[70px] p-5 shadow-md w-full bg-white border-b border-[#dddddd]">
+        <div className="flex items-center">
+          <button
+            className="text-[#6E6F78] px-3 py-1 border rounded-md"
+            onClick={toggleSidebar}
+          >
+            <VscThreeBars className="fill-black" />
           </button>
-        </Popover>
-      </div>
-    </main>
+          <div className="ml-4 sm:block hidden">
+            {user.logo ? (
+              <Image
+                className="h-10 w-auto"
+                priority
+                src={user.logo}
+                height={500}
+                width={500}
+                alt="Copa Business Logo"
+              />
+            ) : (
+              ""
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button onClick={showCalculator}>
+            <FaCalculator className="h-5 w-5 fill-black" />
+          </button>
+          <button onClick={toggleFullScreen}>
+            {isFullScreen ? (
+              <MdOutlineFullscreenExit className="h-8 w-8 fill-black" />
+            ) : (
+              <MdFullscreen className="h-8 w-8 fill-black" />
+            )}
+          </button>
+          <Popover
+            content={popoverContent}
+            trigger="click"
+            placement="bottomRight"
+          >
+            <button className="flex items-center border-2 border-[#307DF1] rounded-full overflow-hidden">
+              <Image
+                className="h-10 w-10"
+                src={user?.image || dummy}
+                height={225}
+                width={225}
+                alt={"User"}
+              />
+            </button>
+          </Popover>
+        </div>
+      </main>
+      <CalculatorModal
+        visible={isCalculatorVisible}
+        onCancel={handleCalculatorCancel}
+      />
+    </>
   );
 };

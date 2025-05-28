@@ -140,7 +140,7 @@ export const CurrencySettingsTable = () => {
       <div className="flex sm:justify-between justify-end items-center mb-5">
         <div className="sm:flex items-center hidden">
           <div className="h-2 w-2 bg-[#307EF3] rounded-full mr-2"></div>
-          <h2 className="text-[13px] font-[500]">Currency Settings Info</h2>
+          <h2 className="text-[13px] font-[500]">Currency Settings</h2>
         </div>
         <div className="flex items-center justify-end gap-2">
           <Input

@@ -76,17 +76,25 @@ export const CreateInvoicesForm = () => {
     new Map(products.map((p) => [p.product_id, p])).values()
   );
 
-  const productOptions = uniqueProducts.map((product) => ({
-    value: product.id,
-    label: `${product.name} (${product.product_id}): ${
-      products.filter((p) => p.product_id == product.product_id).length
-    }`,
-    product: product,
-  }));
-
   const getAvailableCount = (productId: string) => {
-    return products.filter((p) => p.product_id == productId).length;
+    const totalCount = products.filter((p) => p.product_id == productId).length;
+
+    const usedCount = invoiceItems
+      .filter((item) => item.product_id === productId)
+      .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+
+    return totalCount - usedCount;
   };
+
+  const productOptions = uniqueProducts
+    .filter((product) => getAvailableCount(product.product_id) > 0)
+    .map((product) => ({
+      value: product.id,
+      label: `${product.name} (${product.product_id}): ${getAvailableCount(
+        product.product_id
+      )}`,
+      product: product,
+    }));
 
   const showNoCustomersModal = () => {
     setIsCustomersModalVisible(true);
@@ -119,10 +127,10 @@ export const CreateInvoicesForm = () => {
             : [];
           setCustomers(customersList);
 
-          if (customersList.length === 0) {
+          if (customersList.length == 0) {
             showNoCustomersModal();
           }
-        } else if (customersRes.status === 404) {
+        } else if (customersRes.status == 404) {
           showNoCustomersModal();
         }
       } catch (error) {
@@ -148,10 +156,10 @@ export const CreateInvoicesForm = () => {
             : [];
           setProducts(productsList);
 
-          if (productsList.length === 0) {
+          if (productsList.length == 0) {
             showNoProductModal();
           }
-        } else if (productsRes.status === 404) {
+        } else if (productsRes.status == 404) {
           showNoProductModal();
         }
       } catch (error) {
@@ -213,9 +221,9 @@ export const CreateInvoicesForm = () => {
   useEffect(() => {
     const generateCustomerId = () => {
       const compPrefix = user?.company
-        ? user.company.slice(0, 2).toUpperCase()
-        : "CO";
-      const random = Math.floor(10000 + Math.random() * 90000);
+        ? user.company.slice(0, 1).toUpperCase()
+        : "C";
+      const random = Math.floor(100000 + Math.random() * 900000);
       return `I${compPrefix}${random}`;
     };
 
@@ -335,26 +343,37 @@ export const CreateInvoicesForm = () => {
         throw new Error(data.message || "Failed to create invoice");
       }
 
-      // const productsToDelete = invoiceItems.map((item) => ({
-      //   product_id: item.product_id,
-      //   quantity: item.quantity,
-      // }));
+      const productsToDelete: string[] = [];
 
-      // const deleteRes = await fetch("/api/products", {
-      //   method: "DELETE",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({
-      //     products: productsToDelete,
-      //   }),
-      // });
+      invoiceItems.forEach((item) => {
+        const quantity = Number(item.quantity);
+        const productId = item.product_id;
 
-      // const deleteData = await deleteRes.json();
+        if (isNaN(quantity)) {
+          console.error("Invalid quantity:", item.quantity);
+          return;
+        }
 
-      // if (!deleteRes.ok) {
-      //   throw new Error(deleteData.message || "Failed to delete products");
-      // }
+        for (let i = 0; i < quantity; i++) {
+          productsToDelete.push(productId);
+        }
+      });
+
+      const deleteRes = await fetch("/api/products", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_id: productsToDelete,
+        }),
+      });
+
+      const deleteData = await deleteRes.json();
+
+      if (!deleteRes.ok) {
+        throw new Error(deleteData.message || "Failed to delete products");
+      }
 
       setShowSuccessModal(true);
     } catch (error: any) {
@@ -639,14 +658,14 @@ export const CreateInvoicesForm = () => {
                         onChange={(selectedOption) => {
                           if (selectedOption) {
                             const product = selectedOption.product;
-                            const availableCount = getAvailableCount(
+                            const remainingQuantity = getAvailableCount(
                               product.product_id
                             );
-                            const currentQuantity = Number(item.quantity);
-                            const newQuantity =
-                              currentQuantity > availableCount
-                                ? availableCount
-                                : currentQuantity || 1;
+
+                            const newQuantity = Math.min(
+                              remainingQuantity + Number(item.quantity || 0),
+                              Number(item.quantity || 1)
+                            );
 
                             setInvoiceItems(
                               invoiceItems.map((i) =>
@@ -675,8 +694,8 @@ export const CreateInvoicesForm = () => {
                                       product: "",
                                       unit: "",
                                       unit_price: "",
-                                      amount: "",
                                       quantity: "",
+                                      amount: "",
                                     }
                                   : i
                               )
@@ -698,7 +717,8 @@ export const CreateInvoicesForm = () => {
                         pattern="[0-9]"
                         min={1}
                         max={
-                          item.product_id
+                          item.product_id &&
+                          getAvailableCount(item.product_id) >= 1
                             ? getAvailableCount(item.product_id)
                             : undefined
                         }

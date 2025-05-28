@@ -294,18 +294,22 @@ export async function DELETE(request: NextRequest) {
                 );
 
         } else if (product_id) {
-            // Handle delete by product_id (single or multiple)
             const productIds = Array.isArray(product_id) ? product_id : [product_id];
-            const placeholders = productIds.map(() => '?').join(',');
+            const db = await connectionToDatabase();
+            let totalDeleted = 0;
 
-            const [result] = await db.query<ResultSetHeader>(
-                `DELETE FROM products WHERE product_id IN (${placeholders})`,
-                productIds
-            );
+            for (const pid of productIds) {
+                const [result] = await db.query<ResultSetHeader>(
+                    `DELETE FROM products WHERE product_id = ? LIMIT 1`,
+                    [pid]
+                );
 
-            return result.affectedRows > 0
+                totalDeleted += result.affectedRows;
+            }
+
+            return totalDeleted > 0
                 ? NextResponse.json(
-                    { success: true, message: `${result.affectedRows} product(s) deleted successfully` },
+                    { success: true, message: `${totalDeleted} product(s) deleted successfully` },
                     { status: 200 }
                 )
                 : NextResponse.json(
@@ -313,6 +317,7 @@ export async function DELETE(request: NextRequest) {
                     { status: 404 }
                 );
         }
+
 
     } catch (error) {
         return NextResponse.json(

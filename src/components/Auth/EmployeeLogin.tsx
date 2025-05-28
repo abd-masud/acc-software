@@ -36,7 +36,7 @@ export const EmployeeLoginComponent = () => {
         const { token, user: userData } = await response.json();
         setUser(userData);
         localStorage.setItem("acc_user", token);
-        window.location.href = "/";
+        window.location.href = "/dashboard";
       } else {
         const errorData = await response.json().catch(() => ({}));
         setError(errorData.message || "Invalid email or password");

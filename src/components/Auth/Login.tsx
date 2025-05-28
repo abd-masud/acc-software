@@ -44,7 +44,7 @@ export const LoginComponent = () => {
   useEffect(() => {
     if (status == "authenticated" && session?.user?.accessToken) {
       localStorage.setItem("acc_user", session.user.accessToken);
-      window.location.href = "/";
+      window.location.href = "/dashboard";
     }
   }, [session, status, router]);
 
@@ -70,7 +70,7 @@ export const LoginComponent = () => {
         const { token, user: userData } = await response.json();
         setUser(userData);
         localStorage.setItem("acc_user", token);
-        router.push("/");
+        router.push("/dashboard");
       } else {
         const errorData = await response.json().catch(() => ({}));
         setError(errorData.message || "Invalid email or password");

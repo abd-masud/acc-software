@@ -190,9 +190,9 @@ export const AddProductsForm = () => {
   useEffect(() => {
     const generateProductId = () => {
       const compPrefix = user?.company
-        ? user.company.slice(0, 2).toUpperCase()
-        : "CO";
-      const random = Math.floor(10000 + Math.random() * 90000);
+        ? user.company.slice(0, 1).toUpperCase()
+        : "C";
+      const random = Math.floor(100000 + Math.random() * 900000);
       return `P${compPrefix}${random}`;
     };
 
@@ -861,7 +861,7 @@ export const AddProductsForm = () => {
         <h2 className="text-xl font-bold text-center mb-4">
           No Suppliers Available
         </h2>
-        <p>
+        <p className="text-center">
           There are no suppliers available. Please add suppliers first or just
           continue with in-house products.
         </p>

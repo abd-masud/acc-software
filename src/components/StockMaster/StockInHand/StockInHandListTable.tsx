@@ -140,17 +140,24 @@ export const StockInHandListTable: React.FC<ProductsTableProps> = ({
       title: "Attribute",
       dataIndex: "attribute",
       render: (value: any) => {
+        if (Array.isArray(value) && value.length === 0) {
+          return "-";
+        }
         if (typeof value == "object" && value !== null) {
-          return Object.values(value)
+          const values = Object.values(value)
             .map((val: any) => {
               if (val && typeof val == "object") {
                 return val.value ?? "[object]";
               }
               return val;
             })
-            .join(", ");
+            .filter((val) => val !== undefined && val !== null && val !== "");
+
+          return values.length > 0 ? values.join(", ") : "-";
         }
-        return "-";
+        return value !== undefined && value !== null && value !== ""
+          ? value
+          : "-";
       },
     },
     {

@@ -36,6 +36,7 @@ const HIDDEN_PAGES = [
   "/auth/verify-otp",
   "/auth/new-password",
   "/auth/employee-login",
+  "/",
 ] as const;
 
 function CompanyCheck({ children }: { children: React.ReactNode }) {
@@ -85,9 +86,8 @@ function CompanyCheck({ children }: { children: React.ReactNode }) {
           <h2 className="text-xl font-bold text-center mb-4">
             Profile Information Required
           </h2>
-          <p>
-            Please set up your profile information (Your company name, company
-            logo, contact number, address) to continue using the platform.
+          <p className="text-center">
+            Please set up your profile information continue using the platform.
           </p>
           <div className="mt-4 flex justify-end gap-2">
             <button
@@ -198,7 +198,7 @@ export default function RootLayout({
                 {!isHiddenPage && (
                   <>
                     <div
-                      className={`fixed w-[250px] z-50 transition-transform duration-300 ${
+                      className={`fixed w-[250px] z-50 transition-transform duration-100 ${
                         isSidebarVisible ? "translate-x-0" : "-translate-x-full"
                       }`}
                       aria-hidden={!isSidebarVisible}
@@ -207,7 +207,7 @@ export default function RootLayout({
                     </div>
                     {isSidebarVisible && (
                       <div
-                        className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition duration-300"
+                        className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition duration-100"
                         onClick={closeSidebar}
                         role="presentation"
                       />
@@ -215,7 +215,7 @@ export default function RootLayout({
                   </>
                 )}
                 <main
-                  className={`flex-1 transition-all duration-300 ${
+                  className={`flex-1 transition-all duration-100 ${
                     !isHiddenPage && isSidebarVisible
                       ? "md:ml-[250px] ml-0"
                       : "ml-0"

@@ -78,9 +78,7 @@ export const CreateQuotesForm = () => {
 
   const productOptions = uniqueProducts.map((product) => ({
     value: product.id,
-    label: `${product.name} (${product.product_id}): ${
-      products.filter((p) => p.product_id == product.product_id).length
-    }`,
+    label: `${product.name} ${product.product_id}`,
     product: product,
   }));
 
@@ -213,9 +211,9 @@ export const CreateQuotesForm = () => {
   useEffect(() => {
     const generateCustomerId = () => {
       const compPrefix = user?.company
-        ? user.company.slice(0, 2).toUpperCase()
-        : "CO";
-      const random = Math.floor(10000 + Math.random() * 90000);
+        ? user.company.slice(0, 1).toUpperCase()
+        : "C";
+      const random = Math.floor(100000 + Math.random() * 900000);
       return `I${compPrefix}${random}`;
     };
 

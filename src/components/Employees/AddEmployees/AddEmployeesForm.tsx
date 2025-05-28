@@ -21,6 +21,7 @@ export const AddEmployeesForm = () => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [userMessage, setUserMessage] = useState<string | null>(null);
   const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false);
+  const [isSMTPModalVisible, setIsSMTPModalVisible] = useState(false);
 
   const [formValues, setFormValues] = useState<Omit<Employees, "id">>({
     key: "",
@@ -46,9 +47,9 @@ export const AddEmployeesForm = () => {
   useEffect(() => {
     const generateEmployeeId = () => {
       const compPrefix = user?.company
-        ? user.company.slice(0, 2).toUpperCase()
-        : "CO";
-      const random = Math.floor(10000 + Math.random() * 90000);
+        ? user.company.slice(0, 1).toUpperCase()
+        : "C";
+      const random = Math.floor(100000 + Math.random() * 900000);
       return `E${compPrefix}${random}`;
     };
 
@@ -71,6 +72,14 @@ export const AddEmployeesForm = () => {
 
   const handleSettingsModalClose = () => {
     setIsSettingsModalVisible(false);
+  };
+
+  const showNoSMTPModal = () => {
+    setIsSMTPModalVisible(true);
+  };
+
+  const handleSMTPModalClose = () => {
+    setIsSMTPModalVisible(false);
   };
 
   const fetchGenerals = useCallback(async () => {
@@ -128,22 +137,28 @@ export const AddEmployeesForm = () => {
 
       const result = await response.json();
 
-      if (response.ok && result.success && result.data.length > 0) {
-        const smtp = result.data[0];
-        setFormData({
-          host: smtp.host || "",
-          port: smtp.port || 587,
-          username: smtp.username || "",
-          password: smtp.password || "",
-          encryption: smtp.encryption || "none",
-          email: smtp.email || "",
-          company: smtp.company || "",
-        });
+      if (response.ok && result.success) {
+        if (result.data.length > 0) {
+          const smtp = result.data[0];
+          setFormData({
+            host: smtp.host || "",
+            port: smtp.port || 587,
+            username: smtp.username || "",
+            password: smtp.password || "",
+            encryption: smtp.encryption || "none",
+            email: smtp.email || "",
+            company: smtp.company || "",
+          });
+        } else {
+          showNoSMTPModal();
+        }
       } else {
-        console.log(result.message || "No SMTP settings found");
+        console.log(result.message || "Failed to fetch SMTP settings");
+        showNoSMTPModal();
       }
     } catch (error) {
       console.error("Failed to fetch SMTP settings:", error);
+      showNoSMTPModal();
     } finally {
       setLoading(false);
     }
@@ -211,7 +226,7 @@ export const AddEmployeesForm = () => {
               <td>${employeeData.department}</td>
             </tr>
           </table>
-          <p>Please keep your credentials secure and change your password after first login.</p>
+          <p>Please keep your credentials secure.</p>
         </body>
       </html>
     `;
@@ -572,6 +587,48 @@ export const AddEmployeesForm = () => {
         <p className="text-center">
           There are no departments or roles available. Please add departments
           and roles first.
+        </p>
+      </Modal>
+
+      <Modal
+        open={isSMTPModalVisible}
+        onCancel={handleSMTPModalClose}
+        closable={false}
+        footer={[
+          <Button
+            key="continue"
+            onClick={handleSMTPModalClose}
+            className="mr-1"
+          >
+            Continue
+          </Button>,
+          <Button
+            key="add"
+            type="primary"
+            onClick={() => {
+              router.push("/settings/smtp-settings");
+              handleSMTPModalClose();
+            }}
+          >
+            Set Up SMTP
+          </Button>,
+        ]}
+      >
+        <div className="flex justify-center">
+          <Image
+            height={150}
+            width={150}
+            src={warning}
+            alt="Warning"
+            priority
+          />
+        </div>
+        <h2 className="text-xl font-bold text-center mb-4">
+          No SMTP Available
+        </h2>
+        <p className="text-center">
+          There are no SMTP available. Please setup SMTP to send mail or just
+          continue without SMTP.
         </p>
       </Modal>
     </main>

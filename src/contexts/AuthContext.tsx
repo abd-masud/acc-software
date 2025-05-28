@@ -40,10 +40,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(userData);
       } catch {
         localStorage.removeItem("acc_user");
-        router.push("/auth/login");
+        router.push("/");
       }
     } else {
-      router.push("/auth/login");
+      router.push("/dashboard");
     }
   }, [router]);
 

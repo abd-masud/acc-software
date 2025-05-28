@@ -130,8 +130,12 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
           Copa Business
         </span>
       </Link>
-      <Link href={"/"} className={linkClass("/")} onClick={handleLinkClick}>
-        <div className={linkBar("/")}></div>
+      <Link
+        href={"/dashboard"}
+        className={linkClass("/dashboard")}
+        onClick={handleLinkClick}
+      >
+        <div className={linkBar("/dashboard")}></div>
         <AiFillDashboard className="ml-[21px] text-[16px] mr-3 w-5" />
         Dashboard
       </Link>

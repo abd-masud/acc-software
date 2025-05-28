@@ -5,7 +5,7 @@ import { FiCalendar } from "react-icons/fi";
 import logo from "../../../public/images/logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 
-export const HomeHeader = () => {
+export const Company = () => {
   const { user } = useAuth();
 
   return (

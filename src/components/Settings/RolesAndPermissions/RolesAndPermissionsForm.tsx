@@ -3,7 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { EmployeeApiResponse, Employees } from "@/types/employees";
 import { useCallback, useEffect, useState } from "react";
-import { Table, TableColumnsType } from "antd";
+import { Spin, Table, TableColumnsType } from "antd";
 import { FaXmark } from "react-icons/fa6";
 import {
   ModulePermission,
@@ -24,6 +24,15 @@ const SIDEBAR_MODULES = [
   "suppliers",
   "settings",
 ];
+
+const LoadingSpinner = () => (
+  <div className="flex justify-center items-center min-h-[calc(100vh-170px)]">
+    <div className="text-center space-y-4">
+      <Spin size="large" />
+      <p className="text-gray-600">Loading permissions data...</p>
+    </div>
+  </div>
+);
 
 export const RolesAndPermissionsForm = () => {
   const { user } = useAuth();
@@ -236,7 +245,7 @@ export const RolesAndPermissionsForm = () => {
   };
 
   if (!initialLoadComplete) {
-    return <p>Loading...</p>;
+    return <LoadingSpinner />;
   }
 
   if (roles.length == 0) {

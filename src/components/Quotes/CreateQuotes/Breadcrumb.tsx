@@ -12,7 +12,7 @@ export const Breadcrumb = () => {
           <p className="text-[16px] font-[600]">Create Quotes</p>
           <div className="sm:block hidden">
             <div className="flex items-center">
-              <Link className="text-[12px] text-[#797c8b]" href="/">
+              <Link className="text-[12px] text-[#797c8b]" href="/dashboard">
                 Dashboard
               </Link>
               <FaAngleRight className="text-[12px] text-[#797c8b] mx-2" />
