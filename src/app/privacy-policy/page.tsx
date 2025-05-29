@@ -1,5 +1,5 @@
-import HomePage from "@/components/Home/Home";
+import { PrivacyPolicyComponent } from "@/components/PrivacyPolicy/PrivacyPolicy";
 
 export default function PrivacyPolicy() {
-  return <HomePage />;
+  return <PrivacyPolicyComponent />;
 }

@@ -1,5 +1,5 @@
-import HomePage from "@/components/Home/Home";
+import { TermsAndConditionsComponent } from "@/components/TermsAndConditions/TermsAndConditions";
 
 export default function TermsAndConditions() {
-  return <HomePage />;
+  return <TermsAndConditionsComponent />;
 }

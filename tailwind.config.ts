@@ -10,6 +10,7 @@ const config: Config = {
     extend: {
       backgroundImage: {
         "auth_bg": "url('/images/auth_bg.jpg')",
+        "home_bg": "url('/images/home-bg.png')",
       },
       colors: {
         background: "var(--background)",

@@ -43,7 +43,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         router.push("/");
       }
     } else {
-      router.push("/dashboard");
     }
   }, [router]);
 
