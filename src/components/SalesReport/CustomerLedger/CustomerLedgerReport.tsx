@@ -3,8 +3,8 @@
 import { useAuth } from "@/contexts/AuthContext";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import logo from "../../../../public/images/logo.png";
-import barcode from "../../../../public/images/barcode.gif";
+import logo from "../../../../public/images/logo.webp";
+import barcode from "../../../../public/images/barcode.webp";
 import { useEffect, useState } from "react";
 import { InvoicesReportButtonProps } from "@/types/invoices";
 

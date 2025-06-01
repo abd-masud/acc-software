@@ -12,8 +12,8 @@ import { FaTrash } from "react-icons/fa";
 import dayjs from "dayjs";
 import { DatePicker, Modal, Button } from "antd";
 import Image from "next/image";
-import success from "../../../../public/images/success.png";
-import warning from "../../../../public/images/warning.png";
+import success from "../../../../public/images/success.webp";
+import warning from "../../../../public/images/warning.webp";
 
 export const CreateQuotesForm = () => {
   const { user } = useAuth();

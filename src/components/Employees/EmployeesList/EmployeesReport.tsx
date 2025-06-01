@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { EmployeesReportButtonProps } from "@/types/employees";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import logo from "../../../../public/images/logo.png";
+import logo from "../../../../public/images/logo.webp";
 import { useEffect, useState } from "react";
 
 export const EmployeesReportButton: React.FC<EmployeesReportButtonProps> = ({

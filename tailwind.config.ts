@@ -9,8 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       backgroundImage: {
-        "auth_bg": "url('/images/auth_bg.jpg')",
-        "home_bg": "url('/images/home-bg.png')",
+        "auth_bg": "url('/images/auth_bg.webp')",
+        "home_bg": "url('/images/home-bg.webp')",
       },
       colors: {
         background: "var(--background)",

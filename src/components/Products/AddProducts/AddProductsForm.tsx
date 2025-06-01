@@ -3,14 +3,14 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { SupplierOption } from "@/types/products";
 import Image from "next/image";
-import success from "../../../../public/images/success.png";
+import success from "../../../../public/images/success.webp";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useId, useState } from "react";
 import Select, { StylesConfig } from "react-select";
 import { FaXmark } from "react-icons/fa6";
 import { Suppliers } from "@/types/suppliers";
 import { Button, Modal } from "antd";
-import warning from "../../../../public/images/warning.png";
+import warning from "../../../../public/images/warning.webp";
 
 const TYPES = [
   "Single (Only Single product)",

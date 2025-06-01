@@ -8,8 +8,8 @@ import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useId, useState } from "react";
 import { FaXmark } from "react-icons/fa6";
 import Select, { StylesConfig } from "react-select";
-import success from "../../../../public/images/success.png";
-import warning from "../../../../public/images/warning.png";
+import success from "../../../../public/images/success.webp";
+import warning from "../../../../public/images/warning.webp";
 import Image from "next/image";
 
 export const AddEmployeesForm = () => {

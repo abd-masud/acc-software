@@ -4,7 +4,7 @@ import { Popover } from "antd";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import dummy from "../../../public/images/dummy.jpg";
+import dummy from "../../../public/images/dummy.webp";
 import { useAuth } from "@/contexts/AuthContext";
 import { FaCalculator, FaUser } from "react-icons/fa";
 import { FaKey } from "react-icons/fa6";

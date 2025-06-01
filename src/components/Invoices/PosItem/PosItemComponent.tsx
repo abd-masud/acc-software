@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { QRCodeSVG } from "qrcode.react";
 import { useAccUserRedirect } from "@/hooks/useAccUser";
 import Image from "next/image";
-import logo from "../../../../public/images/logo.png";
+import logo from "../../../../public/images/logo.webp";
 import { Breadcrumb } from "./Breadcrumb";
 
 export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import logo from "../../../public/images/logo.png";
+import logo from "../../../public/images/logo.webp";
 import Link from "next/link";
 import { useState } from "react";
 import { FaXmark } from "react-icons/fa6";

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import logo from "../../../public/images/logo.png";
+import logo from "../../../public/images/logo.webp";
 import Link from "next/link";
 import { FaAngleLeft } from "react-icons/fa";
 import { useEffect, useRef, useState } from "react";

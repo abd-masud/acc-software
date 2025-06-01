@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import logo from "../../../public/images/logo.png";
+import logo from "../../../public/images/logo.webp";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AiFillDashboard, AiFillProduct } from "react-icons/ai";

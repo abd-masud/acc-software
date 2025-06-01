@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, ChangeEvent, useEffect } from "react";
 import Image from "next/image";
-import dummy from "../../../public/images/dummy.jpg";
+import dummy from "../../../public/images/dummy.webp";
 import { useAuth } from "@/contexts/AuthContext";
 import { FaUpload } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
@@ -86,7 +86,7 @@ export const ProfileCompound = () => {
       const fileType = isLogo ? originalLogoType : "image/jpeg";
       const fileName = isLogo
         ? `cropped-logo.${fileType.split("/")[1] || "png"}`
-        : "cropped-image.jpg";
+        : "cropped-image.webp";
 
       croppedCanvas.toBlob((blob) => {
         if (blob) {

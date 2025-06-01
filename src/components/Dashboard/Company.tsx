@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { FiCalendar } from "react-icons/fi";
-import logo from "../../../public/images/logo.png";
+import logo from "../../../public/images/logo.webp";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const Company = () => {

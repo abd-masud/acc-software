@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import success from "../../../../public/images/success.png";
+import success from "../../../../public/images/success.webp";
 import { Modal } from "antd";
 import { FaXmark } from "react-icons/fa6";
 

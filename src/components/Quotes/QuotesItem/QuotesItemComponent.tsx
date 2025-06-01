@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { QuoteData, QuotesItemProps } from "@/types/quotes";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
-import logo from "../../../../public/images/logo.png";
+import logo from "../../../../public/images/logo.webp";
 import { Breadcrumb } from "./Breadcrumb";
 import { QRCodeSVG } from "qrcode.react";
 import { useAccUserRedirect } from "@/hooks/useAccUser";

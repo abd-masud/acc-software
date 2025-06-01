@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Modal } from "antd";
 import { User } from "next-auth";
 import Image from "next/image";
-import warning from "../../../public/images/warning.png";
+import warning from "../../../public/images/warning.webp";
 import { signOut } from "next-auth/react";
 import { FaRightFromBracket } from "react-icons/fa6";
 import { useAuth } from "@/contexts/AuthContext";

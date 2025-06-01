@@ -48,7 +48,7 @@ const HomePage = () => {
         }
 
         main {
-          background: url("/images/home-bg.png");
+          background: url("/images/home-bg.webp");
           background-position: center;
           background-repeat: no-repeat;
           background-size: cover;
