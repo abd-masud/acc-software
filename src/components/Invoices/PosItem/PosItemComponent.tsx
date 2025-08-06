@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { InvoiceData, InvoicesItemProps } from "@/types/invoices";
+import { InvoiceData, InvoiceItem, InvoicesItemProps } from "@/types/invoices";
 import { useAuth } from "@/contexts/AuthContext";
 import { QRCodeSVG } from "qrcode.react";
 import { useAccUserRedirect } from "@/hooks/useAccUser";
@@ -87,9 +87,13 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
 
   const generateQRData = () => {
     if (!invoiceData) return "";
+    const customerContact =
+      typeof invoiceData.customer === "string"
+        ? invoiceData.customer
+        : invoiceData.customer.contact;
     return [
       `Invoice ID: ${invoiceData.invoice_id}`,
-      `Contact: ${invoiceData.customer.contact}`,
+      `Contact: ${customerContact}`,
       `Inv Date: ${formatDate(invoiceData.date)}`,
     ].join("\n");
   };
@@ -302,9 +306,15 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
 
           <div className="my-1 text-xs">
             <div className="font-bold">Customer:</div>
-            <div>{invoiceData?.customer?.name}</div>
-            <div>{invoiceData?.customer?.email}</div>
-            <div>{invoiceData?.customer?.contact}</div>
+            {typeof invoiceData?.customer === "string" ? (
+              <div>{invoiceData.customer}</div>
+            ) : (
+              <>
+                <div>{invoiceData?.customer?.name}</div>
+                <div>{invoiceData?.customer?.email}</div>
+                <div>{invoiceData?.customer?.contact}</div>
+              </>
+            )}
           </div>
 
           <div className="dashed-line"></div>
@@ -316,16 +326,20 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
               <span>Price</span>
               <span>Total</span>
             </div>
-            {invoiceData?.items?.map((item, index) => (
-              <div className="items-row" key={index}>
-                <span className="truncate">{item.product}</span>
-                <span className="truncate">
-                  {item.quantity} {item.unit?.charAt(0)}
-                </span>
-                <span>{item.unit_price}</span>
-                <span>{item.amount}</span>
-              </div>
-            ))}
+            {Array.isArray(invoiceData?.items) ? (
+              invoiceData.items.map((item: InvoiceItem, index: number) => (
+                <div className="items-row" key={index}>
+                  <span className="truncate">{item.product}</span>
+                  <span className="truncate">
+                    {item.quantity} {item.unit?.charAt(0)}
+                  </span>
+                  <span>{item.unit_price}</span>
+                  <span>{item.amount}</span>
+                </div>
+              ))
+            ) : (
+              <div>No items available</div>
+            )}
           </div>
 
           <div className="dashed-line"></div>

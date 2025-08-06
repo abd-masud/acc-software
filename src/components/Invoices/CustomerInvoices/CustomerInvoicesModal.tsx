@@ -24,10 +24,23 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
   useEffect(() => {
     if (currentInvoice) {
       setInvoiceId(currentInvoice.invoice_id);
-      setCustomerName(currentInvoice.customer.name);
-      setCustomerId(currentInvoice.customer.customer_id);
-      setCustomerEmail(currentInvoice.customer.email);
-      setCustomerPhone(currentInvoice.customer.contact);
+
+      let customerData;
+      try {
+        customerData =
+          typeof currentInvoice.customer == "string"
+            ? JSON.parse(currentInvoice.customer)
+            : currentInvoice.customer;
+      } catch (e) {
+        console.error("Error parsing customer data", e);
+        customerData = {};
+      }
+
+      setCustomerName(customerData.name || "");
+      setCustomerId(customerData.customer_id || "");
+      setCustomerEmail(customerData.email || "");
+      setCustomerPhone(customerData.contact || "");
+
       setTotal(currentInvoice.total);
       setPaid(currentInvoice.paid_amount);
       setPayNow("");
@@ -82,12 +95,13 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
       let existingSubInvoice = [];
       if (currentInvoice.sub_invoice) {
         try {
-          if (typeof currentInvoice.sub_invoice == "string") {
-            existingSubInvoice = JSON.parse(currentInvoice.sub_invoice);
-          } else {
-            existingSubInvoice = Array.isArray(currentInvoice.sub_invoice)
-              ? currentInvoice.sub_invoice
-              : [currentInvoice.sub_invoice];
+          existingSubInvoice =
+            typeof currentInvoice.sub_invoice === "string"
+              ? JSON.parse(currentInvoice.sub_invoice)
+              : currentInvoice.sub_invoice;
+
+          if (!Array.isArray(existingSubInvoice)) {
+            existingSubInvoice = [existingSubInvoice];
           }
         } catch (e) {
           console.error("Error parsing sub_invoice", e);
@@ -103,8 +117,29 @@ export const InvoicesModal: React.FC<EditInvoiceModalProps> = ({
 
       const updatedSubInvoice = [...existingSubInvoice, newPaymentEntry];
 
+      let customerData = currentInvoice.customer;
+      if (typeof customerData === "string") {
+        try {
+          customerData = JSON.parse(customerData);
+        } catch (e) {
+          console.error("Error parsing customer data", e);
+        }
+      }
+
+      let itemsData = currentInvoice.items || [];
+      if (typeof itemsData === "string") {
+        try {
+          itemsData = JSON.parse(itemsData);
+        } catch (e) {
+          console.error("Error parsing items data", e);
+          itemsData = [];
+        }
+      }
+
       const updatedInvoice = {
         ...currentInvoice,
+        customer: customerData,
+        items: itemsData,
         paid_amount: updatedPaidAmount.toString(),
         due_amount: String(updatedDueAmount.toFixed(2)),
         sub_invoice: updatedSubInvoice,

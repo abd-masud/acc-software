@@ -126,54 +126,113 @@ export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
       children: [
         {
           title: "Customer ID",
-          dataIndex: ["customer", "customer_id"],
-          render: (text: string) => text || "-",
+          render: (record: InvoiceData) => {
+            try {
+              const customer =
+                typeof record.customer == "string"
+                  ? JSON.parse(record.customer)
+                  : record.customer;
+              return customer?.customer_id || "-";
+            } catch (e) {
+              console.error("Error parsing customer data:", e);
+              return "-";
+            }
+          },
         },
         {
           title: "Name",
-          dataIndex: ["customer", "name"],
-          render: (text: string) => text || "-",
+          render: (record: InvoiceData) => {
+            try {
+              const customer =
+                typeof record.customer == "string"
+                  ? JSON.parse(record.customer)
+                  : record.customer;
+              return customer?.name || "-";
+            } catch (e) {
+              console.error("Error parsing customer data:", e);
+              return "-";
+            }
+          },
         },
         {
           title: "Email",
-          dataIndex: ["customer", "email"],
-          render: (text: string) => text || "-",
+          render: (record: InvoiceData) => {
+            try {
+              const customer =
+                typeof record.customer == "string"
+                  ? JSON.parse(record.customer)
+                  : record.customer;
+              return customer?.email || "-";
+            } catch (e) {
+              console.error("Error parsing customer data:", e);
+              return "-";
+            }
+          },
         },
         {
           title: "Phone",
-          dataIndex: ["customer", "contact"],
-          render: (text: string) => text || "-",
+          render: (record: InvoiceData) => {
+            try {
+              const customer =
+                typeof record.customer == "string"
+                  ? JSON.parse(record.customer)
+                  : record.customer;
+              return customer?.contact || "-";
+            } catch (e) {
+              console.error("Error parsing customer data:", e);
+              return "-";
+            }
+          },
         },
         {
           title: "Address",
-          dataIndex: ["customer", "delivery"],
-          render: (text: string) => text || "-",
+          render: (record: InvoiceData) => {
+            try {
+              const customer =
+                typeof record.customer == "string"
+                  ? JSON.parse(record.customer)
+                  : record.customer;
+              return customer?.delivery || "-";
+            } catch (e) {
+              console.error("Error parsing customer data:", e);
+              return "-";
+            }
+          },
         },
       ],
     },
     {
       title: "Items",
       dataIndex: "items",
-      render: (items: InvoiceItem[]) => (
-        <Tooltip
-          title={
-            Array.isArray(items)
-              ? items
-                  .map(
-                    (item) =>
-                      `${item.product || "-"} - ${item.quantity} ${item.unit}`
-                  )
-                  .join("\n")
-              : "N/A"
-          }
-        >
-          <div className="cursor-default border px-1 rounded">
-            {Array.isArray(items)
-              ? `${items.length} ${items.length == 1 ? "item" : "items"}`
-              : "N/A"}
-          </div>
-        </Tooltip>
-      ),
+      render: (itemsString: string) => {
+        try {
+          const items: InvoiceItem[] = JSON.parse(itemsString);
+          return (
+            <Tooltip
+              title={
+                Array.isArray(items)
+                  ? items
+                      .map(
+                        (item) =>
+                          `${item.product || "-"} - ${item.quantity} ${
+                            item.unit
+                          }`
+                      )
+                      .join("\n")
+                  : "N/A"
+              }
+            >
+              <div className="cursor-default border px-1 rounded">
+                {Array.isArray(items)
+                  ? `${items.length} ${items.length == 1 ? "item" : "items"}`
+                  : "N/A"}
+              </div>
+            </Tooltip>
+          );
+        } catch {
+          return "N/A";
+        }
+      },
     },
     {
       title: "Dates",

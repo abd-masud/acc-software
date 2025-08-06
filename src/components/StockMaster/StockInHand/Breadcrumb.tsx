@@ -18,6 +18,17 @@ export const Breadcrumb = () => {
               <FaAngleRight className="text-[12px] text-[#797c8b] mx-2" />
               <p className="text-[12px] text-[#797c8b]">Stock Master</p>
               <FaAngleRight className="text-[12px] text-[#797c8b] mx-2" />
+              <Link
+                className="text-[12px] text-[#797c8b]"
+                href={"/stock-master/warehouse"}
+              >
+                Warehouse
+              </Link>
+              <FaAngleRight className="text-[12px] text-[#797c8b] mx-2" />
+              <p className="text-[12px] text-[#797c8b]">Cabinet</p>
+              <FaAngleRight className="text-[12px] text-[#797c8b] mx-2" />
+              <p className="text-[12px] text-[#797c8b]">Store</p>
+              <FaAngleRight className="text-[12px] text-[#797c8b] mx-2" />
               <p className="text-[12px] text-[#797c8b]">Stock In Hand</p>
             </div>
           </div>

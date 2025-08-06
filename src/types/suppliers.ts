@@ -7,6 +7,7 @@ export interface Suppliers {
     address: string;
     email: string;
     contact: string;
+    products: string;
 }
 
 export type SupplierApiResponse = {

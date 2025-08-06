@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // POST - Create a new supplier
 export async function POST(request: NextRequest) {
     try {
-        const { user_id, supplier_id, company, owner, address, email, contact } = await request.json();
+        const { user_id, supplier_id, company, owner, address, email, contact, products } = await request.json();
 
         // Basic validation
         if (!user_id || !supplier_id || !company || !owner || !address || !email || !contact) {
@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
 
         // Insert new supplier
         const [result] = await db.query<ResultSetHeader>(
-            `INSERT INTO suppliers (user_id, supplier_id, company, owner, address, email, contact)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [user_id, supplier_id, company, owner, address, email, contact]
+            `INSERT INTO suppliers (user_id, supplier_id, company, owner, address, email, contact, products)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [user_id, supplier_id, company, owner, address, email, contact, products]
         );
 
         if (result.affectedRows == 1) {
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
 // PUT - Update a supplier
 export async function PUT(request: NextRequest) {
     try {
-        const { id, supplier_id, company, owner, address, email, contact } = await request.json();
+        const { id, supplier_id, company, owner, address, email, contact, products } = await request.json();
 
         const db = await connectionToDatabase();
 
@@ -119,9 +119,9 @@ export async function PUT(request: NextRequest) {
         // Update supplier
         const [result] = await db.query<ResultSetHeader>(
             `UPDATE suppliers 
-             SET supplier_id =?, company = ?, owner = ?, address = ?, email = ?, contact = ?
+             SET supplier_id = ?, company = ?, owner = ?, address = ?, email = ?, contact = ?, products = ?
              WHERE id = ?`,
-            [supplier_id, company, owner, address, email, contact, id]
+            [supplier_id, company, owner, address, email, contact, products, id]
         );
 
         if (result.affectedRows == 1) {

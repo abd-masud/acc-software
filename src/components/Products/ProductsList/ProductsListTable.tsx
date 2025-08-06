@@ -10,6 +10,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { FaXmark } from "react-icons/fa6";
 import styled from "styled-components";
 
+const StyledTable = styled(Table)`
+  .ant-table-thead > tr:nth-child(1) > th {
+    background-color: #478cf3;
+    color: white;
+  }
+  .ant-table-thead > tr:nth-child(2) > th {
+    background-color: #6aa2f5;
+    color: white;
+  }
+`;
+
 export const ProductsListTable: React.FC<ProductsTableProps> = ({
   products,
   fetchProducts,
@@ -24,16 +35,6 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
   const [searchText, setSearchText] = useState("");
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [userMessage, setUserMessage] = useState<string | null>(null);
-  const StyledTable = styled(Table)`
-    .ant-table-thead > tr:nth-child(1) > th {
-      background-color: #478cf3;
-      color: white;
-    }
-    .ant-table-thead > tr:nth-child(2) > th {
-      background-color: #6aa2f5;
-      color: white;
-    }
-  `;
 
   const showEditModal = (product: Products) => {
     setCurrentProduct(product);
@@ -173,14 +174,21 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
       title: "Supplier",
       dataIndex: "supplier",
       render: (value: any) => {
-        if (typeof value == "string") {
+        if (value == null) return "-";
+        if (typeof value === "object") {
+          return value.company || "-";
+        }
+        if (typeof value === "string") {
+          if (value.trim() === '"In-house product"') {
+            return "In-house product";
+          }
+          try {
+            const parsed = JSON.parse(value);
+            if (parsed?.company) {
+              return parsed.company;
+            }
+          } catch {}
           return value;
-        }
-        if (Array.isArray(value)) {
-          return value.map((v) => v?.company ?? "[No Company]").join(", ");
-        }
-        if (typeof value == "object" && value !== null) {
-          return value.company ?? "[No Company]";
         }
         return "-";
       },
@@ -189,19 +197,25 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
       title: "Attribute",
       dataIndex: "attribute",
       render: (value: any) => {
+        if (typeof value === "string") {
+          try {
+            value = JSON.parse(value);
+          } catch {
+            return value;
+          }
+        }
         if (Array.isArray(value) && value.length === 0) {
           return "-";
         }
-        if (typeof value == "object" && value !== null) {
+        if (typeof value === "object" && value !== null) {
           const values = Object.values(value)
             .map((val: any) => {
-              if (val && typeof val == "object") {
+              if (val && typeof val === "object") {
                 return val.value ?? "[object]";
               }
               return val;
             })
             .filter((val) => val !== undefined && val !== null && val !== "");
-
           return values.length > 0 ? values.join(", ") : "-";
         }
         return value !== undefined && value !== null && value !== ""

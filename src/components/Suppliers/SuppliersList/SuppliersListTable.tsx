@@ -9,6 +9,17 @@ import { MdOutlineDeleteSweep } from "react-icons/md";
 import { FaXmark } from "react-icons/fa6";
 import styled from "styled-components";
 
+const StyledTable = styled(Table)`
+  .ant-table-thead > tr:nth-child(1) > th {
+    background-color: #478cf3;
+    color: white;
+  }
+  .ant-table-thead > tr:nth-child(2) > th {
+    background-color: #6aa2f5;
+    color: white;
+  }
+`;
+
 export const SuppliersListTable: React.FC<SuppliersTableProps> = ({
   suppliers,
   fetchSuppliers,
@@ -25,16 +36,6 @@ export const SuppliersListTable: React.FC<SuppliersTableProps> = ({
   const [searchText, setSearchText] = useState("");
   const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
   const [userMessage, setUserMessage] = useState<string | null>(null);
-  const StyledTable = styled(Table)`
-    .ant-table-thead > tr:nth-child(1) > th {
-      background-color: #478cf3;
-      color: white;
-    }
-    .ant-table-thead > tr:nth-child(2) > th {
-      background-color: #6aa2f5;
-      color: white;
-    }
-  `;
 
   const showEditModal = (supplier: Suppliers) => {
     setCurrentSupplier(supplier);
@@ -143,6 +144,42 @@ export const SuppliersListTable: React.FC<SuppliersTableProps> = ({
     {
       title: "Contact Number",
       dataIndex: "contact",
+    },
+    {
+      title: "Products",
+      dataIndex: "products",
+      render: (products: string) => {
+        try {
+          const parsedProducts = JSON.parse(products);
+          return (
+            <Tooltip
+              title={
+                Array.isArray(parsedProducts)
+                  ? parsedProducts
+                      .map((item) =>
+                        typeof item === "string"
+                          ? item
+                          : `${item.product || "-"} - ${item.quantity} ${
+                              item.unit
+                            }`
+                      )
+                      .join(", ")
+                  : "No products listed"
+              }
+            >
+              <div className="cursor-default border px-1 rounded">
+                {Array.isArray(parsedProducts)
+                  ? `${parsedProducts.length} ${
+                      parsedProducts.length === 1 ? "item" : "items"
+                    }`
+                  : "N/A"}
+              </div>
+            </Tooltip>
+          );
+        } catch {
+          return "N/A";
+        }
+      },
     },
     {
       title: "Action",

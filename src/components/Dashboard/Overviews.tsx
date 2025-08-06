@@ -71,7 +71,13 @@ export const Overviews = () => {
     const productMap: Record<string, number> = {};
 
     invoices.forEach((invoice) => {
-      invoice.items.forEach((item) => {
+      const items = Array.isArray(invoice.items)
+        ? invoice.items
+        : typeof invoice.items === "string"
+        ? JSON.parse(invoice.items)
+        : [];
+
+      items.forEach((item: any) => {
         const key = `${item.product}_${item.product_id}`;
         productMap[key] = (productMap[key] || 0) + Number(item.quantity);
       });

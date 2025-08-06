@@ -117,10 +117,10 @@ export const CreateQuotesForm = () => {
             : [];
           setCustomers(customersList);
 
-          if (customersList.length === 0) {
+          if (customersList.length == 0) {
             showNoCustomersModal();
           }
-        } else if (customersRes.status === 404) {
+        } else if (customersRes.status == 404) {
           showNoCustomersModal();
         }
       } catch (error) {
@@ -146,10 +146,10 @@ export const CreateQuotesForm = () => {
             : [];
           setProducts(productsList);
 
-          if (productsList.length === 0) {
+          if (productsList.length == 0) {
             showNoProductModal();
           }
-        } else if (productsRes.status === 404) {
+        } else if (productsRes.status == 404) {
           showNoProductModal();
         }
       } catch (error) {

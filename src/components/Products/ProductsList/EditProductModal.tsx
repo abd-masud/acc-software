@@ -54,13 +54,15 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
     size: "",
     color: "",
     material: "",
+    weight: "",
   });
   const [generalOptions, setGeneralOptions] = useState<{
     category: string[];
     size: string[];
     color: string[];
     material: string[];
-  }>({ category: [], size: [], color: [], material: [] });
+    weight: string[];
+  }>({ category: [], size: [], color: [], material: [], weight: [] });
 
   const supplierOptions = useMemo(() => {
     return suppliers.map((supplier: Suppliers) => ({
@@ -96,12 +98,22 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
         throw new Error(json.message || "Failed to fetch customers");
       }
 
+      const parseArray = (value: any): string[] => {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      };
+
       const optionsData = json.data[0] || {};
       setGeneralOptions({
-        category: optionsData.category || [],
-        size: optionsData.size || [],
-        color: optionsData.color || [],
-        material: optionsData.material || [],
+        category: parseArray(optionsData.category),
+        size: parseArray(optionsData.size),
+        color: parseArray(optionsData.color),
+        material: parseArray(optionsData.material),
+        weight: parseArray(optionsData.weight),
       });
     } catch (error) {
       console.error("Error:", error);
@@ -184,6 +196,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
         size: transformedAttributes.size || "",
         color: transformedAttributes.color || "",
         material: transformedAttributes.material || "",
+        weight: transformedAttributes.weight || "",
       });
 
       if (currentProduct.supplier.id && suppliers.length > 0) {
@@ -219,6 +232,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
         { name: "size", value: attributes.size.trim() },
         { name: "color", value: attributes.color.trim() },
         { name: "material", value: attributes.material.trim() },
+        { name: "weight", value: attributes.weight.trim() },
       ].filter((attr) => attr.value);
 
       const updatedProduct: any = {
@@ -595,7 +609,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
         <label className="text-[14px]" htmlFor="category">
           Attributes
         </label>
-        <div className="grid sm:grid-cols-3 gap-2">
+        <div className="grid sm:grid-cols-2 gap-2">
           <Select
             instanceId={`${instanceId}-size`}
             inputId="size"
@@ -652,6 +666,26 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
             }
             styles={generalSelectStyles}
             placeholder="Material"
+            isClearable
+            required
+          />
+
+          <Select
+            instanceId={`${instanceId}-weight`}
+            inputId="weight"
+            className="mt-2"
+            options={toSelectOptions(generalOptions.weight)}
+            value={toSelectOptions(generalOptions.weight).find(
+              (opt) => opt.value == attributes.weight
+            )}
+            onChange={(selectedOption) =>
+              setAttributes((prev) => ({
+                ...prev,
+                weight: selectedOption?.value || "",
+              }))
+            }
+            styles={generalSelectStyles}
+            placeholder="weight"
             isClearable
             required
           />

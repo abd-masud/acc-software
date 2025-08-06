@@ -121,9 +121,13 @@ export const PartialInvoicesReportComponent = ({
   // Generate QR code data string
   const generateQRData = () => {
     if (!invoiceData) return "";
+    const customerContact =
+      typeof invoiceData.customer === "string"
+        ? invoiceData.customer
+        : invoiceData.customer.contact;
     return [
       `Invoice ID: ${invoiceData.invoice_id}`,
-      `Contact: ${invoiceData.customer.contact}`,
+      `Contact: ${customerContact}`,
       `Inv Date: ${formatDate(invoiceData.date)}`,
     ].join("\n");
   };
@@ -224,22 +228,31 @@ export const PartialInvoicesReportComponent = ({
                 <h3 className="text-[16px] font-bold text-gray-800 mb-2">
                   Invoice To:
                 </h3>
-                <p className="text-gray-800 text-[12px]">
-                  <span className="font-bold">Name:</span>{" "}
-                  {invoiceData.customer?.name}
-                </p>
-                <p className="text-gray-800 text-[12px]">
-                  <span className="font-bold">Address:</span>{" "}
-                  {invoiceData.customer?.delivery}
-                </p>
-                <p className="text-gray-800 text-[12px]">
-                  <span className="font-bold">Phone:</span>{" "}
-                  {invoiceData.customer?.contact}
-                </p>
-                <p className="text-gray-800 text-[12px]">
-                  <span className="font-bold">Email:</span>{" "}
-                  {invoiceData.customer?.email}
-                </p>
+                {typeof invoiceData.customer === "string" ? (
+                  <p className="text-gray-800 text-[12px]">
+                    <span className="font-bold">Customer:</span>{" "}
+                    {invoiceData.customer}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-gray-800 text-[12px]">
+                      <span className="font-bold">Name:</span>{" "}
+                      {invoiceData.customer?.name || "N/A"}
+                    </p>
+                    <p className="text-gray-800 text-[12px]">
+                      <span className="font-bold">Address:</span>{" "}
+                      {invoiceData.customer?.delivery || "N/A"}
+                    </p>
+                    <p className="text-gray-800 text-[12px]">
+                      <span className="font-bold">Phone:</span>{" "}
+                      {invoiceData.customer?.contact || "N/A"}
+                    </p>
+                    <p className="text-gray-800 text-[12px]">
+                      <span className="font-bold">Email:</span>{" "}
+                      {invoiceData.customer?.email || "N/A"}
+                    </p>
+                  </>
+                )}
               </div>
               <div className="flex items-end justify-end gap-4">
                 <div>

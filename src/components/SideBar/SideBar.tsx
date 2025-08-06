@@ -435,17 +435,24 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
           <div
             className={`overflow-hidden transition-all duration-500 transform ${
               openSection == "stock-master"
-                ? "max-h-[90px] opacity-100"
+                ? "max-h-[135px] opacity-100"
                 : "max-h-0 opacity-0"
             }`}
           >
             <div className="pl-[56px] bg-[#1D1B31] text-[13px]">
               <Link
-                className={subLinkClass("/stock-master/stock-in-hand")}
-                href="/stock-master/stock-in-hand"
+                className={subLinkClass("/stock-master/warehouse")}
+                href="/stock-master/warehouse"
                 onClick={handleLinkClick}
               >
-                Stock In Hand
+                Warehouse
+              </Link>
+              <Link
+                className={subLinkClass("/stock-master/in-house-product")}
+                href="/stock-master/in-house-product"
+                onClick={handleLinkClick}
+              >
+                In-house Product
               </Link>
               <Link
                 className={subLinkClass("/stock-master/stock-settings")}

@@ -7,7 +7,7 @@ import LayoutContent from "./server/LayoutContent";
 import CanonicalURL from "./server/CanonicalURL";
 import OpenGraphURL from "./server/OpenGraphURL";
 import Script from "next/script";
-import Window from "./server/Window";
+// import Window from "./server/Window";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -136,9 +136,9 @@ export default function RootLayout({
       >
         <AuthProvider>
           <Providers>
-            <Window>
-              <LayoutContent>{children}</LayoutContent>
-            </Window>
+            {/* <Window> */}
+            <LayoutContent>{children}</LayoutContent>
+            {/* </Window> */}
           </Providers>
         </AuthProvider>
       </body>

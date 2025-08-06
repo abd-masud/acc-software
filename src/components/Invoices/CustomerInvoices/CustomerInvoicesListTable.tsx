@@ -41,6 +41,18 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
     }
   `;
 
+  const parseField = (field: any) => {
+    if (typeof field == "string") {
+      try {
+        return JSON.parse(field);
+      } catch (e) {
+        console.error("Failed to parse field:", field, e);
+        return null;
+      }
+    }
+    return field;
+  };
+
   const showInvoiceModal = (invoice: InvoiceData) => {
     setCurrentInvoice(invoice);
     setIsEditModalOpen(true);
@@ -154,33 +166,46 @@ export const InvoicesListTable: React.FC<InvoicesTableProps> = ({
     },
     {
       title: "Customer",
-      render: (record: InvoiceData) => (
-        <span>{record.customer?.name || "-"}</span>
-      ),
+      render: (_, record) => {
+        const customer =
+          typeof record.customer == "string"
+            ? parseField(record.customer)
+            : record.customer;
+        return customer?.name || "-";
+      },
     },
     {
       title: "Items",
       dataIndex: "items",
-      render: (items: InvoiceItem[]) => (
-        <Tooltip
-          title={
-            Array.isArray(items)
-              ? items
-                  .map(
-                    (item) =>
-                      `${item.product || "-"} - ${item.quantity} ${item.unit}`
-                  )
-                  .join("\n")
-              : "N/A"
-          }
-        >
-          <div className="cursor-default border px-1 rounded">
-            {Array.isArray(items)
-              ? `${items.length} ${items.length == 1 ? "item" : "items"}`
-              : "N/A"}
-          </div>
-        </Tooltip>
-      ),
+      render: (itemsString: string) => {
+        try {
+          const items: InvoiceItem[] = JSON.parse(itemsString);
+          return (
+            <Tooltip
+              title={
+                Array.isArray(items)
+                  ? items
+                      .map(
+                        (item) =>
+                          `${item.product || "-"} - ${item.quantity} ${
+                            item.unit
+                          }`
+                      )
+                      .join("\n")
+                  : "N/A"
+              }
+            >
+              <div className="cursor-default border px-1 rounded">
+                {Array.isArray(items)
+                  ? `${items.length} ${items.length == 1 ? "item" : "items"}`
+                  : "N/A"}
+              </div>
+            </Tooltip>
+          );
+        } catch {
+          return "N/A";
+        }
+      },
     },
     {
       title: "Dates",

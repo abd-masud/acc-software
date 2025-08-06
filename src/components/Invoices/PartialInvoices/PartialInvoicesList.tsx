@@ -60,7 +60,15 @@ export const PartialInvoicesListComponent = ({
     <main className="bg-[#F2F4F7] min-h-screen p-5">
       <Breadcrumb />
       <PartialInvoicesListTable
-        invoices={invoicesData}
+        invoices={invoicesData.map((invoice) => ({
+          id: invoice.id,
+          invoice_id: invoice.invoice_id,
+          customer:
+            typeof invoice.customer === "string"
+              ? { name: invoice.customer }
+              : { name: invoice.customer.name },
+          sub_invoice: invoice.sub_invoice,
+        }))}
         fetchInvoices={fetchInvoices}
         loading={loading}
       />

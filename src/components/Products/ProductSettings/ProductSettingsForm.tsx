@@ -13,7 +13,8 @@ type GeneralType =
   | "category"
   | "size"
   | "color"
-  | "material";
+  | "material"
+  | "weight";
 
 interface GeneralItem {
   id?: string;
@@ -27,6 +28,7 @@ interface GeneralGeneralsData {
   size: GeneralItem[];
   color: GeneralItem[];
   material: GeneralItem[];
+  weight: GeneralItem[];
 }
 
 export const ProductSettingsForm = () => {
@@ -39,6 +41,7 @@ export const ProductSettingsForm = () => {
     size: [],
     color: [],
     material: [],
+    weight: [],
   });
   const [newItemName, setNewItemName] = useState("");
   const [editingItem, setEditingItem] = useState<GeneralItem | null>(null);
@@ -68,14 +71,51 @@ export const ProductSettingsForm = () => {
       if (response.ok) {
         const result = await response.json();
         const apiData = result.data?.[0] || {};
+        const parseNestedArray = (value: any): string[] => {
+          try {
+            if (Array.isArray(value)) {
+              return value;
+            }
+            if (typeof value === "string") {
+              const parsed = JSON.parse(value);
+              if (Array.isArray(parsed)) {
+                return parsed;
+              }
+              if (typeof parsed === "string") {
+                const doubleParsed = JSON.parse(parsed);
+                if (Array.isArray(doubleParsed)) {
+                  return doubleParsed;
+                }
+              }
+            }
+            return [];
+          } catch (e) {
+            console.error("Error parsing array:", e);
+            return [];
+          }
+        };
         const transformedData = {
-          department:
-            apiData.department?.map((name: string) => ({ name })) || [],
-          role: apiData.role?.map((name: string) => ({ name })) || [],
-          category: apiData.category?.map((name: string) => ({ name })) || [],
-          size: apiData.size?.map((name: string) => ({ name })) || [],
-          color: apiData.color?.map((name: string) => ({ name })) || [],
-          material: apiData.material?.map((name: string) => ({ name })) || [],
+          department: parseNestedArray(apiData.department).map(
+            (name: string) => ({ name })
+          ),
+          role: parseNestedArray(apiData.role).map((name: string) => ({
+            name,
+          })),
+          category: parseNestedArray(apiData.category).map((name: string) => ({
+            name,
+          })),
+          size: parseNestedArray(apiData.size).map((name: string) => ({
+            name,
+          })),
+          color: parseNestedArray(apiData.color).map((name: string) => ({
+            name,
+          })),
+          material: parseNestedArray(apiData.material).map((name: string) => ({
+            name,
+          })),
+          weight: parseNestedArray(apiData.weight).map((name: string) => ({
+            name,
+          })),
         };
         setData(transformedData);
       }
@@ -110,6 +150,7 @@ export const ProductSettingsForm = () => {
           size: updatedData.size.map((item) => item.name),
           color: updatedData.color.map((item) => item.name),
           material: updatedData.material.map((item) => item.name),
+          weight: updatedData.weight.map((item) => item.name),
         }),
       });
 
@@ -240,6 +281,16 @@ export const ProductSettingsForm = () => {
           }`}
         >
           Materials
+        </button>
+        <button
+          onClick={() => setActiveTab("weight")}
+          className={`px-4 py-2 rounded-md text-[14px] transition-all duration-300 ${
+            activeTab == "weight"
+              ? "bg-[#307EF3] hover:bg-[#478cf3] text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
+        >
+          Weight
         </button>
       </div>
 

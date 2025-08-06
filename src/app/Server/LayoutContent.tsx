@@ -1,7 +1,10 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import {
+  // useEffect,
+  useState,
+} from "react";
 import { SideBar } from "@/components/SideBar/SideBar";
 import { Header } from "@/components/Header/Header";
 import { AnimatePresence, motion } from "framer-motion";
@@ -25,7 +28,7 @@ export default function LayoutContent({
   children: React.ReactNode;
 }) {
   const [isSidebarVisible, setSidebarVisible] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  // const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
 
   const toggleSidebar = () => setSidebarVisible((prev) => !prev);
@@ -35,23 +38,23 @@ export default function LayoutContent({
     pathname as (typeof HIDDEN_PAGES)[number]
   );
 
-  useEffect(() => {
-    const checkScreen = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+  // useEffect(() => {
+  //   const checkScreen = () => {
+  //     setIsMobile(window.innerWidth < 768);
+  //   };
 
-    checkScreen();
-    window.addEventListener("resize", checkScreen);
-    return () => window.removeEventListener("resize", checkScreen);
-  }, []);
+  //   checkScreen();
+  //   window.addEventListener("resize", checkScreen);
+  //   return () => window.removeEventListener("resize", checkScreen);
+  // }, []);
 
-  useEffect(() => {
-    if (isSidebarVisible && isMobile) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
-    }
-  }, [isSidebarVisible, isMobile]);
+  // useEffect(() => {
+  //   if (isSidebarVisible && isMobile) {
+  //     document.body.classList.add("overflow-hidden");
+  //   } else {
+  //     document.body.classList.remove("overflow-hidden");
+  //   }
+  // }, [isSidebarVisible, isMobile]);
 
   return (
     <CompanyCheck>

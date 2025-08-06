@@ -4,6 +4,13 @@ import { Modal } from "antd";
 import { EditSupplierModalProps } from "@/types/suppliers";
 import { useEffect, useState } from "react";
 import { FaXmark } from "react-icons/fa6";
+import CreatableSelect from "react-select/creatable";
+import { StylesConfig, MultiValue } from "react-select";
+
+interface Option {
+  value: string;
+  label: string;
+}
 
 export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
   isOpen,
@@ -18,6 +25,49 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
   const [email, setEmail] = useState("");
   const [contact, setContact] = useState("");
   const [userMessage, setUserMessage] = useState<string | null>(null);
+  const [selectedOptions, setSelectedOptions] = useState<MultiValue<Option>>(
+    []
+  );
+
+  const customStyles: StylesConfig<Option, true> = {
+    control: (provided) => ({
+      ...provided,
+      borderColor: "#E3E5E9",
+      borderRadius: "0.375rem",
+      padding: "5px 0",
+      marginTop: "5px",
+      fontSize: "14px",
+      outline: "none",
+      color: "black",
+      width: "100%",
+      backgroundColor: "#F2F4F7",
+      transition: "border-color 0.3s",
+      "&:hover": {
+        borderColor: "#FAB616",
+      },
+      "&:focus": {
+        borderColor: "#FAB616",
+        outline: "none",
+      },
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: "0.375rem",
+      boxShadow: "0 2px 12px rgba(0, 0, 0, 0.1)",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? "#E3E5E9" : "white",
+      color: state.isSelected ? "#131226" : "#131226",
+      padding: "5px 10px",
+      fontSize: "14px",
+      cursor: "pointer",
+      "&:hover": {
+        backgroundColor: "#E3E5E9",
+        color: "#131226",
+      },
+    }),
+  };
 
   useEffect(() => {
     if (currentSupplier) {
@@ -27,8 +77,27 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
       setAddress(currentSupplier.address);
       setEmail(currentSupplier.email);
       setContact(currentSupplier.contact);
+
+      try {
+        const products = currentSupplier.products
+          ? JSON.parse(currentSupplier.products)
+          : [];
+        setSelectedOptions(
+          products.map((product: string) => ({
+            value: product,
+            label: product,
+          }))
+        );
+      } catch (error) {
+        console.error("Error parsing products:", error);
+        setSelectedOptions([]);
+      }
     }
   }, [currentSupplier]);
+
+  const handleSelectChange = (newValue: MultiValue<Option>) => {
+    setSelectedOptions(newValue);
+  };
 
   const handleSubmit = async () => {
     if (!currentSupplier) return;
@@ -57,6 +126,8 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
     }
 
     try {
+      const products = selectedOptions.map((option) => option.value);
+
       const updatedSupplier = {
         ...currentSupplier,
         supplierId,
@@ -65,6 +136,7 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
         address,
         email,
         contact,
+        products: JSON.stringify(products),
       };
 
       await onSave(updatedSupplier);
@@ -206,6 +278,22 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
             required
           />
         </div>
+      </div>
+      <div className="mb-4">
+        <label className="text-[14px] text-[#131226]" htmlFor="product">
+          Available Products
+        </label>
+        <CreatableSelect<Option, true>
+          id="products"
+          isMulti={true}
+          placeholder="Select products"
+          isSearchable
+          className="react-select-container"
+          classNamePrefix="react-select"
+          onChange={handleSelectChange}
+          value={selectedOptions}
+          styles={customStyles}
+        />
       </div>
     </Modal>
   );

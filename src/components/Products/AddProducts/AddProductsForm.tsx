@@ -48,6 +48,7 @@ interface FormValues {
   size: string;
   color: string;
   material: string;
+  weight: string;
 }
 
 export const AddProductsForm = () => {
@@ -66,6 +67,7 @@ export const AddProductsForm = () => {
   const [selectedSupplier, setSelectedSupplier] = useState<Suppliers | null>(
     null
   );
+  const [generalsLoaded, setGeneralsLoaded] = useState(false);
   const [isInHouseProduct, setIsInHouseProduct] = useState(false);
   const [formValues, setFormValues] = useState<FormValues>({
     type: "",
@@ -79,14 +81,32 @@ export const AddProductsForm = () => {
     size: "",
     color: "",
     material: "",
+    weight: "",
   });
+
+  const parseOptionsString = (input: string | null | undefined): string[] => {
+    if (!input) return [];
+    if (input.startsWith("[") && input.endsWith("]")) {
+      try {
+        const content = input.slice(1, -1);
+        return content
+          .split(/[,\n]/)
+          .map((item) => item.trim().replace(/^"|"$/g, ""))
+          .filter((item) => item.length > 0);
+      } catch {
+        return [];
+      }
+    }
+    return input.trim() ? [input.trim()] : [];
+  };
 
   const [generalOptions, setGeneralOptions] = useState<{
     category: string[];
     size: string[];
     color: string[];
     material: string[];
-  }>({ category: [], size: [], color: [], material: [] });
+    weight: string[];
+  }>({ category: [], size: [], color: [], material: [], weight: [] });
 
   const supplierOptions = suppliers.map((supplier: Suppliers) => ({
     value: supplier.id,
@@ -112,7 +132,7 @@ export const AddProductsForm = () => {
   };
 
   const checkEmptyCategories = () => {
-    if (generalOptions.category.length == 0) {
+    if (generalOptions?.category?.length == 0) {
       showNoCategoryModal();
     }
   };
@@ -122,25 +142,21 @@ export const AddProductsForm = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/generals?user_id=${user.id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const json: any = await response.json();
+      const response = await fetch(`/api/generals?user_id=${user.id}`);
+      const json = await response.json();
 
-      if (!response.ok || !json.success) {
-        throw new Error(json.message || "Failed to fetch general");
+      if (response.ok && json.success) {
+        const optionsData = json.data[0] || {};
+
+        setGeneralOptions({
+          category: parseOptionsString(optionsData.category),
+          size: parseOptionsString(optionsData.size),
+          color: parseOptionsString(optionsData.color),
+          material: parseOptionsString(optionsData.material),
+          weight: parseOptionsString(optionsData.weight),
+        });
       }
-
-      const optionsData = json.data[0] || {};
-      setGeneralOptions({
-        category: optionsData.category || [],
-        size: optionsData.size || [],
-        color: optionsData.color || [],
-        material: optionsData.material || [],
-      });
+      setGeneralsLoaded(true);
     } catch (error) {
       console.error("Error:", error);
     } finally {
@@ -171,12 +187,10 @@ export const AddProductsForm = () => {
             : [];
           setSuppliers(suppliersList);
 
-          if (suppliersList.length === 0) {
+          if (suppliersList.length == 0) {
             showNoSuppliersModal();
-          } else if (generalOptions.category.length === 0) {
-            showNoCategoryModal();
           }
-        } else if (suppliersRes.status === 404) {
+        } else if (suppliersRes.status == 404) {
           showNoSuppliersModal();
         }
       } catch (error) {
@@ -185,7 +199,15 @@ export const AddProductsForm = () => {
     };
 
     fetchSuppliers();
-  }, [user?.id, generalOptions.category.length]);
+  }, [user?.id]);
+
+  const isCategoryEmpty = (cat: any) => !Array.isArray(cat) || cat.length === 0;
+
+  useEffect(() => {
+    if (generalsLoaded && isCategoryEmpty(generalOptions.category)) {
+      showNoCategoryModal();
+    }
+  }, [generalsLoaded, generalOptions.category]);
 
   useEffect(() => {
     const generateProductId = () => {
@@ -226,9 +248,8 @@ export const AddProductsForm = () => {
     fetchCurrencies();
   }, [user?.id]);
 
-  const toSelectOptions = (arr: string[] | undefined) => {
-    return (arr || []).map((item) => ({ label: item, value: item }));
-  };
+  const toSelectOptions = (arr: string[]) =>
+    Array.isArray(arr) ? arr.map((item) => ({ label: item, value: item })) : [];
 
   const handleSelectChange = (field: keyof FormValues) => (selected: any) => {
     const value = selected?.value || "";
@@ -284,7 +305,7 @@ export const AddProductsForm = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { size, color, material, stock, type, ...restFormValues } =
+    const { size, color, material, weight, stock, type, ...restFormValues } =
       formValues;
 
     const stockQty = Number(stock) || 1;
@@ -292,6 +313,7 @@ export const AddProductsForm = () => {
       { name: "size", value: size },
       { name: "color", value: color },
       { name: "material", value: material },
+      { name: "weight", value: weight },
     ].filter((attr) => attr.value);
 
     const skuList = Array.from({ length: stockQty }, () => generateSKU());
@@ -589,7 +611,7 @@ export const AddProductsForm = () => {
           />
         </div>
 
-        <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 sm:gap-4">
+        <div className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 sm:gap-4">
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="buying_price">
               Buying Price ({currencyCode})
@@ -680,78 +702,137 @@ export const AddProductsForm = () => {
           </div>
 
           <div className="mb-4">
-            <div className="flex justify-between items-center">
-              <label className="text-[14px]" htmlFor="category">
-                Category
-              </label>
-            </div>
+            <label className="text-[14px]" htmlFor="category">
+              Category
+            </label>
             <Select
               instanceId={`${instanceId}-category`}
               inputId="category"
               className="mt-2"
-              options={toSelectOptions(generalOptions.category)}
-              value={toSelectOptions(generalOptions.category).find(
-                (opt) => opt.value == formValues.category
-              )}
+              options={generalOptions.category.map((option) => ({
+                label: option,
+                value: option,
+              }))}
+              value={
+                generalOptions.category.find(
+                  (opt) => opt === formValues.category
+                )
+                  ? {
+                      label: formValues.category,
+                      value: formValues.category,
+                    }
+                  : null
+              }
               onChange={handleSelectChange("category")}
-              placeholder="Select Category"
+              placeholder="Category"
               styles={generalSelectStyles}
               isClearable
               required
             />
           </div>
+        </div>
 
-          <div className="mb-4">
+        <div className="grid lg:grid-cols-5 md:grid-cols-2 grid-cols-1 sm:gap-4">
+          <div className="mb-4 col-span-4">
             <div className="flex justify-between items-center">
               <label className="text-[14px]" htmlFor="category">
                 Attributes
               </label>
             </div>
-            <div className="grid sm:grid-cols-3 gap-2">
+            <div className="grid sm:grid-cols-4 gap-2">
               <Select
-                instanceId={`${instanceId}-category`}
+                instanceId={`${instanceId}-size`}
                 inputId="size"
                 className="mt-2"
-                options={toSelectOptions(generalOptions.size)}
-                value={toSelectOptions(generalOptions.size).find(
-                  (opt) => opt.value == formValues.size
-                )}
+                options={generalOptions.size.map((option) => ({
+                  label: option,
+                  value: option,
+                }))}
+                value={
+                  generalOptions.size.find((opt) => opt === formValues.size)
+                    ? {
+                        label: formValues.size,
+                        value: formValues.size,
+                      }
+                    : null
+                }
                 onChange={handleSelectChange("size")}
                 placeholder="Size"
                 styles={generalSelectStyles}
                 isClearable
+                required
               />
-
               <Select
                 instanceId={`${instanceId}-color`}
                 inputId="color"
                 className="mt-2"
-                options={toSelectOptions(generalOptions.color)}
-                value={toSelectOptions(generalOptions.color).find(
-                  (opt) => opt.value == formValues.color
-                )}
+                options={generalOptions.color.map((option) => ({
+                  label: option,
+                  value: option,
+                }))}
+                value={
+                  generalOptions.color.find((opt) => opt === formValues.color)
+                    ? {
+                        label: formValues.color,
+                        value: formValues.color,
+                      }
+                    : null
+                }
                 onChange={handleSelectChange("color")}
                 placeholder="Color"
                 styles={generalSelectStyles}
                 isClearable
+                required
               />
 
               <Select
                 instanceId={`${instanceId}-material`}
                 inputId="material"
                 className="mt-2"
-                options={toSelectOptions(generalOptions.material)}
-                value={toSelectOptions(generalOptions.material).find(
-                  (opt) => opt.value == formValues.material
-                )}
+                options={generalOptions.material.map((option) => ({
+                  label: option,
+                  value: option,
+                }))}
+                value={
+                  generalOptions.material.find(
+                    (opt) => opt === formValues.material
+                  )
+                    ? {
+                        label: formValues.material,
+                        value: formValues.material,
+                      }
+                    : null
+                }
                 onChange={handleSelectChange("material")}
-                placeholder="Materials"
+                placeholder="Material"
                 styles={generalSelectStyles}
                 isClearable
+                required
+              />
+              <Select
+                instanceId={`${instanceId}-weight`}
+                inputId="weight"
+                className="mt-2"
+                options={generalOptions.weight.map((option) => ({
+                  label: option,
+                  value: option,
+                }))}
+                value={
+                  generalOptions.weight.find((opt) => opt === formValues.weight)
+                    ? {
+                        label: formValues.weight,
+                        value: formValues.weight,
+                      }
+                    : null
+                }
+                onChange={handleSelectChange("weight")}
+                placeholder="Weight"
+                styles={generalSelectStyles}
+                isClearable
+                required
               />
             </div>
           </div>
-
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="stock">
               Stock Quantity

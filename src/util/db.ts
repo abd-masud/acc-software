@@ -1,7 +1,7 @@
 import mysql from 'mysql2/promise';
 
 let pool: mysql.Pool | null = null;
-let lastConnectionAttempt: number | null = null;
+let creatingPoolPromise: Promise<mysql.Pool> | null = null;
 
 async function createNewPool(): Promise<mysql.Pool> {
     return mysql.createPool({
@@ -15,12 +15,12 @@ async function createNewPool(): Promise<mysql.Pool> {
         enableKeepAlive: true,
         keepAliveInitialDelay: 10000,
         connectTimeout: 10000,
-        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306
+        port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306
     });
 }
 
 export async function connectionToDatabase(): Promise<mysql.Pool> {
-    // Test existing pool if it exists
+    // Reuse healthy pool
     if (pool) {
         try {
             const testConn = await pool.getConnection();
@@ -32,37 +32,42 @@ export async function connectionToDatabase(): Promise<mysql.Pool> {
         }
     }
 
-    // Rate limit connection attempts
-    const now = Date.now();
-    if (lastConnectionAttempt && (now - lastConnectionAttempt) < 5000) {
-        throw new Error('Too frequent connection attempts');
+    // If pool is being created, wait for it
+    if (!creatingPoolPromise) {
+        creatingPoolPromise = createNewPool()
+            .then((newPool) => {
+                pool = newPool;
+                return pool;
+            })
+            .catch((err) => {
+                console.error('Failed to create pool:', err);
+                throw new Error('Database connection failed');
+            })
+            .finally(() => {
+                creatingPoolPromise = null;
+            });
     }
-    lastConnectionAttempt = now;
 
-    // Create new pool
-    try {
-        pool = await createNewPool();
-        return pool;
-    } catch {
-        throw new Error('Database connection failed');
-    }
+    return creatingPoolPromise;
 }
 
-export async function runQuery(query: string, params: (string)[] = []) {
+export async function runQuery(query: string, params: (string | number)[] = []) {
     let connection: mysql.PoolConnection | undefined;
+
     try {
         const pool = await connectionToDatabase();
         connection = await pool.getConnection();
         const [results] = await connection.query(query, params);
         return results;
     } catch (error) {
+        console.error('Query error:', error);
         throw error;
     } finally {
         if (connection) {
             try {
                 connection.release();
-            } catch (error) {
-                console.error('Error releasing connection:', error);
+            } catch (releaseError) {
+                console.error('Error releasing connection:', releaseError);
             }
         }
     }
@@ -73,6 +78,7 @@ process.on('SIGINT', async () => {
     if (pool) {
         try {
             await pool.end();
+            console.log('Connection pool closed');
         } catch (error) {
             console.error('Error closing connection pool:', error);
         }

@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
     try {
-        const { user_id, department, role, category, size, color, material } = await request.json();
+        const { user_id, department, role, category, size, color, material, weight } = await request.json();
 
         // Validate required fields
         if (!user_id) {
@@ -89,14 +89,15 @@ export async function PUT(request: NextRequest) {
             size: JSON.stringify(size),
             color: JSON.stringify(color),
             material: JSON.stringify(material),
+            weight: JSON.stringify(weight),
         };
 
         if (existingSettings.length == 0) {
             // Insert new record
             const [result] = await db.query<ResultSetHeader>(
-                `INSERT INTO generals (user_id, department, role, category, size, color, material) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [user_id, dataToStore.department, dataToStore.role, dataToStore.category, dataToStore.size, dataToStore.color, dataToStore.material]
+                `INSERT INTO generals (user_id, department, role, category, size, color, material, weight)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                [user_id, dataToStore.department, dataToStore.role, dataToStore.category, dataToStore.size, dataToStore.color, dataToStore.material, dataToStore.weight]
             );
 
             return NextResponse.json(
@@ -111,9 +112,9 @@ export async function PUT(request: NextRequest) {
             // Update existing record
             const [result] = await db.query<ResultSetHeader>(
                 `UPDATE generals 
-                 SET department = ?, role = ?, category = ?, size = ?, color = ?, material = ? 
+                 SET department = ?, role = ?, category = ?, size = ?, color = ?, material = ?, weight = ?
                  WHERE user_id = ?`,
-                [dataToStore.department, dataToStore.role, dataToStore.category, dataToStore.size, dataToStore.color, dataToStore.material, user_id]
+                [dataToStore.department, dataToStore.role, dataToStore.category, dataToStore.size, dataToStore.color, dataToStore.material, dataToStore.weight, user_id]
             );
 
             return NextResponse.json(

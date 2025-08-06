@@ -32,6 +32,18 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
     }
   `;
 
+  const parseField = (field: any) => {
+    if (typeof field == "string") {
+      try {
+        return JSON.parse(field);
+      } catch (e) {
+        console.error("Failed to parse field:", field, e);
+        return null;
+      }
+    }
+    return field;
+  };
+
   const showDeleteModal = (quote: QuoteData) => {
     setQuoteToDelete(quote);
     setDeleteConfirmationText("");
@@ -115,33 +127,46 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
     },
     {
       title: "Customer",
-      render: (record: QuoteData) => (
-        <span>{record.customer?.name || "-"}</span>
-      ),
+      render: (_, record) => {
+        const customer =
+          typeof record.customer == "string"
+            ? parseField(record.customer)
+            : record.customer;
+        return customer?.name || "-";
+      },
     },
     {
       title: "Items",
       dataIndex: "items",
-      render: (items: QuoteItem[]) => (
-        <Tooltip
-          title={
-            Array.isArray(items)
-              ? items
-                  .map(
-                    (item) =>
-                      `${item.product || "-"} - ${item.quantity} ${item.unit}`
-                  )
-                  .join("\n")
-              : "N/A"
-          }
-        >
-          <div className="cursor-default border px-1 rounded">
-            {Array.isArray(items)
-              ? `${items.length} ${items.length == 1 ? "item" : "items"}`
-              : "N/A"}
-          </div>
-        </Tooltip>
-      ),
+      render: (itemsString: string) => {
+        try {
+          const items: QuoteItem[] = JSON.parse(itemsString);
+          return (
+            <Tooltip
+              title={
+                Array.isArray(items)
+                  ? items
+                      .map(
+                        (item) =>
+                          `${item.product || "-"} - ${item.quantity} ${
+                            item.unit
+                          }`
+                      )
+                      .join("\n")
+                  : "N/A"
+              }
+            >
+              <div className="cursor-default border px-1 rounded">
+                {Array.isArray(items)
+                  ? `${items.length} ${items.length == 1 ? "item" : "items"}`
+                  : "N/A"}
+              </div>
+            </Tooltip>
+          );
+        } catch {
+          return "N/A";
+        }
+      },
     },
     {
       title: "Financials",

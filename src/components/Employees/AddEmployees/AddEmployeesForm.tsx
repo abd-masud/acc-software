@@ -101,14 +101,14 @@ export const AddEmployeesForm = () => {
 
       const optionsData = json.data[0] || {};
       const newGeneralOptions = {
-        department: optionsData.department || [],
-        role: optionsData.role || [],
+        department: JSON.parse(optionsData.department) || [],
+        role: JSON.parse(optionsData.role) || [],
       };
       setGeneralOptions(newGeneralOptions);
 
       if (
-        newGeneralOptions.department.length === 0 ||
-        newGeneralOptions.role.length === 0
+        newGeneralOptions.department.length == 0 ||
+        newGeneralOptions.role.length == 0
       ) {
         showNoSettingsModal();
       }

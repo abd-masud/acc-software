@@ -3,10 +3,17 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
+import { StylesConfig, MultiValue } from "react-select";
+import CreatableSelect from "react-select/creatable";
 import Image from "next/image";
 import success from "../../../../public/images/success.webp";
 import { Modal } from "antd";
 import { FaXmark } from "react-icons/fa6";
+
+interface Option {
+  value: string;
+  label: string;
+}
 
 export const AddSuppliersForm = () => {
   const { user } = useAuth();
@@ -15,6 +22,9 @@ export const AddSuppliersForm = () => {
   const [supplier_id, setSupplierId] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [userMessage, setUserMessage] = useState<string | null>(null);
+  const [selectedOptions, setSelectedOptions] = useState<MultiValue<Option>>(
+    []
+  );
 
   const [formValues, setFormValues] = useState({
     supplier_id: "",
@@ -48,10 +58,12 @@ export const AddSuppliersForm = () => {
     setLoading(true);
     setUserMessage(null);
 
+    const products = selectedOptions.map((option) => option.value);
     const payload = {
       ...formValues,
       user_id: user?.id,
       supplier_id: supplier_id,
+      products: JSON.stringify(products),
     };
 
     try {
@@ -77,23 +89,44 @@ export const AddSuppliersForm = () => {
     }
   };
 
-  const handleAddMore = () => {
-    setFormValues({
-      supplier_id: "",
-      company: "",
-      owner: "",
-      address: "",
-      email: "",
-      contact: "",
-    });
-
-    const compPrefix = user?.company
-      ? user.company.slice(0, 2).toUpperCase()
-      : "CO";
-    const random = Math.floor(10000 + Math.random() * 90000);
-    setSupplierId(`S${compPrefix}${random}`);
-
-    setShowSuccessModal(false);
+  const customStyles: StylesConfig<Option, true> = {
+    control: (provided) => ({
+      ...provided,
+      borderColor: "#E3E5E9",
+      borderRadius: "0.375rem",
+      padding: "5px 0",
+      marginTop: "5px",
+      fontSize: "14px",
+      outline: "none",
+      color: "black",
+      width: "100%",
+      backgroundColor: "#F2F4F7",
+      transition: "border-color 0.3s",
+      "&:hover": {
+        borderColor: "#FAB616",
+      },
+      "&:focus": {
+        borderColor: "#FAB616",
+        outline: "none",
+      },
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: "0.375rem",
+      boxShadow: "0 2px 12px rgba(0, 0, 0, 0.1)",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? "#E3E5E9" : "white",
+      color: state.isSelected ? "#131226" : "#131226",
+      padding: "5px 10px",
+      fontSize: "14px",
+      cursor: "pointer",
+      "&:hover": {
+        backgroundColor: "#E3E5E9",
+        color: "#131226",
+      },
+    }),
   };
 
   const handleOkay = () => {
@@ -103,6 +136,10 @@ export const AddSuppliersForm = () => {
 
   const handleCloseMessage = () => {
     setUserMessage(null);
+  };
+
+  const handleSelectChange = (newValue: MultiValue<Option>) => {
+    setSelectedOptions(newValue);
   };
 
   return (
@@ -236,6 +273,23 @@ export const AddSuppliersForm = () => {
             />
           </div>
         </div>
+        <div className="mb-4">
+          <label className="text-[14px] text-[#131226]" htmlFor="product">
+            Available Products
+          </label>
+          <CreatableSelect<Option, true>
+            id="products"
+            isMulti={true}
+            placeholder="Select products"
+            isSearchable
+            className="react-select-container"
+            classNamePrefix="react-select"
+            onChange={handleSelectChange}
+            value={selectedOptions}
+            styles={customStyles}
+            required
+          />
+        </div>
         <div className="flex justify-end">
           <input
             className="text-[14px] font-[500] py-2 w-40 rounded cursor-pointer transition-all duration-300 mt-4 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3]"
@@ -249,13 +303,6 @@ export const AddSuppliersForm = () => {
         open={showSuccessModal}
         onCancel={handleOkay}
         footer={[
-          <button
-            key="addMore"
-            onClick={handleAddMore}
-            className="text-[14px] font-[500] py-2 w-28 rounded cursor-pointer transition-all duration-300 mt-2 mr-2 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3]"
-          >
-            Add More
-          </button>,
           <button
             key="okay"
             onClick={handleOkay}

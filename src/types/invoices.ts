@@ -21,7 +21,7 @@ export type PaymentEntry = {
 export type InvoiceData = {
     id: number;
     customer: Customers;
-    items: InvoiceItem[];
+    items: string | InvoiceItem[];
     invoice_id: string;
     date: string;
     due_date: string;

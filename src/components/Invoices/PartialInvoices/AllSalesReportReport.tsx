@@ -166,7 +166,11 @@ export const AllSalesReportButton: React.FC<InvoicesReportButtonProps> = ({
         month: "short",
         year: "numeric",
       })}`,
-      `${invoice.customer?.name || ""}(${invoice.customer?.customer_id || ""})`,
+      typeof invoice.customer === "object" && invoice.customer !== null
+        ? `${invoice.customer?.name || ""}(${
+            invoice.customer?.customer_id || ""
+          })`
+        : invoice.customer || "",
       invoice.items?.length || 0,
       invoice.subtotal,
       invoice.tax,

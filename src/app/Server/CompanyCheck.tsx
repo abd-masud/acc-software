@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Modal } from "antd";
 import { User } from "next-auth";
 import Image from "next/image";
@@ -19,18 +19,38 @@ export default function CompanyCheck({
   const [showModal, setShowModal] = useState(false);
   const [showInactiveModal, setShowInactiveModal] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+  const [modalsShown, setModalsShown] = useState({
+    profileModal: false,
+    inactiveModal: false,
+  });
 
   useEffect(() => {
-    if (
-      user &&
-      user?.role?.toLowerCase() !== "admin" &&
-      user?.status?.toLowerCase() === "inactive"
-    ) {
-      setShowInactiveModal(true);
+    const excludedPaths = [
+      "/",
+      "/privacy-policy",
+      "/terms-and-conditions",
+      "/login",
+      "/auth/login",
+    ];
+
+    if (excludedPaths.includes(pathname)) {
       return;
     }
 
-    if (user?.role.toLowerCase() == "admin") {
+    if (
+      !modalsShown.inactiveModal &&
+      user &&
+      user?.role?.toLowerCase() !== "admin" &&
+      user?.status?.toLowerCase() == "inactive"
+    ) {
+      setShowInactiveModal(true);
+      setModalsShown((prev) => ({ ...prev, inactiveModal: true }));
+      return;
+    }
+
+    if (!modalsShown.profileModal && user?.role.toLowerCase() == "admin") {
       const requiredFields: (keyof User)[] = [
         "contact",
         "company",
@@ -41,9 +61,10 @@ export default function CompanyCheck({
 
       if (isMissingField) {
         setShowModal(true);
+        setModalsShown((prev) => ({ ...prev, profileModal: true }));
       }
     }
-  }, [user]);
+  }, [user, pathname, modalsShown]);
 
   return (
     <>

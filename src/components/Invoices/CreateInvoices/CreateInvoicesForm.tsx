@@ -80,7 +80,7 @@ export const CreateInvoicesForm = () => {
     const totalCount = products.filter((p) => p.product_id == productId).length;
 
     const usedCount = invoiceItems
-      .filter((item) => item.product_id === productId)
+      .filter((item) => item.product_id == productId)
       .reduce((sum, item) => sum + Number(item.quantity || 0), 0);
 
     return totalCount - usedCount;

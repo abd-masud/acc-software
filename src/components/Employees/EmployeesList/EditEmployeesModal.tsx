@@ -116,10 +116,11 @@ export const EditEmployeesModal: React.FC<EditEmployeeModalProps> = ({
       }
 
       const optionsData = json.data[0] || {};
-      setGeneralOptions({
-        department: optionsData.department || [],
-        role: optionsData.role || [],
-      });
+      const newGeneralOptions = {
+        department: JSON.parse(optionsData.department) || [],
+        role: JSON.parse(optionsData.role) || [],
+      };
+      setGeneralOptions(newGeneralOptions);
     } catch (error) {
       console.error("Error:", error);
     } finally {

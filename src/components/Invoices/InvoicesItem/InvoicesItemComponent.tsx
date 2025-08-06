@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { InvoiceData, InvoicesItemProps } from "@/types/invoices";
+import { InvoiceData, InvoiceItem, InvoicesItemProps } from "@/types/invoices";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import logo from "../../../../public/images/logo.webp";
@@ -119,9 +119,13 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
   // Generate QR code data string
   const generateQRData = () => {
     if (!invoiceData) return "";
+    const contact =
+      typeof invoiceData.customer === "string"
+        ? invoiceData.customer
+        : invoiceData.customer.contact;
     return [
       `Invoice ID: ${invoiceData.invoice_id}`,
-      `Contact: ${invoiceData.customer.contact}`,
+      `Contact: ${contact}`,
       `Inv Date: ${formatDate(invoiceData.date)}`,
     ].join("\n");
   };
@@ -220,22 +224,30 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
                 <h3 className="text-[16px] font-bold text-gray-800 mb-2">
                   Invoice To:
                 </h3>
-                <p className="text-gray-800 text-[12px]">
-                  <span className="font-bold">Name:</span>{" "}
-                  {invoiceData.customer?.name}
-                </p>
-                <p className="text-gray-800 text-[12px]">
-                  <span className="font-bold">Address:</span>{" "}
-                  {invoiceData.customer?.delivery}
-                </p>
-                <p className="text-gray-800 text-[12px]">
-                  <span className="font-bold">Phone:</span>{" "}
-                  {invoiceData.customer?.contact}
-                </p>
-                <p className="text-gray-800 text-[12px]">
-                  <span className="font-bold">Email:</span>{" "}
-                  {invoiceData.customer?.email}
-                </p>
+                {typeof invoiceData.customer === "string" ? (
+                  <p className="text-gray-800 text-[12px]">
+                    {invoiceData.customer}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-gray-800 text-[12px]">
+                      <span className="font-bold">Name:</span>{" "}
+                      {invoiceData.customer?.name}
+                    </p>
+                    <p className="text-gray-800 text-[12px]">
+                      <span className="font-bold">Address:</span>{" "}
+                      {invoiceData.customer?.delivery}
+                    </p>
+                    <p className="text-gray-800 text-[12px]">
+                      <span className="font-bold">Phone:</span>{" "}
+                      {invoiceData.customer?.contact}
+                    </p>
+                    <p className="text-gray-800 text-[12px]">
+                      <span className="font-bold">Email:</span>{" "}
+                      {invoiceData.customer?.email}
+                    </p>
+                  </>
+                )}
               </div>
               <div className="flex items-end justify-end gap-4">
                 <div>
@@ -293,25 +305,28 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {invoiceData.items?.map((item, index) => (
-                    <tr className="divide-x divide-gray-200" key={index}>
-                      <td className="px-6 py-2 whitespace-nowrap text-[12px] font-bold text-gray-900">
-                        {index + 1}
-                      </td>
-                      <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                        {item.product}
-                      </td>
-                      <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                        {item.quantity} {item.unit}
-                      </td>
-                      <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                        {item.unit_price} {currencyCode}
-                      </td>
-                      <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                        {item.amount} {currencyCode}
-                      </td>
-                    </tr>
-                  ))}
+                  {Array.isArray(invoiceData.items) &&
+                    invoiceData.items.map(
+                      (item: InvoiceItem, index: number) => (
+                        <tr className="divide-x divide-gray-200" key={index}>
+                          <td className="px-6 py-2 whitespace-nowrap text-[12px] font-bold text-gray-900">
+                            {index + 1}
+                          </td>
+                          <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                            {item.product}
+                          </td>
+                          <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                            {item.quantity} {item.unit}
+                          </td>
+                          <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                            {item.unit_price} {currencyCode}
+                          </td>
+                          <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                            {item.amount} {currencyCode}
+                          </td>
+                        </tr>
+                      )
+                    )}
                 </tbody>
               </table>
             </div>

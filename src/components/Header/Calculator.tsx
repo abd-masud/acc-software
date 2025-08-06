@@ -28,7 +28,7 @@ export const CalculatorModal = ({
     } else if (value === "⌫") {
       setInput(input.slice(0, -1));
     } else {
-      setInput(input + value);
+      setInput((prev) => prev + value);
     }
   };
 
@@ -51,6 +51,8 @@ export const CalculatorModal = ({
     "+",
     "C",
     "⌫",
+    "(",
+    ")",
   ];
 
   return (
@@ -62,9 +64,31 @@ export const CalculatorModal = ({
       centered
       width={300}
     >
-      <div className="bg-gray-100 p-2 rounded mb-4 text-right">
-        <div className="text-gray-600 text-sm h-6">{input}</div>
-        <div className="text-2xl font-semibold h-8">{result || "0"}</div>
+      <div className="bg-gray-100 p-2 rounded mb-4 space-y-2">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => {
+            const value = e.target.value;
+            const sanitized = value.replace(/[^0-9+\-*/().]/g, "");
+            setInput(sanitized);
+          }}
+          className="w-full text-right text-sm text-gray-600 bg-transparent border-b focus:outline-none"
+          placeholder="Enter expression"
+        />
+        <input
+          type="text"
+          value={result || "0"}
+          readOnly
+          onClick={() => {
+            if (result) {
+              navigator.clipboard.writeText(result);
+              console.log("Copied to clipboard:", result);
+            }
+          }}
+          title="Click to copy result"
+          className="w-full text-right text-2xl font-semibold bg-transparent cursor-pointer select-all focus:outline-none"
+        />
       </div>
       <div className="grid grid-cols-4 gap-2">
         {buttons.map((btn) => (

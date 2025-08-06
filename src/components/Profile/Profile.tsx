@@ -498,7 +498,7 @@ export const ProfileCompound = () => {
                       id="email"
                       value={formData.email}
                       disabled
-                      className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                      className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                     />
                   ) : (
                     <p className="text-gray-900 font-medium">

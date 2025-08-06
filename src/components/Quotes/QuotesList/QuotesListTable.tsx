@@ -122,24 +122,53 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
     e.preventDefault();
     if (!selectedQuote) return;
 
-    if (payNow > selectedQuote.total) return;
+    if (Number(payNow) > Number(selectedQuote.total)) {
+      console.error("Payment amount cannot exceed total amount");
+      return;
+    }
 
-    const due_amount = Number(selectedQuote.total) - Number(payNow);
+    let customerData;
+    try {
+      customerData =
+        typeof selectedQuote.customer === "string"
+          ? JSON.parse(selectedQuote.customer)
+          : selectedQuote.customer;
+    } catch (e) {
+      console.error("Error parsing customer data", e);
+      customerData = {};
+    }
+
+    let itemsData;
+    try {
+      itemsData =
+        typeof selectedQuote.items === "string"
+          ? JSON.parse(selectedQuote.items)
+          : selectedQuote.items || [];
+
+      if (!Array.isArray(itemsData)) {
+        itemsData = [itemsData];
+      }
+    } catch (e) {
+      console.error("Error parsing items data", e);
+      itemsData = [];
+    }
+
+    const due_amount = Number(selectedQuote.total) - Number(payNow || 0);
 
     const sub_invoice = [
       {
         paid_amount: payNow || 0,
-        due_amount: due_amount,
-        date: dayjs(),
+        due_amount,
+        date: dayjs().format("YYYY-MM-DD"),
       },
     ];
 
     const invoiceData = {
-      customer: selectedQuote.customer,
-      items: selectedQuote.items,
+      customer: customerData,
+      items: itemsData,
       invoice_id: selectedQuote.quote_id,
       date: dayjs().format("YYYY-MM-DD"),
-      due_date: due_amount == 0 ? "N/A" : dueDate.format("YYYY-MM-DD"),
+      due_date: due_amount === 0 ? "N/A" : dueDate.format("YYYY-MM-DD"),
       subtotal: selectedQuote.subtotal,
       tax: selectedQuote.tax,
       discount: selectedQuote.discount,
@@ -225,54 +254,113 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
       children: [
         {
           title: "Customer ID",
-          dataIndex: ["customer", "customer_id"],
-          render: (text: string) => text || "-",
+          render: (record: QuoteData) => {
+            try {
+              const customer =
+                typeof record.customer == "string"
+                  ? JSON.parse(record.customer)
+                  : record.customer;
+              return customer?.customer_id || "-";
+            } catch (e) {
+              console.error("Error parsing customer data:", e);
+              return "-";
+            }
+          },
         },
         {
           title: "Name",
-          dataIndex: ["customer", "name"],
-          render: (text: string) => text || "-",
+          render: (record: QuoteData) => {
+            try {
+              const customer =
+                typeof record.customer == "string"
+                  ? JSON.parse(record.customer)
+                  : record.customer;
+              return customer?.name || "-";
+            } catch (e) {
+              console.error("Error parsing customer data:", e);
+              return "-";
+            }
+          },
         },
         {
           title: "Email",
-          dataIndex: ["customer", "email"],
-          render: (text: string) => text || "-",
+          render: (record: QuoteData) => {
+            try {
+              const customer =
+                typeof record.customer == "string"
+                  ? JSON.parse(record.customer)
+                  : record.customer;
+              return customer?.email || "-";
+            } catch (e) {
+              console.error("Error parsing customer data:", e);
+              return "-";
+            }
+          },
         },
         {
           title: "Phone",
-          dataIndex: ["customer", "contact"],
-          render: (text: string) => text || "-",
+          render: (record: QuoteData) => {
+            try {
+              const customer =
+                typeof record.customer == "string"
+                  ? JSON.parse(record.customer)
+                  : record.customer;
+              return customer?.contact || "-";
+            } catch (e) {
+              console.error("Error parsing customer data:", e);
+              return "-";
+            }
+          },
         },
         {
           title: "Address",
-          dataIndex: ["customer", "delivery"],
-          render: (text: string) => text || "-",
+          render: (record: QuoteData) => {
+            try {
+              const customer =
+                typeof record.customer == "string"
+                  ? JSON.parse(record.customer)
+                  : record.customer;
+              return customer?.delivery || "-";
+            } catch (e) {
+              console.error("Error parsing customer data:", e);
+              return "-";
+            }
+          },
         },
       ],
     },
     {
       title: "Items",
       dataIndex: "items",
-      render: (items: QuoteItem[]) => (
-        <Tooltip
-          title={
-            Array.isArray(items)
-              ? items
-                  .map(
-                    (item) =>
-                      `${item.product || "-"} - ${item.quantity} ${item.unit}`
-                  )
-                  .join("\n")
-              : "N/A"
-          }
-        >
-          <div className="cursor-default border px-1 rounded">
-            {Array.isArray(items)
-              ? `${items.length} ${items.length == 1 ? "item" : "items"}`
-              : "N/A"}
-          </div>
-        </Tooltip>
-      ),
+      render: (itemsString: string) => {
+        try {
+          const items: QuoteItem[] = JSON.parse(itemsString);
+          return (
+            <Tooltip
+              title={
+                Array.isArray(items)
+                  ? items
+                      .map(
+                        (item) =>
+                          `${item.product || "-"} - ${item.quantity} ${
+                            item.unit
+                          }`
+                      )
+                      .join("\n")
+                  : "N/A"
+              }
+            >
+              <div className="cursor-default border px-1 rounded">
+                {Array.isArray(items)
+                  ? `${items.length} ${items.length == 1 ? "item" : "items"}`
+                  : "N/A"}
+              </div>
+            </Tooltip>
+          );
+        } catch {
+          return "N/A";
+        }
+      },
     },
     {
       title: "Quote Date",
@@ -352,6 +440,25 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
     setUserMessage(null);
   };
 
+  const parseCustomerData = (customer: string | any) => {
+    if (typeof customer === "string") {
+      try {
+        return JSON.parse(customer);
+      } catch (e) {
+        console.error("Error parsing customer data", e);
+        return {};
+      }
+    }
+    return customer || {};
+  };
+
+  const getSelectedQuoteCustomer = () => {
+    if (!selectedQuote) return {};
+    return parseCustomerData(selectedQuote.customer);
+  };
+
+  const customer = getSelectedQuoteCustomer();
+
   return (
     <main className="bg-white p-5 mt-6 rounded-lg border shadow-md">
       {userMessage && (
@@ -429,8 +536,8 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
                 className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="text"
                 id="name"
-                value={`${selectedQuote?.customer?.name || ""}  (${
-                  selectedQuote?.customer?.customer_id || ""
+                value={`${customer?.name || ""}  (${
+                  customer?.customer_id || ""
                 })`}
                 readOnly
               />
@@ -445,7 +552,7 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
                 className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="text"
                 id="email"
-                value={selectedQuote?.customer?.email}
+                value={customer?.email || ""}
                 readOnly
               />
             </div>
@@ -457,7 +564,7 @@ export const QuotesListTable: React.FC<QuotesTableProps> = ({
                 className="border text-[14px] py-3 px-[10px] w-full bg-gray-300 text-gray-500 hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
                 type="text"
                 id="contact"
-                value={selectedQuote?.customer?.contact}
+                value={customer?.contact || ""}
                 readOnly
               />
             </div>

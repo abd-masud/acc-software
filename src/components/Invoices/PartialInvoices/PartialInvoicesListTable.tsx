@@ -27,13 +27,58 @@ export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
     }
   `;
 
+  const parseField = (field: any) => {
+    if (typeof field === "string") {
+      try {
+        return JSON.parse(field);
+      } catch {
+        try {
+          const potentialJson = JSON.parse(field);
+          if (potentialJson.name && typeof potentialJson.name === "string") {
+            try {
+              return {
+                ...potentialJson,
+                name: JSON.parse(potentialJson.name),
+              };
+            } catch {
+              return potentialJson;
+            }
+          }
+          return potentialJson;
+        } catch {
+          return field;
+        }
+      }
+    }
+    return field;
+  };
+
   useEffect(() => {
     const flatData: FlattenedInvoice[] = invoices.flatMap((invoice) => {
-      if (!invoice.sub_invoice || invoice.sub_invoice.length == 0) {
-        return [{ ...invoice, sub_item: null }] as FlattenedInvoice[];
+      let parsedCustomer = parseField(invoice.customer);
+      if (parsedCustomer?.name && typeof parsedCustomer.name === "string") {
+        try {
+          parsedCustomer = {
+            ...parsedCustomer,
+            name: JSON.parse(parsedCustomer.name).name,
+          };
+        } catch (e) {
+          console.error("Failed to parse nested customer name:", e);
+        }
       }
-      return invoice.sub_invoice.map((sub) => ({
+      const parsedSubInvoices = parseField(invoice.sub_invoice) || [];
+      if (!Array.isArray(parsedSubInvoices) || parsedSubInvoices.length == 0) {
+        return [
+          {
+            ...invoice,
+            customer: parsedCustomer,
+            sub_item: null,
+          },
+        ] as FlattenedInvoice[];
+      }
+      return parsedSubInvoices.map((sub) => ({
         ...invoice,
+        customer: parsedCustomer,
         sub_item: sub,
       })) as FlattenedInvoice[];
     });
@@ -104,8 +149,17 @@ export const PartialInvoicesListTable: React.FC<PartialInvoicesTableProps> = ({
     },
     {
       title: "Customer",
-      dataIndex: ["customer", "name"],
-      render: (name?: string) => name || "-",
+      render: (record: FlattenedInvoice) => {
+        if (record.customer && typeof record.customer.name === "string") {
+          try {
+            const nameObj = JSON.parse(record.customer.name);
+            return nameObj.name || "-";
+          } catch {
+            return record.customer.name || "-";
+          }
+        }
+        return record.customer?.name || "-";
+      },
     },
     {
       title: "Payment Date",
