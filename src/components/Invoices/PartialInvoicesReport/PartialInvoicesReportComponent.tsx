@@ -118,16 +118,29 @@ export const PartialInvoicesReportComponent = ({
     return `${day} ${month}, ${year}`;
   }
 
-  // Generate QR code data string
+  const tryParse = (value: string) => {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  };
+
   const generateQRData = () => {
     if (!invoiceData) return "";
-    const customerContact =
-      typeof invoiceData.customer === "string"
-        ? invoiceData.customer
-        : invoiceData.customer.contact;
+    let contactNumber = "N/A";
+    if (typeof invoiceData.customer === "string") {
+      const parsedCustomer = tryParse(invoiceData.customer);
+      contactNumber =
+        typeof parsedCustomer === "object" && parsedCustomer !== null
+          ? parsedCustomer.contact || "N/A"
+          : parsedCustomer;
+    } else {
+      contactNumber = invoiceData.customer.contact;
+    }
     return [
       `Invoice ID: ${invoiceData.invoice_id}`,
-      `Contact: ${customerContact}`,
+      `Contact: ${contactNumber}`,
       `Inv Date: ${formatDate(invoiceData.date)}`,
     ].join("\n");
   };
@@ -229,27 +242,54 @@ export const PartialInvoicesReportComponent = ({
                   Invoice To:
                 </h3>
                 {typeof invoiceData.customer === "string" ? (
-                  <p className="text-gray-800 text-[12px]">
-                    <span className="font-bold">Customer:</span>{" "}
-                    {invoiceData.customer}
-                  </p>
+                  (() => {
+                    try {
+                      const customer = JSON.parse(invoiceData.customer);
+                      return (
+                        <>
+                          <p className="text-gray-800 text-[12px]">
+                            <span className="font-bold">Name:</span>{" "}
+                            {customer.name}
+                          </p>
+                          <p className="text-gray-800 text-[12px]">
+                            <span className="font-bold">Address:</span>{" "}
+                            {customer.delivery}
+                          </p>
+                          <p className="text-gray-800 text-[12px]">
+                            <span className="font-bold">Phone:</span>{" "}
+                            {customer.contact}
+                          </p>
+                          <p className="text-gray-800 text-[12px]">
+                            <span className="font-bold">Email:</span>{" "}
+                            {customer.email}
+                          </p>
+                        </>
+                      );
+                    } catch {
+                      return (
+                        <p className="text-gray-800 text-[12px]">
+                          {invoiceData.customer}
+                        </p>
+                      );
+                    }
+                  })()
                 ) : (
                   <>
                     <p className="text-gray-800 text-[12px]">
                       <span className="font-bold">Name:</span>{" "}
-                      {invoiceData.customer?.name || "N/A"}
+                      {invoiceData.customer?.name}
                     </p>
                     <p className="text-gray-800 text-[12px]">
                       <span className="font-bold">Address:</span>{" "}
-                      {invoiceData.customer?.delivery || "N/A"}
+                      {invoiceData.customer?.delivery}
                     </p>
                     <p className="text-gray-800 text-[12px]">
                       <span className="font-bold">Phone:</span>{" "}
-                      {invoiceData.customer?.contact || "N/A"}
+                      {invoiceData.customer?.contact}
                     </p>
                     <p className="text-gray-800 text-[12px]">
                       <span className="font-bold">Email:</span>{" "}
-                      {invoiceData.customer?.email || "N/A"}
+                      {invoiceData.customer?.email}
                     </p>
                   </>
                 )}
@@ -316,62 +356,84 @@ export const PartialInvoicesReportComponent = ({
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {dataToRender.map((item, index) => {
-                    let typeText;
-                    if (index == 0) {
-                      typeText = "Main";
-                    } else if (index == 1) {
-                      typeText = "1st";
-                    } else if (index == 2) {
-                      typeText = "2nd";
-                    } else if (index == 3) {
-                      typeText = "3rd";
-                    } else {
-                      typeText = `${index}th`;
+                  {(function () {
+                    try {
+                      const parsedData =
+                        typeof dataToRender === "string"
+                          ? JSON.parse(dataToRender)
+                          : dataToRender;
+                      const dataArray = Array.isArray(parsedData)
+                        ? parsedData
+                        : [parsedData];
+                      if (dataArray.length > 0) {
+                        return dataArray.map((item, index) => {
+                          const typeText =
+                            index === 0
+                              ? "Main"
+                              : index === 1
+                              ? "1st"
+                              : index === 2
+                              ? "2nd"
+                              : index === 3
+                              ? "3rd"
+                              : `${index}th`;
+                          const invoiceIdSuffix =
+                            index === 0 ? "" : String.fromCharCode(64 + index);
+                          const displayInvoiceId = `${invoiceData.invoice_id}${invoiceIdSuffix}`;
+                          return (
+                            <tr
+                              className="divide-x divide-gray-200"
+                              key={index}
+                            >
+                              <td className="px-6 py-2 whitespace-nowrap text-[12px] font-bold text-gray-900">
+                                {index + 1}
+                              </td>
+                              <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                                {typeText}
+                              </td>
+                              <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                                {displayInvoiceId}
+                              </td>
+                              <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                                {item.date
+                                  ? formatDate(item.date)
+                                  : formatDate(invoiceData.date)}
+                              </td>
+                              <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                                {item.paid_amount ?? invoiceData.paid_amount}{" "}
+                                {currencyCode}
+                              </td>
+                              <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                                {item.due_amount ?? invoiceData.due_amount}{" "}
+                                {currencyCode}
+                              </td>
+                              <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                                {Number(
+                                  item.due_amount ?? invoiceData.due_amount
+                                ) === 0
+                                  ? "Paid"
+                                  : "Due"}
+                              </td>
+                            </tr>
+                          );
+                        });
+                      }
+                    } catch (error) {
+                      console.error("Failed to parse data:", error);
                     }
-
-                    // Generate invoice ID suffix (A, B, C, etc.)
-                    const invoiceIdSuffix =
-                      index == 0 ? "" : String.fromCharCode(64 + index);
-                    const displayInvoiceId = `${invoiceData.invoice_id}${invoiceIdSuffix}`;
-
                     return (
-                      <tr className="divide-x divide-gray-200" key={index}>
-                        <td className="px-6 py-2 whitespace-nowrap text-[12px] font-bold text-gray-900">
-                          {index + 1}
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                          {typeText}
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                          {displayInvoiceId}
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                          {invoiceData.sub_invoice
-                            ? formatDate(item.date)
-                            : formatDate(invoiceData.date)}
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                          {invoiceData.sub_invoice
-                            ? item.paid_amount
-                            : invoiceData.paid_amount}{" "}
-                          {currencyCode}
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                          {invoiceData.sub_invoice
-                            ? item.due_amount
-                            : invoiceData.due_amount}{" "}
-                          {currencyCode}
-                        </td>
-                        <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                          {Number(item.due_amount) == 0 ||
-                          invoiceData.due_amount
-                            ? "Paid"
-                            : "Due"}
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="text-center py-4 text-gray-500"
+                        >
+                          {typeof dataToRender === "string"
+                            ? "Invalid invoice data format"
+                            : "No invoices found"}
                         </td>
                       </tr>
                     );
-                  })}
+                  })()}
                 </tbody>
               </table>
             </div>

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { FaXmark } from "react-icons/fa6";
 import CreatableSelect from "react-select/creatable";
 import { StylesConfig, MultiValue } from "react-select";
+import { options } from "../options";
 
 interface Option {
   value: string;
@@ -287,6 +288,7 @@ export const EditSupplierModal: React.FC<EditSupplierModalProps> = ({
           id="products"
           isMulti={true}
           placeholder="Select products"
+          options={options}
           isSearchable
           className="react-select-container"
           classNamePrefix="react-select"

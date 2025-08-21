@@ -11,10 +11,12 @@ import { FaKey } from "react-icons/fa6";
 import { FaRightFromBracket } from "react-icons/fa6";
 import { signOut } from "next-auth/react";
 import { VscThreeBars } from "react-icons/vsc";
+import { SiConvertio } from "react-icons/si";
 import { useState } from "react";
 import { MdFullscreen, MdOutlineFullscreenExit } from "react-icons/md";
 import { useAccUserRedirect } from "@/hooks/useAccUser";
 import { CalculatorModal } from "./Calculator";
+import { ConverterModal } from "./Converter";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -23,6 +25,7 @@ interface HeaderProps {
 export const Header = ({ toggleSidebar }: HeaderProps) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isCalculatorVisible, setIsCalculatorVisible] = useState(false);
+  const [isConverterVisible, setIsConverterVisible] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
   useAccUserRedirect();
@@ -44,6 +47,14 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
 
   const handleCalculatorCancel = () => {
     setIsCalculatorVisible(false);
+  };
+
+  const showConverter = () => {
+    setIsConverterVisible(true);
+  };
+
+  const handleConverterCancel = () => {
+    setIsConverterVisible(false);
   };
 
   const handleSignOut = async () => {
@@ -120,6 +131,15 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            className="text-[12px] font-bold border rounded px-2 py-[2px]"
+            href={"/create-invoices"}
+          >
+            POS
+          </Link>
+          <button onClick={showConverter}>
+            <SiConvertio className="h-5 w-5 fill-black" />
+          </button>
           <button onClick={showCalculator}>
             <FaCalculator className="h-5 w-5 fill-black" />
           </button>
@@ -150,6 +170,10 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
       <CalculatorModal
         visible={isCalculatorVisible}
         onCancel={handleCalculatorCancel}
+      />
+      <ConverterModal
+        visible={isConverterVisible}
+        onCancel={handleConverterCancel}
       />
     </>
   );

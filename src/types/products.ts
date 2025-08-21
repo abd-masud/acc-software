@@ -6,6 +6,8 @@ type ProductAttribute = {
 };
 
 export type Products = {
+    cabinet_id: any;
+    warehouse_id: any;
     key: string;
     id: number;
     product_id: string;

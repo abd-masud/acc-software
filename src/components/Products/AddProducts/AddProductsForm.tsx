@@ -11,6 +11,8 @@ import { FaXmark } from "react-icons/fa6";
 import { Suppliers } from "@/types/suppliers";
 import { Button, Modal } from "antd";
 import warning from "../../../../public/images/warning.webp";
+import { Warehouse } from "@/types/warehouse";
+import { Cabinet } from "@/types/cabinet";
 
 const TYPES = [
   "Single (Only Single product)",
@@ -69,6 +71,15 @@ export const AddProductsForm = () => {
   );
   const [generalsLoaded, setGeneralsLoaded] = useState(false);
   const [isInHouseProduct, setIsInHouseProduct] = useState(false);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [cabinets, setCabinets] = useState<Cabinet[]>([]);
+  const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(
+    null
+  );
+  const [selectedCabinet, setSelectedCabinet] = useState<Cabinet | null>(null);
+  const [isLoadingWarehouses, setIsLoadingWarehouses] = useState(false);
+  const [isLoadingCabinets, setIsLoadingCabinets] = useState(false);
+  const [supplierProducts, setSupplierProducts] = useState<string[]>([]);
   const [formValues, setFormValues] = useState<FormValues>({
     type: "",
     name: "",
@@ -113,6 +124,20 @@ export const AddProductsForm = () => {
     label: `${supplier.company} (${supplier.supplier_id})`,
     supplier: supplier,
   }));
+
+  const warehouseOptions = warehouses.map((warehouse: Warehouse) => ({
+    value: warehouse.id,
+    label: `${warehouse.warehouse} (${warehouse.warehouse_id})`,
+    warehouse: warehouse,
+  }));
+
+  const cabinetOptions = cabinets
+    .filter((cabinet) => Number(cabinet.warehouse_id) === selectedWarehouse?.id)
+    .map((cabinet: Cabinet) => ({
+      value: cabinet.id,
+      label: `${cabinet.cabinet} (${cabinet.cabinet_id})`,
+      cabinet: cabinet,
+    }));
 
   const showNoSuppliersModal = () => {
     setIsSuppliersModalVisible(true);
@@ -201,6 +226,20 @@ export const AddProductsForm = () => {
     fetchSuppliers();
   }, [user?.id]);
 
+  useEffect(() => {
+    if (selectedSupplier) {
+      try {
+        const products = JSON.parse(selectedSupplier.products || "[]");
+        setSupplierProducts(Array.isArray(products) ? products : []);
+      } catch (error) {
+        console.error("Failed to parse supplier products:", error);
+        setSupplierProducts([]);
+      }
+    } else {
+      setSupplierProducts([]);
+    }
+  }, [selectedSupplier]);
+
   const isCategoryEmpty = (cat: any) => !Array.isArray(cat) || cat.length === 0;
 
   useEffect(() => {
@@ -247,6 +286,67 @@ export const AddProductsForm = () => {
 
     fetchCurrencies();
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const fetchWarehouses = async () => {
+      setIsLoadingWarehouses(true);
+      try {
+        const response = await fetch(`/api/warehouse?user_id=${user.id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setWarehouses(Array.isArray(data.data) ? data.data : []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch warehouses:", error);
+      } finally {
+        setIsLoadingWarehouses(false);
+      }
+    };
+
+    fetchWarehouses();
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!selectedWarehouse?.id) {
+      setCabinets([]);
+      setSelectedCabinet(null);
+      return;
+    }
+
+    const fetchCabinets = async () => {
+      setIsLoadingCabinets(true);
+      try {
+        const response = await fetch(
+          `/api/cabinet?warehouse_id=${selectedWarehouse.id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setCabinets(Array.isArray(data.data) ? data.data : []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch cabinets:", error);
+      } finally {
+        setIsLoadingCabinets(false);
+      }
+    };
+
+    fetchCabinets();
+  }, [selectedWarehouse]);
 
   const toSelectOptions = (arr: string[]) =>
     Array.isArray(arr) ? arr.map((item) => ({ label: item, value: item })) : [];
@@ -324,11 +424,13 @@ export const AddProductsForm = () => {
       type,
       user_id: user?.id,
       product_id,
-      supplier: isInHouseProduct
-        ? "In-house product"
-        : selectedSupplier || null,
+      supplier: isInHouseProduct ? "In-house product" : selectedSupplier,
       attribute,
       sku,
+      warehouse_id: selectedWarehouse?.id,
+      warehouse: selectedWarehouse?.warehouse,
+      cabinet_id: selectedCabinet?.id,
+      cabinet: selectedCabinet?.cabinet,
     }));
 
     try {
@@ -441,7 +543,7 @@ export const AddProductsForm = () => {
         <h2 className="text-[13px] font-[500]">Add Product Form</h2>
       </div>
       <form onSubmit={handleSubmit}>
-        <div className="grid sm:grid-cols-3 grid-cols-1 sm:gap-4 gap-0">
+        <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4 gap-0">
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="product_id">
               Product ID
@@ -474,21 +576,6 @@ export const AddProductsForm = () => {
               required
             />
           </div>
-          <div className="mb-4">
-            <label className="text-[14px]" htmlFor="name">
-              Product Name
-            </label>
-            <input
-              placeholder="Enter product name"
-              className="border text-[14px] py-3 px-[10px] w-full bg-[#F2F4F7] hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
-              type="text"
-              id="name"
-              maxLength={100}
-              value={formValues.name}
-              onChange={handleChange}
-              required
-            />
-          </div>
         </div>
 
         <div className="mb-6 p-4 border rounded-lg">
@@ -500,6 +587,7 @@ export const AddProductsForm = () => {
               checked={isInHouseProduct}
               onChange={(e) => {
                 setIsInHouseProduct(e.target.checked);
+                setFormValues((prev) => ({ ...prev, name: "" }));
                 if (e.target.checked) {
                   setSelectedSupplier(null);
                 }
@@ -531,6 +619,7 @@ export const AddProductsForm = () => {
                   } else {
                     setSelectedSupplier(null);
                   }
+                  setFormValues((prev) => ({ ...prev, name: "" }));
                 }}
                 placeholder="Select supplier"
                 isClearable
@@ -591,6 +680,135 @@ export const AddProductsForm = () => {
                 id="contact"
                 value={selectedSupplier?.contact || ""}
                 readOnly
+              />
+            </div>
+          </div>
+          <div className="mb-4">
+            <label className="text-[14px]" htmlFor="name">
+              Product Name
+            </label>
+            {isInHouseProduct ? (
+              <input
+                placeholder="Enter product name"
+                className="border text-[14px] py-3 px-[10px] w-full hover:border-[#B9C1CC] focus:outline-none focus:border-[#B9C1CC] rounded-md transition-all duration-300 mt-2"
+                type="text"
+                id="name"
+                value={formValues.name}
+                onChange={(e) =>
+                  setFormValues((prev) => ({ ...prev, name: e.target.value }))
+                }
+                required
+              />
+            ) : (
+              <Select
+                id="name"
+                className="text-[14px] mt-2"
+                options={supplierProducts.map((product) => ({
+                  value: product,
+                  label: product,
+                }))}
+                value={
+                  formValues.name
+                    ? { value: formValues.name, label: formValues.name }
+                    : null
+                }
+                onChange={(selectedOption) => {
+                  setFormValues((prev) => ({
+                    ...prev,
+                    name: selectedOption?.value || "",
+                  }));
+                }}
+                placeholder="Select product"
+                isClearable
+                isSearchable
+                isDisabled={!selectedSupplier}
+                styles={generalSelectStyles}
+                required
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="mb-6 p-4 border rounded-lg">
+          <h3 className="text-[15px] font-semibold mb-3">Product Storage</h3>
+          <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4 gap-0">
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="warehouse">
+                Warehouse
+              </label>
+              <Select<{
+                value: number;
+                label: string;
+                warehouse: Warehouse;
+              }>
+                id="warehouse"
+                className="text-[14px] mt-2"
+                options={warehouseOptions}
+                value={warehouseOptions.find(
+                  (option) => option.value === selectedWarehouse?.id
+                )}
+                onChange={(selectedOption) => {
+                  if (selectedOption) {
+                    setSelectedWarehouse(selectedOption.warehouse);
+                  } else {
+                    setSelectedWarehouse(null);
+                  }
+                  setSelectedCabinet(null);
+                }}
+                placeholder={
+                  isLoadingWarehouses
+                    ? "Loading warehouses..."
+                    : "Select warehouse"
+                }
+                isClearable
+                isSearchable
+                isLoading={isLoadingWarehouses}
+                isDisabled={isLoadingWarehouses}
+                styles={generalSelectStyles}
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="text-[14px]" htmlFor="cabinet">
+                Cabinet
+              </label>
+              <Select<{
+                value: number;
+                label: string;
+                cabinet: Cabinet;
+              }>
+                id="cabinet"
+                className="text-[14px] mt-2"
+                options={cabinetOptions}
+                value={cabinetOptions.find(
+                  (option) => option.value === selectedCabinet?.id
+                )}
+                onChange={(selectedOption) => {
+                  if (selectedOption) {
+                    setSelectedCabinet(selectedOption.cabinet);
+                  } else {
+                    setSelectedCabinet(null);
+                  }
+                }}
+                placeholder={
+                  !selectedWarehouse
+                    ? "Select a warehouse first"
+                    : isLoadingCabinets
+                    ? "Loading cabinets..."
+                    : cabinetOptions.length === 0
+                    ? "No cabinets available"
+                    : "Select cabinet"
+                }
+                isClearable
+                isSearchable
+                isLoading={isLoadingCabinets}
+                isDisabled={
+                  !selectedWarehouse ||
+                  isLoadingCabinets ||
+                  cabinetOptions.length === 0
+                }
+                styles={generalSelectStyles}
+                required
               />
             </div>
           </div>
@@ -700,7 +918,6 @@ export const AddProductsForm = () => {
               required
             />
           </div>
-
           <div className="mb-4">
             <label className="text-[14px]" htmlFor="category">
               Category
@@ -739,7 +956,7 @@ export const AddProductsForm = () => {
                 Attributes
               </label>
             </div>
-            <div className="grid sm:grid-cols-4 gap-2">
+            <div className="grid sm:grid-cols-4 gap-4">
               <Select
                 instanceId={`${instanceId}-size`}
                 inputId="size"
@@ -784,7 +1001,6 @@ export const AddProductsForm = () => {
                 isClearable
                 required
               />
-
               <Select
                 instanceId={`${instanceId}-material`}
                 inputId="material"

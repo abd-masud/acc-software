@@ -19,7 +19,7 @@ const StyledTable = styled(Table)`
   }
 `;
 
-export const StockInHandListTable: React.FC<ProductsTableProps> = ({
+export const InHouseProductTable: React.FC<ProductsTableProps> = ({
   products,
   fetchProducts,
   loading,

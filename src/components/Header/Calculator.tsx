@@ -1,7 +1,7 @@
 "use client";
 
 import { Modal } from "antd";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface CalculatorModalProps {
   visible: boolean;
@@ -14,14 +14,46 @@ export const CalculatorModal = ({
 }: CalculatorModalProps) => {
   const [input, setInput] = useState("");
   const [result, setResult] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Focus the input when modal opens
+  useEffect(() => {
+    if (visible && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [visible]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const key = e.key;
+
+    // Allow only calculator-relevant keys
+    if (/[0-9+\-*/.()=]|Backspace|Enter|Delete|Escape/.test(key)) {
+      e.preventDefault();
+
+      if (key === "Enter" || key === "=") {
+        calculateResult();
+      } else if (key === "Backspace") {
+        setInput(input.slice(0, -1));
+      } else if (key === "Delete" || key === "Escape") {
+        setInput("");
+        setResult("");
+      } else {
+        setInput((prev) => prev + key);
+      }
+    }
+  };
+
+  const calculateResult = () => {
+    try {
+      setResult(eval(input).toString());
+    } catch {
+      setResult("Error");
+    }
+  };
 
   const handleClick = (value: string) => {
     if (value === "=") {
-      try {
-        setResult(eval(input).toString());
-      } catch {
-        setResult("Error");
-      }
+      calculateResult();
     } else if (value === "C") {
       setInput("");
       setResult("");
@@ -66,6 +98,7 @@ export const CalculatorModal = ({
     >
       <div className="bg-gray-100 p-2 rounded mb-4 space-y-2">
         <input
+          ref={inputRef}
           type="text"
           value={input}
           onChange={(e) => {
@@ -73,6 +106,7 @@ export const CalculatorModal = ({
             const sanitized = value.replace(/[^0-9+\-*/().]/g, "");
             setInput(sanitized);
           }}
+          onKeyDown={handleKeyDown}
           className="w-full text-right text-sm text-gray-600 bg-transparent border-b focus:outline-none"
           placeholder="Enter expression"
         />

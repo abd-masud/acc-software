@@ -7,6 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import Select, { StylesConfig } from "react-select";
 import { FaXmark } from "react-icons/fa6";
 import { Suppliers } from "@/types/suppliers";
+import { Warehouse } from "@/types/warehouse";
+import { Cabinet } from "@/types/cabinet";
 
 const UNITS = [
   "Pieces",
@@ -50,6 +52,14 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
   const [selectedSupplier, setSelectedSupplier] = useState<Suppliers | null>(
     null
   );
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
+  const [cabinets, setCabinets] = useState<Cabinet[]>([]);
+  const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(
+    null
+  );
+  const [selectedCabinet, setSelectedCabinet] = useState<Cabinet | null>(null);
+  const [isLoadingWarehouses, setIsLoadingWarehouses] = useState(false);
+  const [isLoadingCabinets, setIsLoadingCabinets] = useState(false);
   const [attributes, setAttributes] = useState({
     size: "",
     color: "",
@@ -72,13 +82,52 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
     }));
   }, [suppliers]);
 
+  const warehouseOptions = useMemo(() => {
+    return warehouses.map((warehouse: Warehouse) => ({
+      value: warehouse.id,
+      label: `${warehouse.warehouse} (${warehouse.warehouse_id})`,
+      warehouse: warehouse,
+    }));
+  }, [warehouses]);
+
+  const cabinetOptions = useMemo(() => {
+    return cabinets
+      .filter(
+        (cabinet) => Number(cabinet.warehouse_id) === selectedWarehouse?.id
+      )
+      .map((cabinet: Cabinet) => ({
+        value: cabinet.id,
+        label: `${cabinet.cabinet} (${cabinet.cabinet_id})`,
+        cabinet: cabinet,
+      }));
+  }, [cabinets, selectedWarehouse]);
+
   const transformAttributes = (
-    attributeArray: Array<{ name: string; value: string }> = []
+    attributeArray: Array<{ name: string; value: string }> | undefined
   ) => {
-    return attributeArray.reduce((acc: { [key: string]: string }, attr) => {
-      acc[attr.name] = attr.value;
-      return acc;
-    }, {});
+    if (!Array.isArray(attributeArray)) {
+      return {
+        size: "",
+        color: "",
+        material: "",
+        weight: "",
+      };
+    }
+
+    return attributeArray.reduce(
+      (acc: { [key: string]: string }, attr) => {
+        if (attr && attr.name && attr.value) {
+          acc[attr.name] = attr.value;
+        }
+        return acc;
+      },
+      {
+        size: "",
+        color: "",
+        material: "",
+        weight: "",
+      }
+    );
   };
 
   const fetchGenerals = useCallback(async () => {
@@ -152,6 +201,67 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
   }, [user?.id]);
 
   useEffect(() => {
+    if (!user?.id) return;
+
+    const fetchWarehouses = async () => {
+      setIsLoadingWarehouses(true);
+      try {
+        const response = await fetch(`/api/warehouse?user_id=${user.id}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setWarehouses(Array.isArray(data.data) ? data.data : []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch warehouses:", error);
+      } finally {
+        setIsLoadingWarehouses(false);
+      }
+    };
+
+    fetchWarehouses();
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!selectedWarehouse?.id) {
+      setCabinets([]);
+      setSelectedCabinet(null);
+      return;
+    }
+
+    const fetchCabinets = async () => {
+      setIsLoadingCabinets(true);
+      try {
+        const response = await fetch(
+          `/api/cabinet?warehouse_id=${selectedWarehouse.id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setCabinets(Array.isArray(data.data) ? data.data : []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch cabinets:", error);
+      } finally {
+        setIsLoadingCabinets(false);
+      }
+    };
+
+    fetchCabinets();
+  }, [selectedWarehouse]);
+
+  useEffect(() => {
     const fetchCurrencies = async () => {
       if (!user?.id) return;
       try {
@@ -187,10 +297,10 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
       setSellingPrice(currentProduct.price || "");
       setCategory(currentProduct.category);
       setUnit(currentProduct.unit);
-      setIsInHouseProduct(!currentProduct.supplier.id);
+      setIsInHouseProduct(!currentProduct.supplier?.id);
 
       const transformedAttributes = transformAttributes(
-        currentProduct.attribute
+        Array.isArray(currentProduct.attribute) ? currentProduct.attribute : []
       );
       setAttributes({
         size: transformedAttributes.size || "",
@@ -199,7 +309,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
         weight: transformedAttributes.weight || "",
       });
 
-      if (currentProduct.supplier.id && suppliers.length > 0) {
+      if (currentProduct.supplier?.id && suppliers.length > 0) {
         const productSupplier = suppliers.find(
           (p) => p.id == currentProduct.supplier.id
         );
@@ -245,6 +355,10 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
         category: category,
         unit: unit,
         attribute,
+        warehouse_id: selectedWarehouse?.id,
+        warehouse: selectedWarehouse?.warehouse,
+        cabinet_id: selectedCabinet?.id,
+        cabinet: selectedCabinet?.cabinet,
       };
 
       await onSave(updatedProduct);
@@ -493,6 +607,89 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
         </div>
       </div>
 
+      <div className="mb-6 p-4 border rounded-lg">
+        <h3 className="text-[15px] font-semibold mb-3">Product Storage</h3>
+        <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-4 gap-0">
+          <div className="mb-4">
+            <label className="text-[14px]" htmlFor="warehouse">
+              Warehouse
+            </label>
+            <Select<{
+              value: number;
+              label: string;
+              warehouse: Warehouse;
+            }>
+              id="warehouse"
+              className="text-[14px] mt-2"
+              options={warehouseOptions}
+              value={warehouseOptions.find(
+                (option) => option.value === selectedWarehouse?.id
+              )}
+              onChange={(selectedOption) => {
+                if (selectedOption) {
+                  setSelectedWarehouse(selectedOption.warehouse);
+                } else {
+                  setSelectedWarehouse(null);
+                }
+                setSelectedCabinet(null);
+              }}
+              placeholder={
+                isLoadingWarehouses
+                  ? "Loading warehouses..."
+                  : "Select warehouse"
+              }
+              isClearable
+              isSearchable
+              isLoading={isLoadingWarehouses}
+              isDisabled={isLoadingWarehouses}
+              styles={generalSelectStyles}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="text-[14px]" htmlFor="cabinet">
+              Cabinet
+            </label>
+            <Select<{
+              value: number;
+              label: string;
+              cabinet: Cabinet;
+            }>
+              id="cabinet"
+              className="text-[14px] mt-2"
+              options={cabinetOptions}
+              value={cabinetOptions.find(
+                (option) => option.value === selectedCabinet?.id
+              )}
+              onChange={(selectedOption) => {
+                if (selectedOption) {
+                  setSelectedCabinet(selectedOption.cabinet);
+                } else {
+                  setSelectedCabinet(null);
+                }
+              }}
+              placeholder={
+                !selectedWarehouse
+                  ? "Select a warehouse first"
+                  : isLoadingCabinets
+                  ? "Loading cabinets..."
+                  : cabinetOptions.length === 0
+                  ? "No cabinets available"
+                  : "Select cabinet"
+              }
+              isClearable
+              isSearchable
+              isLoading={isLoadingCabinets}
+              isDisabled={
+                !selectedWarehouse ||
+                isLoadingCabinets ||
+                cabinetOptions.length === 0
+              }
+              styles={generalSelectStyles}
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="mb-4">
         <label className="text-[14px]" htmlFor="description">
           Description
@@ -609,7 +806,7 @@ export const EditProductModal: React.FC<EditProductModalProps> = ({
         <label className="text-[14px]" htmlFor="category">
           Attributes
         </label>
-        <div className="grid sm:grid-cols-2 gap-2">
+        <div className="grid sm:grid-cols-2 sm:gap-4 gap-2">
           <Select
             instanceId={`${instanceId}-size`}
             inputId="size"

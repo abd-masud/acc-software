@@ -23,6 +23,10 @@ export async function POST(request: NextRequest) {
                 user_id,
                 product_id,
                 name,
+                warehouse,
+                warehouse_id,
+                cabinet,
+                cabinet_id,
                 description,
                 price,
                 buying_price,
@@ -35,7 +39,7 @@ export async function POST(request: NextRequest) {
                 attribute
             } = product;
 
-            if (!user_id || !product_id || !name || !price || !buying_price ||
+            if (!user_id || !product_id || !name || !warehouse || !warehouse_id || !cabinet || !cabinet_id || !price || !buying_price ||
                 !category || stock == null || !unit || !type || !sku) {
                 console.error('Missing required fields in product:', product);
                 return NextResponse.json(
@@ -61,6 +65,10 @@ export async function POST(request: NextRequest) {
                 user_id,
                 product_id,
                 name,
+                warehouse,
+                warehouse_id,
+                cabinet,
+                cabinet_id,
                 description || '',
                 numericPrice,
                 numericBuyingPrice,
@@ -76,9 +84,10 @@ export async function POST(request: NextRequest) {
 
         const [result] = await db.query<ResultSetHeader>(
             `INSERT INTO products 
-             (user_id, product_id, name, description, price, buying_price, 
+             (user_id, product_id, name,  warehouse, warehouse_id,
+                cabinet, cabinet_id, description, price, buying_price,
               category, stock, unit, type, sku, supplier, attribute)
-             VALUES ${insertValues.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ')}`,
+             VALUES ${insertValues.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ')}`,
             insertValues.flat()
         );
 

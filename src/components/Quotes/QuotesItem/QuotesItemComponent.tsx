@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { QuoteData, QuotesItemProps } from "@/types/quotes";
+import { QuoteData, QuoteItem, QuotesItemProps } from "@/types/quotes";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import logo from "../../../../public/images/logo.webp";
@@ -111,12 +111,29 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
     return `${day} ${month}, ${year}`;
   }
 
-  // Generate QR code data string
+  const tryParse = (value: string) => {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  };
+
   const generateQRData = () => {
     if (!quoteData) return "";
+    let contactNumber = "N/A";
+    if (typeof quoteData.customer === "string") {
+      const parsedCustomer = tryParse(quoteData.customer);
+      contactNumber =
+        typeof parsedCustomer === "object" && parsedCustomer !== null
+          ? parsedCustomer.contact || "N/A"
+          : parsedCustomer;
+    } else {
+      contactNumber = quoteData.customer.contact;
+    }
     return [
       `Quote ID: ${quoteData.quote_id}`,
-      `Contact: ${quoteData.customer.contact}`,
+      `Contact: ${contactNumber}`,
       `Inv Date: ${formatDate(quoteData.date)}`,
     ].join("\n");
   };
@@ -215,22 +232,58 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
                 <h3 className="text-[16px] font-bold text-gray-800 mb-2">
                   Quote To:
                 </h3>
-                <p className="text-gray-800 text-[12px]">
-                  <span className="font-bold">Name:</span>{" "}
-                  {quoteData.customer?.name}
-                </p>
-                <p className="text-gray-800 text-[12px]">
-                  <span className="font-bold">Address:</span>{" "}
-                  {quoteData.customer?.delivery}
-                </p>
-                <p className="text-gray-800 text-[12px]">
-                  <span className="font-bold">Phone:</span>{" "}
-                  {quoteData.customer?.contact}
-                </p>
-                <p className="text-gray-800 text-[12px]">
-                  <span className="font-bold">Email:</span>{" "}
-                  {quoteData.customer?.email}
-                </p>
+                {typeof quoteData.customer === "string" ? (
+                  (() => {
+                    try {
+                      const customer = JSON.parse(quoteData.customer);
+                      return (
+                        <>
+                          <p className="text-gray-800 text-[12px]">
+                            <span className="font-bold">Name:</span>{" "}
+                            {customer.name}
+                          </p>
+                          <p className="text-gray-800 text-[12px]">
+                            <span className="font-bold">Address:</span>{" "}
+                            {customer.delivery}
+                          </p>
+                          <p className="text-gray-800 text-[12px]">
+                            <span className="font-bold">Phone:</span>{" "}
+                            {customer.contact}
+                          </p>
+                          <p className="text-gray-800 text-[12px]">
+                            <span className="font-bold">Email:</span>{" "}
+                            {customer.email}
+                          </p>
+                        </>
+                      );
+                    } catch {
+                      return (
+                        <p className="text-gray-800 text-[12px]">
+                          {quoteData.customer}
+                        </p>
+                      );
+                    }
+                  })()
+                ) : (
+                  <>
+                    <p className="text-gray-800 text-[12px]">
+                      <span className="font-bold">Name:</span>{" "}
+                      {quoteData.customer?.name}
+                    </p>
+                    <p className="text-gray-800 text-[12px]">
+                      <span className="font-bold">Address:</span>{" "}
+                      {quoteData.customer?.delivery}
+                    </p>
+                    <p className="text-gray-800 text-[12px]">
+                      <span className="font-bold">Phone:</span>{" "}
+                      {quoteData.customer?.contact}
+                    </p>
+                    <p className="text-gray-800 text-[12px]">
+                      <span className="font-bold">Email:</span>{" "}
+                      {quoteData.customer?.email}
+                    </p>
+                  </>
+                )}
               </div>
               <div className="flex items-end justify-end gap-4">
                 <div>
@@ -284,25 +337,39 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {quoteData.items?.map((item, index) => (
-                    <tr className="divide-x divide-gray-200" key={index}>
-                      <td className="px-6 py-2 whitespace-nowrap text-[12px] font-bold text-gray-900">
-                        {index + 1}
-                      </td>
-                      <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                        {item.product}
-                      </td>
-                      <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                        {item.quantity} {item.unit}
-                      </td>
-                      <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                        {item.unit_price} {currencyCode}
-                      </td>
-                      <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                        {item.amount} {currencyCode}
+                  {quoteData.items && quoteData.items.length > 0 ? (
+                    (Array.isArray(quoteData.items)
+                      ? quoteData.items
+                      : JSON.parse(quoteData.items)
+                    ).map((item: QuoteItem, index: number) => (
+                      <tr className="divide-x divide-gray-200" key={index}>
+                        <td className="px-6 py-2 whitespace-nowrap text-[12px] font-bold text-gray-900">
+                          {index + 1}
+                        </td>
+                        <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                          {item.product}
+                        </td>
+                        <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                          {item.quantity} {item.unit || ""}
+                        </td>
+                        <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                          {item.unit_price} {currencyCode}
+                        </td>
+                        <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                          {item.amount} {currencyCode}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="px-6 py-4 text-center text-[12px] text-gray-500"
+                      >
+                        No items found
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>

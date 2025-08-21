@@ -15,6 +15,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AllSalesReportButton } from "./AllSalesReportReport";
 import styled from "styled-components";
 
+const StyledTable = styled(Table)`
+  .ant-table-thead > tr:nth-child(1) > th {
+    background-color: #478cf3;
+    color: white;
+  }
+  .ant-table-thead > tr:nth-child(2) > th {
+    background-color: #6aa2f5;
+    color: white;
+  }
+`;
+
 export const AllSalesReportTable: React.FC<InvoicesTableProps> = ({
   invoices,
   loading,
@@ -25,16 +36,8 @@ export const AllSalesReportTable: React.FC<InvoicesTableProps> = ({
   const [toDate, setToDate] = useState<Dayjs | null>(null);
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [, setDateRangeSelected] = useState(false);
-  const StyledTable = styled(Table)`
-    .ant-table-thead > tr:nth-child(1) > th {
-      background-color: #478cf3;
-      color: white;
-    }
-    .ant-table-thead > tr:nth-child(2) > th {
-      background-color: #6aa2f5;
-      color: white;
-    }
-  `;
+
+  console.log(invoices);
 
   useEffect(() => {
     if (!user?.id) return;

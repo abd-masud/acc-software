@@ -65,10 +65,24 @@ export const AllSalesReportComponent = () => {
   const Invoices = useMemo(() => {
     return invoicesData
       .map((invoice) => {
-        const customer = customersData.find((c) => c.id == invoice.customer.id);
-        return customer ? { ...invoice, customer } : null;
+        const customerId =
+          typeof invoice.customer === "string"
+            ? invoice.customer
+            : invoice.customer.id;
+
+        const customer = customersData.find((c) => c.id == customerId);
+
+        return customer
+          ? {
+              ...invoice,
+              customer,
+            }
+          : null;
       })
-      .filter((invoice): invoice is InvoiceData => invoice !== null);
+      .filter(
+        (invoice): invoice is InvoiceData & { customer: Customers } =>
+          invoice !== null
+      );
   }, [invoicesData, customersData]);
 
   return (

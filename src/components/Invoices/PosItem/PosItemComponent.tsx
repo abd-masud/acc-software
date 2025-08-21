@@ -15,6 +15,7 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
   const [currencyCode, setCurrencyCode] = useState("USD");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [receiptWidth, setReceiptWidth] = useState<"58mm" | "80mm">("58mm");
   const receiptRef = useRef<HTMLDivElement>(null);
   useAccUserRedirect();
 
@@ -85,15 +86,29 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
     return `${day}/${month}/${year}`;
   };
 
+  const tryParse = (value: string) => {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  };
+
   const generateQRData = () => {
     if (!invoiceData) return "";
-    const customerContact =
-      typeof invoiceData.customer === "string"
-        ? invoiceData.customer
-        : invoiceData.customer.contact;
+    let contactNumber = "N/A";
+    if (typeof invoiceData.customer === "string") {
+      const parsedCustomer = tryParse(invoiceData.customer);
+      contactNumber =
+        typeof parsedCustomer === "object" && parsedCustomer !== null
+          ? parsedCustomer.contact || "N/A"
+          : parsedCustomer;
+    } else {
+      contactNumber = invoiceData.customer.contact;
+    }
     return [
       `Invoice ID: ${invoiceData.invoice_id}`,
-      `Contact: ${customerContact}`,
+      `Contact: ${contactNumber}`,
       `Inv Date: ${formatDate(invoiceData.date)}`,
     ].join("\n");
   };
@@ -103,67 +118,83 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
     const printWindow = window.open("", "");
     if (printWindow) {
       printWindow.document.write(`
-        <html>
-          <head>
-            <title>Receipt</title>
-            <style>
-              @media print {
-                body { 
-                  font-family: 'Courier New', monospace;
-                  font-size: 12px;
-                  width: 58mm;
-                  margin: 0;
-                  padding: 0;
-                }
-                .receipt-container {
-                  width: 100%;
-                  padding: 2mm;
-                }
-                .logo-container img {
-                  width: auto;
-                  height: auto;
-                  max-width: 100%;
-                  max-height: 50px;
-                  object-fit: contain;
-                }
-                .text-center { text-align: center; }
-                .text-right { text-align: right; }
-                .font-bold { font-weight: bold; }
-                .border-top { border-top: 1px dashed #000; }
-                .border-bottom { border-bottom: 1px dashed #000; }
-                .my-1 { margin-top: 0.25rem; margin-bottom: 0.25rem; }
-                .items-header, .items-row {
-                  display: flex;
-                  justify-content: space-between;
-                }
-                .items-header span, .items-row span {
-                  flex: 1;
-                }
-                .dashed-line {
-                  border-top: 1px dashed #000;
-                  margin: 0.5rem 0;
-                }
-                .truncate {
-                  overflow: hidden;
-                  text-overflow: ellipsis;
-                  white-space: nowrap;
-                }
+      <html>
+        <head>
+          <title>Receipt</title>
+          <style>
+            @media print {
+              body { 
+                font-family: 'Courier New', monospace;
+                font-size: ${receiptWidth === "58mm" ? "12px" : "14px"};
+                width: ${receiptWidth};
+                margin: 0;
+                padding: 0;
+                line-height: 1.2;
+                -webkit-print-color-adjust: exact;
               }
-            </style>
-          </head>
-          <body>
-            ${receiptRef.current.innerHTML}
-            <script>
-              window.onload = function() {
-                setTimeout(function() {
-                  window.print();
-                  window.close();
-                }, 100);
-              };
-            </script>
-          </body>
-        </html>
-      `);
+              * {
+                box-sizing: border-box;
+              }
+              .receipt-container {
+                width: 100%;
+                padding: 1mm 2mm;
+              }
+              .logo-container img {
+                width: auto;
+                height: auto;
+                max-width: 100%;
+                max-height: ${receiptWidth === "58mm" ? "40px" : "50px"};
+                object-fit: contain;
+                filter: contrast(120%);
+              }
+              .text-center { text-align: center; }
+              .text-right { text-align: right; }
+              .font-bold { 
+                font-weight: bold;
+                font-size: ${receiptWidth === "58mm" ? "13px" : "15px"};
+              }
+              .border-top { border-top: 1px solid #000 !important; }
+              .border-bottom { border-bottom: 1px solid #000 !important; }
+              .my-1 { margin: 2px 0; }
+              .items-header, .items-row {
+                display: flex;
+                justify-content: space-between;
+                margin: 3px 0;
+              }
+              .items-header span, .items-row span {
+                flex: 1;
+                padding: 0 1px;
+              }
+              .dashed-line {
+                border-top: 1px dashed #000;
+                margin: 3px 0;
+              }
+              .truncate {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              }
+              .qrcode {
+                width: ${receiptWidth === "58mm" ? "90px" : "110px"};
+                height: auto;
+                margin: 2px auto;
+                filter: contrast(130%);
+              }
+              .no-print { display: none !important; }
+            }
+          </style>
+        </head>
+        <body>
+          ${receiptRef.current.innerHTML}
+          <script>
+            setTimeout(function() {
+              window.print();
+              window.close();
+            }, 200);
+          </script>
+        </body>
+      </html>
+    `);
       printWindow.document.close();
     }
   };
@@ -201,7 +232,15 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
   return (
     <main className="bg-[#F2F4F7]">
       <Breadcrumb />
-      <div className="flex justify-end px-10 pt-5">
+      <div className="flex justify-end items-center gap-4 px-10 pt-5">
+        <select
+          value={receiptWidth}
+          onChange={(e) => setReceiptWidth(e.target.value as "58mm" | "80mm")}
+          className="px-3 py-2 border rounded text-sm"
+        >
+          <option value="58mm">58mm Receipt</option>
+          <option value="80mm">80mm Receipt</option>
+        </select>
         <button
           onClick={handlePrint}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
@@ -210,19 +249,20 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
         </button>
       </div>
 
-      {/* Receipt container with fixed 58mm width */}
+      {/* Receipt container with dynamic width */}
       <div className="flex justify-center px-4 mx-auto pb-10">
         <div
           ref={receiptRef}
           className="receipt-container bg-white p-2 shadow-lg border"
-          style={{ width: "58mm", maxWidth: "58mm" }}
+          style={{
+            width: receiptWidth,
+            maxWidth: receiptWidth,
+            fontSize: receiptWidth === "58mm" ? "12px" : "14px",
+          }}
         >
           <style jsx>{`
             .receipt-container {
               font-family: "Courier New", monospace;
-              font-size: 12px;
-              width: 58mm;
-              max-width: 58mm;
             }
             .text-center {
               text-align: center;
@@ -283,38 +323,36 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
                 width={200}
                 height={200}
                 alt="Logo"
-                className="grayscale h-14 w-auto"
+                className="grayscale"
+                style={{
+                  height: receiptWidth === "58mm" ? "40px" : "50px",
+                  width: "auto",
+                  filter: "contrast(120%)",
+                }}
               />
             </div>
 
-            <div className="font-bold text-sm">
+            <div
+              className="font-bold"
+              style={{ fontSize: receiptWidth === "58mm" ? "14px" : "16px" }}
+            >
               {user?.company || "Copa Business"}
             </div>
-            <div className="text-xs">{user?.address || "-"}</div>
-            <div className="text-xs">Tel: {user?.contact || "-"}</div>
+            <div>{user?.address || "-"}</div>
+            <div>Tel: {user?.contact || "-"}</div>
           </div>
 
           <div className="dashed-line"></div>
 
           <div className="text-center my-1">
-            <div className="font-bold text-sm">INVOICE</div>
-            <div className="text-xs">Inv ID: {invoiceData?.invoice_id}</div>
-            <div className="text-xs">Date: {formatDate(invoiceData.date)}</div>
-          </div>
-
-          <div className="dashed-line"></div>
-
-          <div className="my-1 text-xs">
-            <div className="font-bold">Customer:</div>
-            {typeof invoiceData?.customer === "string" ? (
-              <div>{invoiceData.customer}</div>
-            ) : (
-              <>
-                <div>{invoiceData?.customer?.name}</div>
-                <div>{invoiceData?.customer?.email}</div>
-                <div>{invoiceData?.customer?.contact}</div>
-              </>
-            )}
+            <div
+              className="font-bold"
+              style={{ fontSize: receiptWidth === "58mm" ? "14px" : "16px" }}
+            >
+              INVOICE
+            </div>
+            <div>Inv ID: {invoiceData?.invoice_id}</div>
+            <div>Date: {formatDate(invoiceData.date)}</div>
           </div>
 
           <div className="dashed-line"></div>
@@ -326,20 +364,44 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
               <span>Price</span>
               <span>Total</span>
             </div>
-            {Array.isArray(invoiceData?.items) ? (
-              invoiceData.items.map((item: InvoiceItem, index: number) => (
-                <div className="items-row" key={index}>
-                  <span className="truncate">{item.product}</span>
-                  <span className="truncate">
-                    {item.quantity} {item.unit?.charAt(0)}
-                  </span>
-                  <span>{item.unit_price}</span>
-                  <span>{item.amount}</span>
-                </div>
-              ))
-            ) : (
-              <div>No items available</div>
-            )}
+
+            {(() => {
+              try {
+                const items = invoiceData?.items
+                  ? Array.isArray(invoiceData.items)
+                    ? invoiceData.items
+                    : JSON.parse(invoiceData.items)
+                  : [];
+
+                return items.length > 0 ? (
+                  items.map((item: InvoiceItem, index: number) => (
+                    <div className="items-row" key={index}>
+                      <span className="truncate">{item.product}</span>
+                      <span className="truncate">
+                        {item.quantity} {item.unit?.charAt(0)}
+                      </span>
+                      <span>
+                        {item.unit_price} {currencyCode}
+                      </span>
+                      <span>
+                        {item.amount} {currencyCode}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-gray-500 py-2">
+                    No items available
+                  </div>
+                );
+              } catch (error) {
+                console.error("Error loading items:", error);
+                return (
+                  <div className="text-center text-red-500 py-2">
+                    Error loading items
+                  </div>
+                );
+              }
+            })()}
           </div>
 
           <div className="dashed-line"></div>
@@ -390,12 +452,14 @@ export const PosItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
           <div className="text-center my-1">
             <QRCodeSVG
               value={generateQRData()}
-              size={100}
+              size={receiptWidth === "58mm" ? 90 : 110}
               level="L"
+              includeMargin={true}
               className="mx-auto"
+              style={{ filter: "contrast(130%)" }}
             />
-            <div className="text-xs mt-1">Thank you for your business!</div>
-            <div className="text-xs">{user?.email || ""}</div>
+            <div className="mt-1">Thank you for your business!</div>
+            <div>{user?.email || ""}</div>
           </div>
           <div className="text-center my-1 mt-2">
             <p>Powered by Copa Business</p>

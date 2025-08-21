@@ -78,7 +78,7 @@ export const CustomerLedgerTable: React.FC<InvoicesTableProps> = ({
   const customerOptions = useMemo(() => {
     const uniqueCustomers = new Map<string, Customers>();
     invoices.forEach((invoice) => {
-      if (invoice.customer) {
+      if (invoice.customer && typeof invoice.customer !== "string") {
         uniqueCustomers.set(invoice.customer.id.toString(), invoice.customer);
       }
     });
@@ -95,19 +95,33 @@ export const CustomerLedgerTable: React.FC<InvoicesTableProps> = ({
 
     // Apply customer filter
     if (selectedCustomer) {
-      sortedInvoices = sortedInvoices.filter(
-        (invoice) => invoice.customer?.id.toString() == selectedCustomer
-      );
+      sortedInvoices = sortedInvoices.filter((invoice) => {
+        if (!invoice.customer || typeof invoice.customer === "string")
+          return false;
+        return invoice.customer.id.toString() === selectedCustomer;
+      });
     }
 
     // Apply text search filter
     if (searchText) {
       sortedInvoices = sortedInvoices.filter((invoice) =>
-        Object.values(invoice).some(
-          (value) =>
+        Object.values(invoice).some((value) => {
+          if (value && typeof value === "object") {
+            // Handle object values (like customer)
+            return Object.values(value).some(
+              (nestedValue) =>
+                nestedValue &&
+                nestedValue
+                  .toString()
+                  .toLowerCase()
+                  .includes(searchText.toLowerCase())
+            );
+          }
+          return (
             value &&
             value.toString().toLowerCase().includes(searchText.toLowerCase())
-        )
+          );
+        })
       );
     }
 

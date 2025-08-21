@@ -197,25 +197,35 @@ export const CustomerLedgerReportButton: React.FC<
     });
 
     // Prepare table data
-    const tableData = invoices.map((invoice, index) => [
-      index + 1,
-      invoice.invoice_id,
-      `${new Date(invoice.date).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })}`,
-      `${invoice.customer?.name || ""}(${invoice.customer?.customer_id || ""})`,
-      invoice.items?.length || 0,
-      invoice.subtotal,
-      invoice.tax,
-      invoice.discount,
-      invoice.total,
-      invoice.paid_amount,
-      invoice.due_amount,
-      Number(invoice.due_amount) == 0 ? "Paid" : "Due",
-      invoice.notes,
-    ]);
+    const tableData = invoices.map((invoice, index) => {
+      let customerInfo = "";
+      if (typeof invoice.customer === "string") {
+        customerInfo = invoice.customer;
+      } else if (invoice.customer) {
+        customerInfo = `${invoice.customer.name || ""}(${
+          invoice.customer.customer_id || ""
+        })`;
+      }
+      return [
+        index + 1,
+        invoice.invoice_id,
+        `${new Date(invoice.date).toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })}`,
+        customerInfo,
+        invoice.items?.length || 0,
+        invoice.subtotal,
+        invoice.tax,
+        invoice.discount,
+        invoice.total,
+        invoice.paid_amount,
+        invoice.due_amount,
+        Number(invoice.due_amount) == 0 ? "Paid" : "Due",
+        invoice.notes,
+      ];
+    });
 
     const totalsRow = [
       "",

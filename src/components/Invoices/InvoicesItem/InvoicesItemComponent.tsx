@@ -116,16 +116,29 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
     return `${day} ${month}, ${year}`;
   }
 
-  // Generate QR code data string
+  const tryParse = (value: string) => {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  };
+
   const generateQRData = () => {
     if (!invoiceData) return "";
-    const contact =
-      typeof invoiceData.customer === "string"
-        ? invoiceData.customer
-        : invoiceData.customer.contact;
+    let contactNumber = "N/A";
+    if (typeof invoiceData.customer === "string") {
+      const parsedCustomer = tryParse(invoiceData.customer);
+      contactNumber =
+        typeof parsedCustomer === "object" && parsedCustomer !== null
+          ? parsedCustomer.contact || "N/A"
+          : parsedCustomer;
+    } else {
+      contactNumber = invoiceData.customer.contact;
+    }
     return [
       `Invoice ID: ${invoiceData.invoice_id}`,
-      `Contact: ${contact}`,
+      `Contact: ${contactNumber}`,
       `Inv Date: ${formatDate(invoiceData.date)}`,
     ].join("\n");
   };
@@ -225,9 +238,37 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
                   Invoice To:
                 </h3>
                 {typeof invoiceData.customer === "string" ? (
-                  <p className="text-gray-800 text-[12px]">
-                    {invoiceData.customer}
-                  </p>
+                  (() => {
+                    try {
+                      const customer = JSON.parse(invoiceData.customer);
+                      return (
+                        <>
+                          <p className="text-gray-800 text-[12px]">
+                            <span className="font-bold">Name:</span>{" "}
+                            {customer.name}
+                          </p>
+                          <p className="text-gray-800 text-[12px]">
+                            <span className="font-bold">Address:</span>{" "}
+                            {customer.delivery}
+                          </p>
+                          <p className="text-gray-800 text-[12px]">
+                            <span className="font-bold">Phone:</span>{" "}
+                            {customer.contact}
+                          </p>
+                          <p className="text-gray-800 text-[12px]">
+                            <span className="font-bold">Email:</span>{" "}
+                            {customer.email}
+                          </p>
+                        </>
+                      );
+                    } catch {
+                      return (
+                        <p className="text-gray-800 text-[12px]">
+                          {invoiceData.customer}
+                        </p>
+                      );
+                    }
+                  })()
                 ) : (
                   <>
                     <p className="text-gray-800 text-[12px]">
@@ -305,28 +346,39 @@ export const InvoicesItemComponent = ({ InvoiceId }: InvoicesItemProps) => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {Array.isArray(invoiceData.items) &&
-                    invoiceData.items.map(
-                      (item: InvoiceItem, index: number) => (
-                        <tr className="divide-x divide-gray-200" key={index}>
-                          <td className="px-6 py-2 whitespace-nowrap text-[12px] font-bold text-gray-900">
-                            {index + 1}
-                          </td>
-                          <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                            {item.product}
-                          </td>
-                          <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                            {item.quantity} {item.unit}
-                          </td>
-                          <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                            {item.unit_price} {currencyCode}
-                          </td>
-                          <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
-                            {item.amount} {currencyCode}
-                          </td>
-                        </tr>
-                      )
-                    )}
+                  {invoiceData.items && invoiceData.items.length > 0 ? (
+                    (Array.isArray(invoiceData.items)
+                      ? invoiceData.items
+                      : JSON.parse(invoiceData.items)
+                    ).map((item: InvoiceItem, index: number) => (
+                      <tr className="divide-x divide-gray-200" key={index}>
+                        <td className="px-6 py-2 whitespace-nowrap text-[12px] font-bold text-gray-900">
+                          {index + 1}
+                        </td>
+                        <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                          {item.product}
+                        </td>
+                        <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                          {item.quantity} {item.unit || ""}
+                        </td>
+                        <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                          {item.unit_price} {currencyCode}
+                        </td>
+                        <td className="px-6 py-2 whitespace-nowrap text-[12px] text-gray-900">
+                          {item.amount} {currencyCode}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="px-6 py-4 text-center text-[12px] text-gray-500"
+                      >
+                        No items found
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

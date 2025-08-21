@@ -9,6 +9,7 @@ import Image from "next/image";
 import success from "../../../../public/images/success.webp";
 import { Modal } from "antd";
 import { FaXmark } from "react-icons/fa6";
+import { options } from "../options";
 
 interface Option {
   value: string;
@@ -103,10 +104,10 @@ export const AddSuppliersForm = () => {
       backgroundColor: "#F2F4F7",
       transition: "border-color 0.3s",
       "&:hover": {
-        borderColor: "#FAB616",
+        borderColor: "#B9C1CC",
       },
       "&:focus": {
-        borderColor: "#FAB616",
+        borderColor: "#B9C1CC",
         outline: "none",
       },
     }),
@@ -281,6 +282,7 @@ export const AddSuppliersForm = () => {
             id="products"
             isMulti={true}
             placeholder="Select products"
+            options={options}
             isSearchable
             className="react-select-container"
             classNamePrefix="react-select"

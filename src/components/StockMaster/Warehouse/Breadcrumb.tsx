@@ -2,7 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import { FaAngleRight } from "react-icons/fa";
-import { Modal, Button, Radio } from "antd";
+import {
+  Modal,
+  Button,
+  // Radio
+} from "antd";
 import { useAuth } from "@/contexts/AuthContext";
 import { FaXmark } from "react-icons/fa6";
 import Link from "next/link";
@@ -17,7 +21,7 @@ export const Breadcrumb = ({ onWarehouseAdded }: BreadcrumbProps) => {
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [userMessage, setUserMessage] = useState<string | null>(null);
-  const [warehouseOption, setWarehouseOption] = useState<string>("none");
+  const [warehouseOption, setWarehouseOption] = useState<string>("cabinet");
   const [storeId, setStoreId] = useState("");
 
   const [formValues, setFormValues] = useState({
@@ -78,7 +82,7 @@ export const Breadcrumb = ({ onWarehouseAdded }: BreadcrumbProps) => {
         warehouse: "",
         address: "",
       });
-      setWarehouseOption("none");
+      setWarehouseOption("cabinet");
       setStoreId("");
 
       const compPrefix = user?.company
@@ -103,7 +107,7 @@ export const Breadcrumb = ({ onWarehouseAdded }: BreadcrumbProps) => {
 
   const handleCancel = () => {
     setIsModalVisible(false);
-    setWarehouseOption("none");
+    setWarehouseOption("cabinet");
     setStoreId("");
   };
 
@@ -206,33 +210,27 @@ export const Breadcrumb = ({ onWarehouseAdded }: BreadcrumbProps) => {
           />
         </div>
 
-        <div className="mb-4">
-          <label className="text-[14px] block mb-2">Warehouse Options</label>
+        {/* <div className="mb-4">
+          <label className="text-[14px] block mb-2">Attribute</label>
           <Radio.Group
             onChange={(e) => setWarehouseOption(e.target.value)}
             value={warehouseOption}
             className="w-full"
           >
-            <div className="grid sm:grid-cols-2 grid-cols-1 gap-3">
+            <div className="grid sm:grid-cols-2 grid-cols-1 sm:gap-3">
               <Radio value="cabinet" className="w-full">
                 <div className="flex flex-col">
-                  <span className="">Cabinet System</span>
-                  <span className="text-xs text-gray-500">
-                    Warehouse will use a cabinet storage
-                  </span>
+                  <span className="">Have Cabinet System</span>
                 </div>
               </Radio>
               <Radio value="store" className="w-full">
                 <div className="flex flex-col">
-                  <span className="">Connect to Store</span>
-                  <span className="text-xs text-gray-500">
-                    Link this to an existing store
-                  </span>
+                  <span className="">Haven&apos;t Cabinet System</span>
                 </div>
               </Radio>
             </div>
           </Radio.Group>
-        </div>
+        </div> */}
       </Modal>
     </>
   );

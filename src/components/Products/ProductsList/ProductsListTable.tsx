@@ -224,6 +224,14 @@ export const ProductsListTable: React.FC<ProductsTableProps> = ({
       },
     },
     {
+      title: "Warehouse",
+      dataIndex: "warehouse",
+    },
+    {
+      title: "Cabinet",
+      dataIndex: "cabinet",
+    },
+    {
       title: "Description",
       dataIndex: "description",
       render: (text: string) => (text ? text : "-"),

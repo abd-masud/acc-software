@@ -9,11 +9,14 @@ import { AiFillDashboard, AiFillProduct } from "react-icons/ai";
 import {
   FaCubesStacked,
   FaGear,
+  FaHandHoldingDollar,
   FaMoneyBillTrendUp,
   FaUsers,
 } from "react-icons/fa6";
-import { FaChevronDown, FaUserTie } from "react-icons/fa";
+import { FaBoxes, FaChevronDown, FaUserTie } from "react-icons/fa";
+import { IoNewspaper } from "react-icons/io5";
 import { GiBuyCard, GiNotebook } from "react-icons/gi";
+import { BiSolidShoppingBags } from "react-icons/bi";
 import { TbBlockquote } from "react-icons/tb";
 import { RiExchangeDollarFill } from "react-icons/ri";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,10 +28,15 @@ const SIDEBAR_MODULES = [
   "invoices",
   "quotes",
   "products",
+  "stores",
   "employees",
   "sales-report",
   "stock-master",
+  "accounting",
+  "expenses",
+  "income",
   "suppliers",
+  "others",
   "settings",
   "subscription-plan",
 ];
@@ -435,7 +443,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
           <div
             className={`overflow-hidden transition-all duration-500 transform ${
               openSection == "stock-master"
-                ? "max-h-[135px] opacity-100"
+                ? "max-h-[180px] opacity-100"
                 : "max-h-0 opacity-0"
             }`}
           >
@@ -453,6 +461,13 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
                 onClick={handleLinkClick}
               >
                 In-house Product
+              </Link>
+              <Link
+                className={subLinkClass("/stock-master/transfer-products")}
+                href="/stock-master/transfer-products"
+                onClick={handleLinkClick}
+              >
+                Transfer Products
               </Link>
               <Link
                 className={subLinkClass("/stock-master/stock-settings")}
@@ -516,6 +531,150 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         </>
       )}
 
+      {canAccessModule("accounting") && (
+        <>
+          <button
+            onClick={() => toggleSection("accounting")}
+            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+              pathname.includes("/accounting") ? "text-white bg-[#1E2639]" : ""
+            }`}
+          >
+            <div className="flex items-center">
+              <div
+                className={`h-[23px] w-[3px] group-hover:bg-[#307DF1] transition duration-300 ${
+                  pathname.includes("/accounting")
+                    ? "bg-[#307DF1]"
+                    : "bg-transparent"
+                }`}
+              ></div>
+              <IoNewspaper className="ml-[21px] text-[16px] mr-3 w-5" />
+              Accounting
+            </div>
+            <FaChevronDown />
+          </button>
+          <div
+            className={`overflow-hidden transition-all duration-500 transform ${
+              openSection == "accounting"
+                ? "max-h-[90px] opacity-100"
+                : "max-h-0 opacity-0"
+            }`}
+          >
+            <div className="pl-[56px] bg-[#1D1B31] text-[13px]">
+              <Link
+                className={subLinkClass("/sales-report/all-sales-report")}
+                href="/sales-report/all-sales-report"
+                onClick={handleLinkClick}
+              >
+                All Sales Report
+              </Link>
+              <Link
+                className={subLinkClass("/sales-report/customer-ledger")}
+                href="/sales-report/customer-ledger"
+                onClick={handleLinkClick}
+              >
+                Customer Ledger
+              </Link>
+            </div>
+          </div>
+        </>
+      )}
+
+      {canAccessModule("expenses") && (
+        <>
+          <button
+            onClick={() => toggleSection("expenses")}
+            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+              pathname.includes("/expenses") ? "text-white bg-[#1E2639]" : ""
+            }`}
+          >
+            <div className="flex items-center">
+              <div
+                className={`h-[23px] w-[3px] group-hover:bg-[#307DF1] transition duration-300 ${
+                  pathname.includes("/expenses")
+                    ? "bg-[#307DF1]"
+                    : "bg-transparent"
+                }`}
+              ></div>
+              <BiSolidShoppingBags className="ml-[21px] text-[16px] mr-3 w-5" />
+              Expenses
+            </div>
+            <FaChevronDown />
+          </button>
+          <div
+            className={`overflow-hidden transition-all duration-500 transform ${
+              openSection == "expenses"
+                ? "max-h-[90px] opacity-100"
+                : "max-h-0 opacity-0"
+            }`}
+          >
+            <div className="pl-[56px] bg-[#1D1B31] text-[13px]">
+              <Link
+                className={subLinkClass("/sales-report/all-sales-report")}
+                href="/sales-report/all-sales-report"
+                onClick={handleLinkClick}
+              >
+                All Sales Report
+              </Link>
+              <Link
+                className={subLinkClass("/sales-report/customer-ledger")}
+                href="/sales-report/customer-ledger"
+                onClick={handleLinkClick}
+              >
+                Customer Ledger
+              </Link>
+            </div>
+          </div>
+        </>
+      )}
+
+      {canAccessModule("income") && (
+        <>
+          <button
+            onClick={() => toggleSection("income")}
+            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+              pathname.includes("/income") ? "text-white bg-[#1E2639]" : ""
+            }`}
+          >
+            <div className="flex items-center">
+              <div
+                className={`h-[23px] w-[3px] group-hover:bg-[#307DF1] transition duration-300 ${
+                  pathname.includes("/income")
+                    ? "bg-[#307DF1]"
+                    : "bg-transparent"
+                }`}
+              ></div>
+              <FaHandHoldingDollar className="ml-[21px] text-[14px] mr-3 w-5" />
+              Income
+            </div>
+            <FaChevronDown />
+          </button>
+          <div
+            className={`overflow-hidden transition-all duration-500 transform ${
+              openSection == "income"
+                ? "max-h-[90px] opacity-100"
+                : "max-h-0 opacity-0"
+            }`}
+          >
+            <div className="pl-[56px] bg-[#1D1B31] text-[13px]">
+              <Link
+                className={subLinkClass("/sales-report/all-sales-report")}
+                href="/sales-report/all-sales-report"
+                onClick={handleLinkClick}
+              >
+                All Sales Report
+              </Link>
+              <Link
+                className={subLinkClass("/sales-report/customer-ledger")}
+                href="/sales-report/customer-ledger"
+                onClick={handleLinkClick}
+              >
+                Customer Ledger
+              </Link>
+            </div>
+          </div>
+        </>
+      )}
+
       {canAccessModule("employees") && (
         <>
           <button
@@ -540,6 +699,63 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
           <div
             className={`overflow-hidden transition-all duration-500 transform ${
               openSection == "employees"
+                ? "max-h-[135px] opacity-100"
+                : "max-h-0 opacity-0"
+            }`}
+          >
+            <div className="pl-[56px] bg-[#1D1B31] text-[13px]">
+              <Link
+                className={subLinkClass("/employees/add-employees")}
+                href="/employees/add-employees"
+                onClick={handleLinkClick}
+              >
+                Add Employees
+              </Link>
+
+              <Link
+                className={subLinkClass("/employees/employees-list")}
+                href="/employees/employees-list"
+                onClick={handleLinkClick}
+              >
+                Employees List
+              </Link>
+
+              <Link
+                className={subLinkClass("/employees/employee-settings")}
+                href="/employees/employee-settings"
+                onClick={handleLinkClick}
+              >
+                Employee Settings
+              </Link>
+            </div>
+          </div>
+        </>
+      )}
+
+      {canAccessModule("others") && (
+        <>
+          <button
+            onClick={() => toggleSection("others")}
+            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+              pathname.includes("/others") ? "text-white bg-[#1E2639]" : ""
+            }`}
+          >
+            <div className="flex items-center">
+              <div
+                className={`h-[23px] w-[3px] group-hover:bg-[#307DF1] transition duration-300 ${
+                  pathname.includes("/others")
+                    ? "bg-[#307DF1]"
+                    : "bg-transparent"
+                }`}
+              ></div>
+              <FaBoxes className="ml-[21px] text-[14px] mr-3 w-5" />
+              Others
+            </div>
+            <FaChevronDown />
+          </button>
+          <div
+            className={`overflow-hidden transition-all duration-500 transform ${
+              openSection == "others"
                 ? "max-h-[135px] opacity-100"
                 : "max-h-0 opacity-0"
             }`}
@@ -643,7 +859,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
           <div className="mt-auto">
             <Link
               href="/subscription-plan"
-              className={`${linkClass(
+              className={` border-b ${linkClass(
                 "/subscription-plan"
               )} flex items-center justify-between`}
               onClick={handleLinkClick}
@@ -660,6 +876,12 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
           </div>
         </>
       )}
+
+      <div className="text-white font-bold flex items-center text-[30px] px-6 py-[19.5px]">
+        <span className="text-white text-[14px] font-bold text-center px-5 py-3 border border-[#307DF1] rounded-lg">
+          Business is in your hand...
+        </span>
+      </div>
     </main>
   );
 };
