@@ -123,7 +123,7 @@ export const CabinetItemComponent = ({ cabinetId }: CabinetItemProps) => {
 
   return (
     <div className="bg-gray-50 min-h-screen p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="mx-auto">
         <Breadcrumb onCabinetAdded={fetchCabinets} warehouseId={cabinetId} />
 
         <Modal
@@ -246,7 +246,7 @@ export const CabinetItemComponent = ({ cabinetId }: CabinetItemProps) => {
               ))}
             </div>
           ) : (
-            <div className="flex items-center justify-center mt-20">
+            <div className="flex items-center justify-center min-h-[calc(100vh-350px)]">
               <div className="text-center">
                 <svg
                   className="w-16 h-16 mx-auto text-gray-400"

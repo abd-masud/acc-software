@@ -154,21 +154,30 @@ export const SuppliersListTable: React.FC<SuppliersTableProps> = ({
           return (
             <Tooltip
               title={
-                Array.isArray(parsedProducts)
-                  ? parsedProducts
-                      .map((item) =>
-                        typeof item === "string"
-                          ? item
-                          : `${item.product || "-"} - ${item.quantity} ${
-                              item.unit
-                            }`
-                      )
-                      .join(", ")
-                  : "No products listed"
+                Array.isArray(parsedProducts) && parsedProducts.length > 0 ? (
+                  <div className="max-h-60 overflow-y-auto">
+                    {parsedProducts.map((item, index) => (
+                      <div
+                        key={index}
+                        className="py-1 border-b last:border-b-0"
+                      >
+                        {typeof item === "string" ? (
+                          item
+                        ) : (
+                          <>
+                            {item.product || "-"} - {item.quantity} {item.unit}
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  "No products listed"
+                )
               }
             >
               <div className="cursor-default border px-1 rounded">
-                {Array.isArray(parsedProducts)
+                {Array.isArray(parsedProducts) && parsedProducts.length > 0
                   ? `${parsedProducts.length} ${
                       parsedProducts.length === 1 ? "item" : "items"
                     }`

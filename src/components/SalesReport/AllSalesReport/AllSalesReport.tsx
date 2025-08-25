@@ -65,12 +65,24 @@ export const AllSalesReportComponent = () => {
   const Invoices = useMemo(() => {
     return invoicesData
       .map((invoice) => {
-        const customerId =
-          typeof invoice.customer === "string"
-            ? invoice.customer
-            : invoice.customer.id;
+        let customerId: number; // Change to number
+        let customerData: any;
 
-        const customer = customersData.find((c) => c.id == customerId);
+        if (typeof invoice.customer === "string") {
+          try {
+            // Parse the JSON string to get the customer object
+            customerData = JSON.parse(invoice.customer);
+            customerId = customerData.id;
+          } catch (error) {
+            console.error("Failed to parse customer JSON:", error);
+            return null;
+          }
+        } else {
+          customerData = invoice.customer;
+          customerId = invoice.customer.id;
+        }
+
+        const customer = customersData.find((c) => c.id === customerId);
 
         return customer
           ? {

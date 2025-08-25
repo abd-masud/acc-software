@@ -197,8 +197,13 @@ export const QuotesItemComponent = ({ QuoteId }: QuotesItemProps) => {
   return (
     <main className="bg-[#F2F4F7]">
       <Breadcrumb />
-      <div className="flex justify-end px-10 pt-5">
-        <button onClick={handleDownloadPDF}>Download PDF</button>
+      <div className="flex justify-end items-center gap-4 px-10 pt-5">
+        <button
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+          onClick={handleDownloadPDF}
+        >
+          Download PDF
+        </button>
       </div>
       <div className="py-10">
         <div ref={quoteRef}>

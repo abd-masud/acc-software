@@ -112,12 +112,12 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
   };
 
   const linkClass = (route: string) =>
-    `text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center transition duration-300 group h-11 border-t border-[#252D37] ${
+    `text-[13px] text-white font-[500] flex items-center transition duration-300 group h-11 border-t border-[#252D37] ${
       pathname == route ? "text-white bg-[#1E2639]" : ""
     }`;
 
   const subLinkClass = (route: string) =>
-    `text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center transition duration-300 group h-11 ${
+    `text-[13px] text-gray-400 hover:text-white font-[500] flex items-center transition duration-300 group h-11 ${
       pathname == route ? "text-white" : ""
     }`;
 
@@ -152,7 +152,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         <>
           <button
             onClick={() => toggleSection("suppliers")}
-            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+            className={`text-[13px] text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
               pathname.includes("/suppliers") ? "text-white bg-[#1E2639]" : ""
             }`}
           >
@@ -201,7 +201,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         <>
           <button
             onClick={() => toggleSection("customers")}
-            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+            className={`text-[13px] text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
               pathname.includes("/customers") ? "text-white bg-[#1E2639]" : ""
             }`}
           >
@@ -250,7 +250,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         <>
           <button
             onClick={() => toggleSection("products")}
-            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+            className={`text-[13px] text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
               pathname.includes("/products") ? "text-white bg-[#1E2639]" : ""
             }`}
           >
@@ -307,7 +307,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         <>
           <button
             onClick={() => toggleSection("quotes")}
-            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+            className={`text-[13px] text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
               pathname.includes("/quotes") ? "text-white bg-[#1E2639]" : ""
             }`}
           >
@@ -356,7 +356,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         <>
           <button
             onClick={() => toggleSection("invoices")}
-            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+            className={`text-[13px] text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
               pathname.includes("/invoices") ? "text-white bg-[#1E2639]" : ""
             }`}
           >
@@ -421,7 +421,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         <>
           <button
             onClick={() => toggleSection("stock-master")}
-            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+            className={`text-[13px] text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
               pathname.includes("/stock-master")
                 ? "text-white bg-[#1E2639]"
                 : ""
@@ -485,7 +485,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         <>
           <button
             onClick={() => toggleSection("sales-report")}
-            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+            className={`text-[13px] text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
               pathname.includes("/sales-report")
                 ? "text-white bg-[#1E2639]"
                 : ""
@@ -535,7 +535,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         <>
           <button
             onClick={() => toggleSection("accounting")}
-            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+            className={`text-[13px] text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
               pathname.includes("/accounting") ? "text-white bg-[#1E2639]" : ""
             }`}
           >
@@ -583,7 +583,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         <>
           <button
             onClick={() => toggleSection("expenses")}
-            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+            className={`text-[13px] text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
               pathname.includes("/expenses") ? "text-white bg-[#1E2639]" : ""
             }`}
           >
@@ -631,7 +631,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         <>
           <button
             onClick={() => toggleSection("income")}
-            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+            className={`text-[13px] text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
               pathname.includes("/income") ? "text-white bg-[#1E2639]" : ""
             }`}
           >
@@ -679,7 +679,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         <>
           <button
             onClick={() => toggleSection("employees")}
-            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+            className={`text-[13px] text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
               pathname.includes("/employees") ? "text-white bg-[#1E2639]" : ""
             }`}
           >
@@ -736,7 +736,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         <>
           <button
             onClick={() => toggleSection("others")}
-            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+            className={`text-[13px] text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
               pathname.includes("/others") ? "text-white bg-[#1E2639]" : ""
             }`}
           >
@@ -793,7 +793,7 @@ export const SideBar = ({ closeSidebar }: SideBarProps) => {
         <>
           <button
             onClick={() => toggleSection("settings")}
-            className={`text-[13px] text-[#797c8b] hover:text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
+            className={`text-[13px] text-white font-[500] flex items-center justify-between pr-5 transition duration-300 group h-11 w-full border-t border-[#252D37] ${
               pathname.includes("/settings") ? "text-white bg-[#1E2639]" : ""
             }`}
           >

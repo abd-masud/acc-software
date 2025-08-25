@@ -78,25 +78,6 @@ export const AddCustomersForm = () => {
     }
   };
 
-  const handleAddMore = () => {
-    setFormValues({
-      customer_id: "",
-      name: "",
-      delivery: "",
-      email: "",
-      contact: "",
-      status: "",
-    });
-
-    const compPrefix = user?.company
-      ? user.company.slice(0, 2).toUpperCase()
-      : "CO";
-    const random = Math.floor(10000 + Math.random() * 90000);
-    setCustomerId(`C${compPrefix}${random}`);
-
-    setShowSuccessModal(false);
-  };
-
   const handleOkay = () => {
     setShowSuccessModal(false);
     router.push("/customers/customers-list");
@@ -233,13 +214,6 @@ export const AddCustomersForm = () => {
         open={showSuccessModal}
         onCancel={handleOkay}
         footer={[
-          <button
-            key="addMore"
-            onClick={handleAddMore}
-            className="text-[14px] font-[500] py-2 w-28 rounded cursor-pointer transition-all duration-300 mt-2 mr-2 text-white bg-[#307EF3] hover:bg-[#478cf3] focus:bg-[#307EF3]"
-          >
-            Add More
-          </button>,
           <button
             key="okay"
             onClick={handleOkay}

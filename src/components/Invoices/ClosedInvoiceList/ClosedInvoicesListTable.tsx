@@ -210,16 +210,22 @@ export const ClosedInvoicesListTable: React.FC<InvoicesTableProps> = ({
           return (
             <Tooltip
               title={
-                Array.isArray(items)
-                  ? items
-                      .map(
-                        (item) =>
-                          `${item.product || "-"} - ${item.quantity} ${
-                            item.unit
-                          }`
-                      )
-                      .join("\n")
-                  : "N/A"
+                Array.isArray(items) ? (
+                  <div className="max-h-60 overflow-y-auto">
+                    {items.map((item, index) => (
+                      <div
+                        key={index}
+                        className="py-1 border-b last:border-b-0"
+                      >
+                        <div className="font-medium">
+                          {item.product} - {item.quantity} {item.unit}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  "N/A"
+                )
               }
             >
               <div className="cursor-default border px-1 rounded">

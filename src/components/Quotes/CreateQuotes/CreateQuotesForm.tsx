@@ -78,7 +78,7 @@ export const CreateQuotesForm = () => {
 
   const productOptions = uniqueProducts.map((product) => ({
     value: product.id,
-    label: `${product.name} ${product.product_id}`,
+    label: `${product.name} (${product.product_id})`,
     product: product,
   }));
 

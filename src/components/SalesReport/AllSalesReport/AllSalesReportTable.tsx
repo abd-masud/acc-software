@@ -35,9 +35,6 @@ export const AllSalesReportTable: React.FC<InvoicesTableProps> = ({
   const [fromDate, setFromDate] = useState<Dayjs | null>(null);
   const [toDate, setToDate] = useState<Dayjs | null>(null);
   const [currencyCode, setCurrencyCode] = useState("USD");
-  const [, setDateRangeSelected] = useState(false);
-
-  console.log(invoices);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -66,34 +63,37 @@ export const AllSalesReportTable: React.FC<InvoicesTableProps> = ({
     fetchCurrencies();
   }, [user?.id]);
 
-  useEffect(() => {
-    // Check if both dates are selected
-    if (fromDate && toDate) {
-      setDateRangeSelected(true);
-    } else {
-      setDateRangeSelected(false);
-    }
-  }, [fromDate, toDate]);
-
   const filteredInvoices = useMemo(() => {
-    let sortedInvoices = [...invoices].sort((a, b) => {
-      return b.id - a.id;
-    });
-
-    // Apply text search filter
+    let filtered = [...invoices];
     if (searchText) {
-      sortedInvoices = sortedInvoices.filter((invoice) =>
-        Object.values(invoice).some(
-          (value) =>
-            value &&
-            value.toString().toLowerCase().includes(searchText.toLowerCase())
-        )
-      );
+      const searchLower = searchText.toLowerCase();
+      filtered = filtered.filter((invoice) => {
+        const customerName =
+          typeof invoice.customer === "string"
+            ? invoice.customer
+            : invoice.customer?.name || "";
+
+        const customerEmail =
+          typeof invoice.customer === "string"
+            ? ""
+            : invoice.customer?.email || "";
+
+        const customerId =
+          typeof invoice.customer === "string"
+            ? ""
+            : invoice.customer?.customer_id || "";
+
+        return (
+          invoice.invoice_id.toLowerCase().includes(searchLower) ||
+          customerName.toLowerCase().includes(searchLower) ||
+          customerEmail.toLowerCase().includes(searchLower) ||
+          customerId.toLowerCase().includes(searchLower)
+        );
+      });
     }
 
-    // Apply date range filter
     if (fromDate && toDate) {
-      sortedInvoices = sortedInvoices.filter((invoice) => {
+      filtered = filtered.filter((invoice) => {
         const invoiceDate = dayjs(invoice.date);
         return (
           invoiceDate.isSame(fromDate, "day") ||
@@ -102,29 +102,27 @@ export const AllSalesReportTable: React.FC<InvoicesTableProps> = ({
         );
       });
     } else if (fromDate) {
-      sortedInvoices = sortedInvoices.filter((invoice) => {
+      filtered = filtered.filter((invoice) => {
         const invoiceDate = dayjs(invoice.date);
         return (
           invoiceDate.isSame(fromDate, "day") || invoiceDate.isAfter(fromDate)
         );
       });
     } else if (toDate) {
-      sortedInvoices = sortedInvoices.filter((invoice) => {
+      filtered = filtered.filter((invoice) => {
         const invoiceDate = dayjs(invoice.date);
         return (
           invoiceDate.isSame(toDate, "day") || invoiceDate.isBefore(toDate)
         );
       });
     }
-
-    return sortedInvoices;
+    return filtered.sort((a, b) => b.id - a.id);
   }, [invoices, searchText, fromDate, toDate]);
 
   const handleResetFilters = () => {
     setSearchText("");
     setFromDate(null);
     setToDate(null);
-    setDateRangeSelected(false);
   };
 
   const columns: TableColumnsType<InvoiceData> = [
@@ -169,26 +167,41 @@ export const AllSalesReportTable: React.FC<InvoicesTableProps> = ({
     {
       title: "Items",
       dataIndex: "items",
-      render: (items: InvoiceItem[]) => (
-        <Tooltip
-          title={
-            Array.isArray(items)
-              ? items
-                  .map(
-                    (item) =>
-                      `${item.product || "-"} - ${item.quantity} ${item.unit}`
-                  )
-                  .join("\n")
-              : "N/A"
-          }
-        >
-          <div className="cursor-default border px-1 rounded">
-            {Array.isArray(items)
-              ? `${items.length} ${items.length == 1 ? "item" : "items"}`
-              : "N/A"}
-          </div>
-        </Tooltip>
-      ),
+      render: (itemsString: string) => {
+        try {
+          const items: InvoiceItem[] = JSON.parse(itemsString);
+          return (
+            <Tooltip
+              title={
+                Array.isArray(items) ? (
+                  <div className="max-h-60 overflow-y-auto">
+                    {items.map((item, index) => (
+                      <div
+                        key={index}
+                        className="py-1 border-b last:border-b-0"
+                      >
+                        <div className="font-medium">
+                          {item.product} - {item.quantity} {item.unit}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  "N/A"
+                )
+              }
+            >
+              <div className="cursor-default border px-1 rounded">
+                {Array.isArray(items)
+                  ? `${items.length} ${items.length == 1 ? "item" : "items"}`
+                  : "N/A"}
+              </div>
+            </Tooltip>
+          );
+        } catch {
+          return "N/A";
+        }
+      },
     },
     {
       title: "Dates",
